@@ -5,7 +5,6 @@ body {
   color: white;
 }
 
-/* LOGIN */
 .center {
   display: flex;
   justify-content: center;
@@ -16,17 +15,16 @@ body {
 .box {
   background: #1c1f26;
   padding: 20px;
+  width: 260px;
   border-radius: 10px;
-  width: 250px;
 }
 
 input, button {
   width: 100%;
-  margin-top: 10px;
   padding: 10px;
+  margin-top: 10px;
 }
 
-/* TOPBAR */
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -34,7 +32,6 @@ input, button {
   background: #1c1f26;
 }
 
-/* PAGE */
 .page {
   display: none;
   padding: 20px;
@@ -44,7 +41,6 @@ input, button {
   display: block;
 }
 
-/* BOTTOM NAV (WA STYLE) */
 .bottomnav {
   position: fixed;
   bottom: 0;
