@@ -1,1 +1,62 @@
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #0f1115;
+  color: white;
+}
 
+/* LOGIN */
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.box {
+  background: #1c1f26;
+  padding: 20px;
+  border-radius: 10px;
+  width: 250px;
+}
+
+input, button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+}
+
+/* TOPBAR */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  background: #1c1f26;
+}
+
+/* PAGE */
+.page {
+  display: none;
+  padding: 20px;
+}
+
+.page.active {
+  display: block;
+}
+
+/* BOTTOM NAV (WA STYLE) */
+.bottomnav {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  background: #1c1f26;
+}
+
+.bottomnav button {
+  flex: 1;
+  padding: 15px;
+  background: none;
+  color: white;
+  border: none;
+}
