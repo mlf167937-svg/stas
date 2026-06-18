@@ -1,49 +1,48 @@
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template
+import os
 
 app = Flask(__name__)
-app.secret_key = "stas_community_key"
 
-# komunitas user (fake database dulu)
-users = {
-    "rehan": "123",
-    "admin": "admin",
-    "member1": "111"
-}
+BASE = "stas"
+
+def load_members():
+    members = []
+
+    nama_path = os.path.join(BASE, "nama")
+    desk_path = os.path.join(BASE, "desk")
+    db_path = os.path.join(BASE, "database")
+
+    for file in os.listdir(nama_path):
+        if file.endswith(".txt"):
+            name = file.replace(".txt", "")
+
+            try:
+                with open(os.path.join(nama_path, file), "r", encoding="utf-8") as f:
+                    nama = f.read().strip()
+
+                with open(os.path.join(desk_path, file), "r", encoding="utf-8") as f:
+                    desk = f.read().strip()
+
+                with open(os.path.join(db_path, file), "r", encoding="utf-8") as f:
+                    data = f.read().strip()
+
+                members.append({
+                    "id": name,
+                    "nama": nama,
+                    "desk": desk,
+                    "data": data
+                })
+
+            except:
+                pass
+
+    return members
+
 
 @app.route("/")
 def index():
-    if "user" in session:
-        return redirect("/home")
-    return redirect("/login")
-
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        u = request.form["username"]
-        p = request.form["password"]
-
-        if u in users and users[u] == p:
-            session["user"] = u
-            return redirect("/home")
-
-        return render_template("login.html", error="Login gagal")
-
-    return render_template("login.html")
-
-
-@app.route("/home")
-def home():
-    if "user" not in session:
-        return redirect("/login")
-
-    return render_template("home.html", user=session["user"])
-
-
-@app.route("/logout")
-def logout():
-    session.pop("user", None)
-    return redirect("/login")
+    members = load_members()
+    return render_template("index.html", members=members)
 
 
 if __name__ == "__main__":
