@@ -101,6 +101,18 @@ def login():
         password = request.form.get('password', '').strip()
         if verify_user_login(user_id, password):
             session['user'] = user_id
+# =====================================================================
+# 4. ROUTING WEB VIEW (NAVIGASI BARU: GENERAL, GAME, AI, ADMIN)
+# =====================================================================
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if 'user' in session: return redirect(url_for('home'))
+    error = None
+    if request.method == 'POST':
+        user_id = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        if verify_user_login(user_id, password):
+            session['user'] = user_id
             return redirect(url_for('home'))
         error = "ID Anggota atau Password salah!"
     return render_template('login.html', error=error)
@@ -124,13 +136,15 @@ def games_hub():
     if 'user' not in session: return redirect(url_for('login'))
     return render_template('games_hub.html')
 
-# ARENA GAME 1: STICKMAN WAR LAYOUT
-@app.route('/games/stickman')
-def game_stickman():
+# DETEKSI UTAMA: MENYESUAIKAN URL PLAY DARI APP.JS (1HP & ONLINE MULTIPLAYER)
+@app.route('/play/<mode>')
+def game_stickman(mode):
     if 'user' not in session: return redirect(url_for('login'))
-    mode = request.args.get('mode', 'local') # 'local' (1 HP) atau 'online' (beda HP)
+    # mode akan bernilai '1hp' atau 'online' sesuai lemparan dari static/app.js
     room = request.args.get('room', 'default')
-    return render_template('game_stickman.html', mode=mode, room=room, username=session['user'])
+    username = request.args.get('username', session['user'])
+    
+    return render_template('game_stickman.html', mode=mode, room=room, username=username)
 
 @app.route('/ai')
 def ai():
@@ -153,7 +167,6 @@ def admin():
 @app.route('/user/<user_id>')
 def profile(user_id):
     if 'user' not in session: return redirect(url_for('login'))
-    # Implementasi get_member ringkas
     nama_path = os.path.join(NAMA_DIR, f"{user_id}.txt")
     if not os.path.exists(nama_path): return "Tidak ditemukan", 404
     with open(nama_path, 'r', encoding='utf-8') as f: nama = f.read().strip()
@@ -185,22 +198,34 @@ def on_join(data):
     room = data.get('room', 'default')
     username = data.get('username', 'Player')
     join_room(room)
+    
     if room not in ACTIVE_ROOMS:
         ACTIVE_ROOMS[room] = []
+        
     if username not in ACTIVE_ROOMS[room]:
-        ACTIVE_ROOMS[room].append(username)
-    
-    # Tentukan apakah dia Player 1 atau Player 2 berdasarkan urutan join
+        # Membatasi maksimal hanya 2 pemain di dalam satu room tarung
+        if len(ACTIVE_ROOMS[room]) < 2:
+            ACTIVE_ROOMS[room].append(username)
+        else:
+            emit('room_full', {'message': 'Room ini sudah penuh cuks!'}, to=request.sid)
+            return
+            
+    # Cari tahu indeks urutan untuk menentukan siapa Player 1 / Player 2
     role = "player1" if ACTIVE_ROOMS[room].index(username) == 0 else "player2"
+    
+    # Broadcast data room terbaru ke semua perangkat di room tersebut
     emit('game_assigned', {'role': role, 'all_players': ACTIVE_ROOMS[room]}, room=room)
 
 @socketio.on('update_player_state')
 def on_update(data):
-    # Teruskan koordinat stickman, gerakan analog, atau serangan ke HP musuh di room yang sama
     room = data.get('room', 'default')
+    # Kirim data pergerakan koordinat stickman ke musuh (include_self=False)
     emit('enemy_moved', data, room=room, include_self=False)
 
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    # Ganti app.run dengan socketio.run agar fitur websocket aktif di Render
-    socketio.run(app, host='0.0.0.0', port=port, debug=False)
+# EVENT HANDLING JIKA ADA PEMAIN YANG LEPAS KONEKSI (DC)
+@socketio.on('disconnect')
+def on_disconnect():
+    for room, players in list(ACTIVE_ROOMS.items()):
+        # Jika player terputus, bersihkan namanya dari room aktif
+        # Di sini kita bisa menambahkan reset jika diperlukan
+        pass
