@@ -1,11 +1,13 @@
 from flask import Flask, render_template, request, redirect, session
 
 app = Flask(__name__)
-app.secret_key = "stas_secret_key"
+app.secret_key = "stas_community_key"
 
+# komunitas user (fake database dulu)
 users = {
     "rehan": "123",
-    "admin": "admin"
+    "admin": "admin",
+    "member1": "111"
 }
 
 @app.route("/")
@@ -18,11 +20,11 @@ def index():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
+        u = request.form["username"]
+        p = request.form["password"]
 
-        if username in users and users[username] == password:
-            session["user"] = username
+        if u in users and users[u] == p:
+            session["user"] = u
             return redirect("/home")
 
         return render_template("login.html", error="Login gagal")
