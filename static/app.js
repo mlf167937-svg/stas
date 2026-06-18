@@ -1,111 +1,90 @@
-/* ==========================================================================
-   STAS — app.js
-   Handles: deterministic avatar colors, live client-side search filtering
-   (with graceful fallback to backend ?q= search), small UX polish.
-   ========================================================================== */
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Live Client-Side Search Filtering
+    const searchInput = document.getElementById('live-search-input');
+    const searchCards = document.querySelectorAll('.search-card');
 
-(function () {
-  "use strict";
-
-  const AVATAR_COLORS = [
-    "#6e7bff", // indigo
-    "#3fb97f", // green
-    "#f0a93f", // amber
-    "#f0556b", // red
-    "#4fc3d9", // cyan
-    "#c66fe0", // violet
-  ];
-
-  /**
-   * Deterministically pick a color for a given string (username or name),
-   * so the same member always gets the same avatar color across pages.
-   */
-  function colorForKey(key) {
-    let hash = 0;
-    for (let i = 0; i < key.length; i++) {
-      hash = (hash << 5) - hash + key.charCodeAt(i);
-      hash |= 0;
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            searchCards.forEach(card => {
+                const name = card.getAttribute('data-name');
+                if (name.includes(query)) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        });
     }
-    const index = Math.abs(hash) % AVATAR_COLORS.length;
-    return AVATAR_COLORS[index];
-  }
 
-  function applyAvatarColors() {
-    document.querySelectorAll("[data-avatar-key]").forEach((el) => {
-      const key = el.getAttribute("data-avatar-key") || el.textContent || "?";
-      el.style.background = colorForKey(key);
-    });
-  }
+    // 2. Functional OpenAI Communication & Interactive Layout
+    const aiBtn = document.getElementById('ai-btn');
+    const aiInput = document.getElementById('ai-input');
+    const chatWindow = document.getElementById('chat-window');
 
-  /**
-   * Live search: filters the already-rendered member cards in the DOM
-   * instantly as the user types, without waiting for a server round-trip.
-   * Falls back gracefully — if JS fails, the form still submits normally
-   * to the backend ?q= search on Enter.
-   */
-  function setupLiveSearch() {
-    const input = document.getElementById("search-input");
-    const grid = document.getElementById("member-grid");
-    const emptyState = document.getElementById("empty-state");
-    const searchMeta = document.getElementById("search-meta");
+    if (aiBtn && aiInput && chatWindow) {
+        const handleSendMessage = async () => {
+            const txt = aiInput.value.trim();
+            if (!txt) return;
 
-    if (!input || !grid) return;
+            // Render user message bubble
+            appendBubble('User', txt, 'user-msg');
+            aiInput.value = '';
 
-    const cards = Array.from(grid.querySelectorAll(".member-card"));
+            // Render temporary loading indicator
+            const tempId = 'loading-' + Date.now();
+            appendBubble('AI', 'Memikirkan jawaban...', 'system-msg', tempId);
 
-    input.addEventListener("input", () => {
-      const term = input.value.trim().toLowerCase();
-      let visibleCount = 0;
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: txt })
+                });
+                const resData = await response.json();
+                
+                // Clear loading indicator element
+                const loadingEl = document.getElementById(tempId);
+                if (loadingEl) loadingEl.remove();
 
-      cards.forEach((card) => {
-        const name = (card.getAttribute("data-name") || "").toLowerCase();
-        const desk = (card.getAttribute("data-desk") || "").toLowerCase();
-        const matches = !term || name.includes(term) || desk.includes(term);
-        card.style.display = matches ? "" : "none";
-        if (matches) visibleCount++;
-      });
+                if (resData.reply) {
+                    appendBubble('AI', resData.reply, 'system-msg');
+                } else if (resData.error) {
+                    appendBubble('AI', `Gagal: ${resData.error}`, 'system-msg');
+                }
+            } catch (err) {
+                const loadingEl = document.getElementById(tempId);
+                if (loadingEl) loadingEl.remove();
+                appendBubble('AI', 'Gagal terhubung dengan server.', 'system-msg');
+            }
+        };
 
-      if (emptyState) {
-        emptyState.style.display = visibleCount === 0 ? "flex" : "none";
-      }
+        aiBtn.addEventListener('click', handleSendMessage);
+        aiInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSendMessage();
+            }
+        });
+    }
 
-      if (searchMeta) {
-        searchMeta.textContent = term
-          ? `Showing ${visibleCount} of ${cards.length} members matching "${input.value.trim()}"`
-          : `Showing all ${cards.length} members`;
-      }
-    });
-  }
+    function appendBubble(sender, text, className, id = '') {
+        const wrapper = document.createElement('div');
+        wrapper.className = `ai-message ${className}`;
+        if (id) wrapper.id = id;
 
-  function setupCardNavigation() {
-    document.querySelectorAll(".member-card[data-href]").forEach((card) => {
-      card.addEventListener("click", () => {
-        window.location.href = card.getAttribute("data-href");
-      });
-      card.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          window.location.href = card.getAttribute("data-href");
-        }
-      });
-    });
-  }
+        const icon = document.createElement('div');
+        icon.className = sender === 'User' ? 'avatar-fallback' : 'avatar-fallback ai-avatar';
+        icon.textContent = sender === 'User' ? 'U' : 'AI';
+        if (sender === 'User') icon.style.backgroundColor = '#30363d';
 
-  function autoDismissFlashes() {
-    document.querySelectorAll(".flash").forEach((el, i) => {
-      setTimeout(() => {
-        el.style.transition = "opacity 0.3s ease, transform 0.3s ease";
-        el.style.opacity = "0";
-        el.style.transform = "translateX(8px)";
-        setTimeout(() => el.remove(), 320);
-      }, 4000 + i * 200);
-    });
-  }
+        const bubble = document.createElement('div');
+        bubble.className = 'msg-bubble';
+        bubble.textContent = text;
 
-  document.addEventListener("DOMContentLoaded", () => {
-    applyAvatarColors();
-    setupLiveSearch();
-    setupCardNavigation();
-    autoDismissFlashes();
-  });
-})();
+        wrapper.appendChild(icon);
+        wrapper.appendChild(bubble);
+        chatWindow.appendChild(wrapper);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+});
