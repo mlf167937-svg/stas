@@ -1,22 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Login STAS</title>
+  <title>STAS Login</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
+
 <body class="center">
 
   <div class="box">
-    <h2>STAS LOGIN</h2>
+
+    <h2>STAS</h2>
+    <p>Sang Tuan Alhidayah Sutam</p>
 
     {% if error %}
       <p style="color:red">{{ error }}</p>
     {% endif %}
 
     <form method="POST">
-      <input name="username" placeholder="Username" required>
-      <input name="password" type="password" placeholder="Password" required>
-      <button type="submit">Login</button>
+      <input name="username" placeholder="Username">
+      <input name="password" type="password" placeholder="Password">
+      <button>Login</button>
     </form>
 
   </div>
