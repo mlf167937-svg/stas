@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>STAS HOME</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <h3>STAS</h3>
+  <a href="/logout">Logout</a>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <div id="general" class="page active">
+    <h2>General</h2>
+    <p>Welcome {{ user }}</p>
+  </div>
+
+  <div id="search" class="page">
+    <h2>Search Profile</h2>
+    <input placeholder="Cari user...">
+  </div>
+
+  <div id="profile" class="page">
+    <h2>Profile</h2>
+    <p>User: {{ user }}</p>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV (WA STYLE) -->
+<div class="bottomnav">
+
+  <button onclick="showPage('general')">General</button>
+  <button onclick="showPage('search')">Search</button>
+  <button onclick="showPage('profile')">Profile</button>
+
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
