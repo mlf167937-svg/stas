@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STAS - Game Hub</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .hub-container { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+        .game-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; text-align: left; position: relative; overflow: hidden; }
+        .game-title { color: var(--name-green); font-size: 1.3rem; font-weight: bold; margin-bottom: 6px; }
+        .game-desc { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px; line-height: 1.4; }
+        .mode-select-area { display: flex; gap: 10px; }
+        .mode-btn { flex: 1; padding: 10px; border-radius: 6px; border: none; font-weight: bold; font-size: 0.8rem; cursor: pointer; text-align: center; text-decoration: none; }
+        .local-btn { background-color: var(--tag-cyan); color: #0d1117; }
+        .online-btn { background-color: #58a6ff; color: white; }
+        .room-input { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid var(--border-color); background-color: var(--bg-dark); color: white; border-radius: 4px; font-size: 0.85rem; }
+    </style>
+</head>
+<body class="page-transition">
+    <header class="main-header">
+        <h1>STAS ARENA GAME</h1>
+        <p class="subtitle">Pilih permainan dan mulai pertempuran antar Tuan</p>
+    </header>
+
+    <main class="content-area">
+        <div class="hub-container">
+            
+            <div class="game-card">
+                <div class="game-title">⚔️ STICKMAN WAR 2D</div>
+                <div class="game-desc">Adu jotos dan tembak stickman legendaris. Bisa main berdua langsung dalam 1 layar HP (Dual Analog) atau tanding online beda HP menggunakan kode kamar server!</div>
+                
+                <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px dashed var(--border-color);">
+                    <label style="font-size: 0.75rem; color: var(--text-secondary); display:block; margin-bottom:4px;">KODE KAMAR (Khusus Beda HP / Online):</label>
+                    <input type="text" id="room-code" class="room-input" placeholder="Contoh: mabar-rauf" value="room-stas">
+                </div>
+
+                <div class="mode-select-area">
+                    <button class="mode-btn local-btn" onclick="startLocalGame()">🎮 1 HP (2 Analog)</button>
+                    <button class="mode-btn online-btn" onclick="startOnlineGame()">🌐 BEDA HP (Online)</button>
+                </div>
+            </div>
+
+            <div class="game-card" style="opacity: 0.5;">
+                <div class="game-title">🔒 NEXT GAME (COMING SOON)</div>
+                <div class="game-desc">Slot game kedua sedang dipersiapkan oleh dev STAS. Nantikan pembaruan berikutnya!</div>
+            </div>
+
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="/home" class="nav-item">GENERAL</a>
+        <a href="/games" class="nav-item active">GAME</a>
+        <a href="/ai" class="nav-item">AI STAS</a>
+        <a href="/admin" class="nav-item">ADMIN UI</a>
+    </nav>
+
+    <script>
+        function startLocalGame() {
+            window.location.href = "/games/stickman?mode=local";
+        }
+        function startOnlineGame() {
+            const room = document.getElementById('room-code').value.trim() || 'default';
+            window.location.href = "/games/stickman?mode=online&room=" + encodeURIComponent(room);
+        }
+    </script>
+</body>
+</html>
+
