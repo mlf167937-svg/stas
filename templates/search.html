@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>STAS Community - Home</title>
+    <title>STAS Community - Pembaruan</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body class="page-transition">
     <header class="main-header">
         <h1>STAS COMMUNITY</h1>
         <p class="subtitle">Sang Tuan Alhidayah Sutam</p>
-        <div class="search-bar-container" onclick="location.href='/search'">
-            <input type="text" class="wa-search-bar" placeholder="Cari anggota, tanya komunitas, atau search AI..." readonly>
+        <div class="search-bar-container">
+            <input type="text" id="live-search-input" class="wa-search-bar" placeholder="Cari nama anggota...">
         </div>
     </header>
 
     <main class="content-area">
-        <div class="feed-container">
+        <div class="feed-container" id="search-results">
             {% for m in members %}
-            <div class="member-card" onclick="location.href='/user/{{ m.id }}'">
+            <div class="member-card search-card" data-name="{{ m.nama | lower }}" onclick="location.href='/user/{{ m.id }}'">
                 <div class="card-left">
                     {% if m.avatar %}
                         <img src="/avatar/{{ m.avatar }}" alt="Avatar" class="avatar-img">
@@ -31,18 +31,16 @@
                     <p class="member-desk">{{ m.desk }}</p>
                 </div>
                 <div class="card-right">
-                    <span class="info-tag">Active</span>
+                    <span class="info-tag">Member</span>
                 </div>
             </div>
-            {% else %}
-            <div class="empty-state">Belum ada data anggota di direktori stas/nama/</div>
             {% endfor %}
         </div>
     </main>
 
     <nav class="bottom-nav">
-        <a href="/home" class="nav-item active">GENERAL</a>
-        <a href="/search" class="nav-item">PEMBARUAN</a>
+        <a href="/home" class="nav-item">GENERAL</a>
+        <a href="/search" class="nav-item active">PEMBARUAN</a>
         <a href="/ai" class="nav-item">AI STAS</a>
         <a href="/admin" class="nav-item">ADMIN UI</a>
     </nav>

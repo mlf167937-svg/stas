@@ -1,82 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ member.nama }} · STAS</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>STAS Community - {{ member.nama }}</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
-<body>
-
-  {% if get_flashed_messages() %}
-  <div class="flash-stack">
-    {% for category, message in get_flashed_messages(with_categories=true) %}
-      <div class="flash {{ category }}">{{ message }}</div>
-    {% endfor %}
-  </div>
-  {% endif %}
-
-  <div class="app-shell">
-
-    <header class="topbar">
-      <div class="brand">
-        <div class="brand-mark">S</div>
-        <div class="brand-text">
-          <span class="brand-name">STAS</span>
-          <span class="brand-sub">Sang Tuan Alhidayah Sutam</span>
+<body class="page-transition">
+    <header class="main-header">
+        <div class="profile-header-top">
+            <button class="back-btn" onclick="location.href='/home'">← Kembali</button>
+            <h1 style="flex:1; text-align:center; font-size:1.1rem; margin-right:60px;">STAS PROFILE</h1>
         </div>
-      </div>
-
-      <div class="topbar-actions">
-        <div class="session-pill">
-          <span class="dot"></span>
-          Signed in as <strong>{{ username }}</strong>
-        </div>
-        <a href="{{ url_for('logout') }}" class="btn btn-ghost">Log out</a>
-      </div>
     </header>
 
-    <a href="{{ url_for('index') }}" class="back-link">
-      <svg viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Back to all members
-    </a>
+    <main class="content-area">
+        <div class="profile-card">
+            <div class="profile-avatar-wrapper">
+                {% if member.avatar %}
+                    <img src="/avatar/{{ member.avatar }}" alt="Avatar" class="profile-avatar">
+                {% else %}
+                    <div class="profile-avatar-fallback">{{ member.letter }}</div>
+                {% endif %}
+            </div>
+            
+            <h2 class="profile-name">{{ member.nama }}</h2>
+            <div class="profile-tag">Anggota STAS</div>
+            
+            <div class="profile-section">
+                <h3>Deskripsi</h3>
+                <p class="profile-desk">{{ member.desk if member.desk else 'Tidak ada deskripsi.' }}</p>
+            </div>
 
-    <section class="profile-header">
-      <div class="profile-avatar" data-avatar-key="{{ member.id }}">{{ member.initial }}</div>
-      <div class="profile-header-text">
-        <h1>{{ member.nama }}</h1>
-        <span class="profile-id-tag">@{{ member.id }}</span>
-      </div>
-    </section>
-
-    <div class="profile-grid">
-      <div class="profile-section">
-        <div class="profile-section-label">
-          <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M3 9h18" stroke="currentColor" stroke-width="1.5"/></svg>
-          Description
+            <div class="profile-section">
+                <h3>Database Entry</h3>
+                <div class="database-box">
+                    <pre>{{ member.database if member.database else 'Kosong.' }}</pre>
+                </div>
+            </div>
         </div>
-        <div class="profile-section-body">{{ member.desk }}</div>
-      </div>
+    </main>
 
-      <div class="profile-section">
-        <div class="profile-section-label">
-          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          Identity
-        </div>
-        <div class="profile-section-body">Username: {{ member.id }}&#10;Display name: {{ member.nama }}</div>
-      </div>
-
-      <div class="profile-section full">
-        <div class="profile-section-label">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3z" stroke="currentColor" stroke-width="1.5"/><path d="M4 7v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7" stroke="currentColor" stroke-width="1.5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" stroke="currentColor" stroke-width="1.5"/></svg>
-          Database Profile
-        </div>
-        <div class="profile-section-body">{{ member.database }}</div>
-      </div>
-    </div>
-
-  </div>
-
-  <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <nav class="bottom-nav">
+        <a href="/home" class="nav-item">GENERAL</a>
+        <a href="/search" class="nav-item">PEMBARUAN</a>
+        <a href="/ai" class="nav-item">AI STAS</a>
+        <a href="/admin" class="nav-item">ADMIN UI</a>
+    </nav>
+    <script src="/static/app.js"></script>
 </body>
 </html>
