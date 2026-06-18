@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>STAS - Stickman War Arena</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.socketio.org/4.5.4/socketio.min.js"></script>
+    <style>
+        body { padding: 0; margin: 0; background-color: #000; overflow: hidden; touch-action: none; }
+        .game-header { position: absolute; top: 10px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; box-sizing: border-box; z-index: 10; color: white; pointer-events: none; }
+        .health-bar { width: 120px; height: 14px; background: #333; border: 2px solid #fff; border-radius: 4px; overflow: hidden; }
+        .hp-fill { height: 100%; width: 100%; transition: width 0.1s; }
+        #hp1 { background: #ff4444; } #hp2 { background: #0088ff; }
+        #gameCanvas { display: block; background: #111; width: 100vw; height: 100vh; }
+        
+        /* Gaya Analog Sentuh Layar */
+        .joystick-container { position: absolute; bottom: 30px; width: 90px; height: 90px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 100; }
+        .joystick-knob { width: 40px; height: 40px; background: rgba(255,255,255,0.5); border-radius: 50%; position: absolute; }
+        .btn-action { position: absolute; bottom: 35px; width: 60px; height: 60px; background: rgba(255, 68, 68, 0.4); border: 2px solid #ff4444; border-radius: 50%; z-index: 100; color: white; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+        
+        /* Posisi Kontrol Player 1 (Kiri) */
+        #joyLeft1 { left: 20px; } #btnAttack1 { left: 130px; }
+        /* Posisi Kontrol Player 2 (Kanan / Khusus Mode 1 HP) */
+        #joyLeft2 { right: 130px; } #btnAttack2 { right: 20px; background: rgba(0, 136, 255, 0.4); border-color: #0088ff; }
+        .exit-btn { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); padding: 6px 14px; background: rgba(255,255,255,0.2); border: 1px solid white; color: white; text-decoration: none; font-size: 0.8rem; border-radius: 4px; z-index: 200; }
+    </style>
+</head>
+<body>
+
+    <div class="game-header">
+        <div>
+            <div id="p1-name" style="color: #ff4444; font-weight: bold;">PLAYER 1</div>
+            <div class="health-bar"><div id="hp1" class="hp-fill"></div></div>
+        </div>
+        <div>
+            <div id="p2-name" style="color: #0088ff; font-weight: bold;">PLAYER 2</div>
+            <div class="health-bar"><div id="hp2" class="hp-fill"></div></div>
+        </div>
+    </div>
+
+    <a href="/games" class="exit-btn">Keluar Arena</a>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="joyLeft1" class="joystick-container"><div id="knob1" class="joystick-knob"></div></div>
+    <div id="btnAttack1" class="btn-action">HIT</div>
+
+    <div id="joyLeft2" class="joystick-container"><div id="knob2" class="joystick-knob"></div></div>
+    <div id="btnAttack2" class="btn-action">HIT</div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Set ukuran resolusi internal canvas permainan
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Parameter Konstruksi Konfigurasi Game dari Backend
+        const GAME_MODE = "{{ mode }}"; // 'local' atau 'online'
+        const ROOM_ID = "{{ room }}";
+        const USERNAME = "{{ username }}";
+        let MY_ROLE = "player1"; // Bawaan default jika main lokal
+
+        // State Karakter Pemain
+        let p1 = { x: 150, y: canvas.height - 120, hp: 100, isAttacking: false, flip: false, color: '#ff4444' };
+        let p2 = { x: canvas.width - 150, y: canvas.height - 120, hp: 100, isAttacking: false, flip: true, color: '#0088ff' };
+
+        // Sembunyikan kontrol Player 2 jika bermain beda HP (karena analog kanan diganti oleh input HP lawan)
+        if (GAME_MODE === "online") {
+            document.getElementById("joyLeft2").style.display = "none";
+            document.getElementById("btnAttack2").style.display = "none";
+            document.getElementById("p1-name").textContent = USERNAME + " (Anda)";
+            document.getElementById("p2-name").textContent = "Mencari Lawan...";
+        } else {
+            document.getElementById("p1-name").textContent = "P1 (Kiri)";
+            document.getElementById("p2-name").textContent = "P2 (Kanan)";
+        }
+
+        // =====================================================================
+        // LOGIKA UTARA: KONEKSI MULTIPLAYER ONLINE (WEB-SOCKET)
+        // =====================================================================
+        let socket = null;
+        if (GAME_MODE === "online") {
+            socket = io();
+            socket.emit('join_game', { room: ROOM_ID, username: USERNAME });
+
+            socket.on('game_assigned', function(data) {
+                MY_ROLE = data.role;
+                if (data.all_players.length > 1) {
+                    if (MY_ROLE === "player1") {
+                        document.getElementById("p2-name").textContent = data.all_players[1];
+                    } else {
+                        document.getElementById("p1-name").textContent = data.all_players[0];
+                        document.getElementById("p2-name").textContent = USERNAME + " (Anda)";
+                    }
+                }
+            });
+
+            socket.on('enemy_moved', function(data) {
+                if (MY_ROLE === "player1") {
+                    p2.x = data.x; p2.y = data.y; p2.hp = data.hp; p2.isAttacking = data.isAttacking; p2.flip = data.flip;
+                } else {
+                    p1.x = data.x; p1.y = data.y; p1.hp = data.hp; p1.isAttacking = data.isAttacking; p1.flip = data.flip;
+                }
+                updateHealthBars();
+            });
+        }
+
+        function kirimDataKeMusuh() {
+            if (GAME_MODE === "online" && socket) {
+                let stateYangDikirim = MY_ROLE === "player1" ? p1 : p2;
+                socket.emit('update_player_state', {
+                    room: ROOM_ID, x: stateYangDikirim.x, y: stateYangDikirim.y,
+                    hp: stateYangDikirim.hp, isAttacking: stateYangDikirim.isAttacking, flip: stateYangDikirim.flip
+                });
+            }
+        }
+
+        // =====================================================================
+        // ENGINE GRAFIS: RENDERING STICKMAN 2D CANVAS
+        // =====================================================================
+        function drawStickman(p) {
+            ctx.save();
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = p.color;
+            ctx.fillStyle = p.color;
+
+            // Kepala Lingkaran
+            ctx.beginPath();
+            ctx.arc(p.x, p.y - 60, 12, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Badan Utama
+            ctx.beginPath(); ctx.moveTo(p.x, p.y - 48); ctx.lineTo(p.x, p.y - 20); ctx.stroke();
+
+            // Kaki Kiri & Kanan
+            ctx.beginPath(); ctx.moveTo(p.x, p.y - 20); ctx.lineTo(p.x - 15, p.y); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(p.x, p.y - 20); ctx.lineTo(p.x + 15, p.y); ctx.stroke();
+
+            // Tangan (Jika Menyerang Animasi Pukulan Lurus)
+            ctx.beginPath();
+            if (p.isAttacking) {
+                let jangkauanPukul = p.flip ? p.x - 30 : p.x + 30;
+                ctx.moveTo(p.x, p.y - 40); ctx.lineTo(jangkauanPukul, p.y - 40);
+                // Efek Aura Pukulan
+                ctx.fillStyle = "rgba(255,255,255,0.4)";
+                ctx.fillRect(jangkauanPukul - (p.flip?2:0), p.y - 45, 8, 10);
+            } else {
+                ctx.moveTo(p.x, p.y - 40); ctx.lineTo(p.x - 12, p.y - 25);
+                ctx.moveTo(p.x, p.y - 40); ctx.lineTo(p.x + 12, p.y - 25);
+            }
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function updateHealthBars() {
+            document.getElementById("hp1").style.width = p1.hp + "%";
+            document.getElementById("hp2").style.width = p2.hp + "%";
+        }
+
+        // =====================================================================
+        // ENGINE INPUT CONTROLLER: ANALOG SENTUH VIRTUAL
+        // =====================================================================
+        function setupJoystick(containerId, knobId, onMove, onEnd) {
+            const container = document.getElementById(containerId);
+            const knob = document.getElementById(knobId);
+            if (!container || !knob) return;
+
+            let activeTouchId = null;
+
+            container.addEventListener('touchstart', (e) => {
+                if (activeTouchId !== null) return;
+                const touch = e.changedTouches[0];
+                activeTouchId = touch.identifier;
+            });
+
+            container.addEventListener('touchmove', (e) => {
+                if (activeTouchId === null) return;
+                let touch = null;
+                for (let t of e.touches) {
+                    if (t.identifier === activeTouchId) { touch = t; break; }
+                }
+                if (!touch) return;
+
+                const rect = container.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+
+                let dirX = touch.clientX - centerX;
+                let dirY = touch.clientY - centerY;
+                let jarak = Math.min(30, Math.sqrt(dirX*dirX + dirY*dirY));
+
+                let sudut = Math.atan2(dirY, dirX);
+                let knobX = jarak * Math.cos(sudut);
+                let knobY = jarak * Math.sin(sudut);
+
+                knob.style.transform = `translate(${knobX}px, ${knobY}px)`;
+                onMove(knobX / 30, knobY / 30);
+            });
+
+            container.addEventListener('touchend', (e) => {
+                for (let t of e.changedTouches) {
+                    if (t.identifier === activeTouchId) {
+                        activeTouchId = null;
+                        knob.style.transform = 'translate(0px, 0px)';
+                        onEnd();
+                        break;
+                    }
+                }
+            });
+        }
+
+        // Jalankan Pemicu Gerak Player 1
+        let p1SpeedX = 0;
+        setupJoystick('joyLeft1', 'knob1', (vx, vy) => {
+            if (GAME_MODE === "online" && MY_ROLE !== "player1") return;
+            p1SpeedX = vx * 5;
+            if (vx < 0) p1.flip = true; else if (vx > 0) p1.flip = false;
+        }, () => { p1SpeedX = 0; kirimDataKeMusuh(); });
+
+        // Jalankan Pemicu Gerak Player 2 (Hanya aktif di Mode 1 HP)
+        let p2SpeedX = 0;
+        setupJoystick('joyLeft2', 'knob2', (vx, vy) => {
+            if (GAME_MODE === "online") return;
+            p2SpeedX = vx * 5;
+            if (vx < 0) p2.flip = true; else if (vx > 0) p2.flip = false;
+        }, () => { p2SpeedX = 0; });
+
+        // Aksi Tombol Pukulan (HIT)
+        document.getElementById("btnAttack1").addEventListener('touchstart', () => {
+            if (GAME_MODE === "online" && MY_ROLE !== "player1") return;
+            p1.isAttacking = true;
+            // Deteksi tabrakan fisik pukulan (Hitbox)
+            if (Math.abs(p1.x - p2.x) < 45) { p2.hp = Math.max(0, p2.hp - 5); updateHealthBars(); }
+            kirimDataKeMusuh();
+            setTimeout(() => { p1.isAttacking = false; kirimDataKeMusuh(); }, 150);
+        });
+
+        document.getElementById("btnAttack2").addEventListener('touchstart', () => {
+            if (GAME_MODE === "online") return;
+            p2.isAttacking = true;
+            if (Math.abs(p1.x - p2.x) < 45) { p1.hp = Math.max(0, p1.hp - 5); updateHealthBars(); }
+            setTimeout(() => { p2.isAttacking = false; }, 150);
+        });
+
+        // Loop Game Utama (Menggambar Ulang Arena 60 Frame Per Detik)
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Lantai Dasar Arena
+            ctx.fillStyle = "#222";
+            ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+            ctx.strokeStyle = varName('--border-color', '#30363d');
+            ctx.beginPath(); ctx.moveTo(0, canvas.height - 50); ctx.lineTo(canvas.width, canvas.height - 50); ctx.stroke();
+
+            // Update posisi koordinat horizontal berdasarkan input analog
+            p1.x = Math.max(20, Math.min(canvas.width - 20, p1.x + p1SpeedX));
+            p2.x = Math.max(20, Math.min(canvas.width - 20, p2.x + p2SpeedX));
+
+            if (p1SpeedX !== 0 || p2SpeedX !== 0) { kirimDataKeMusuh(); }
+
+            // Gambar ulang kedua karakter stickman ke layar canvas
+            drawStickman(p1);
+            drawStickman(p2);
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function varName(name, fallback) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+        }
+
+        // Mulai engine game loop
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+  </html>
+    
