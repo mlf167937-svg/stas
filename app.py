@@ -3,47 +3,56 @@ import os
 
 app = Flask(__name__)
 
-BASE = "stas"
+BASE_DIR = "stas"
 
-def load_members():
+def get_members():
     members = []
 
-    nama_path = os.path.join(BASE, "nama")
-    desk_path = os.path.join(BASE, "desk")
-    db_path = os.path.join(BASE, "database")
+    nama_dir = os.path.join(BASE_DIR, "nama")
+    desk_dir = os.path.join(BASE_DIR, "desk")
+    db_dir = os.path.join(BASE_DIR, "database")
 
-    for file in os.listdir(nama_path):
-        if file.endswith(".txt"):
-            name = file.replace(".txt", "")
+    files = os.listdir(nama_dir)
 
-            try:
-                with open(os.path.join(nama_path, file), "r", encoding="utf-8") as f:
-                    nama = f.read().strip()
+    for file in files:
+        if not file.endswith(".txt"):
+            continue
 
-                with open(os.path.join(desk_path, file), "r", encoding="utf-8") as f:
-                    desk = f.read().strip()
+        user_id = file.replace(".txt", "")
 
-                with open(os.path.join(db_path, file), "r", encoding="utf-8") as f:
-                    data = f.read().strip()
+        nama_path = os.path.join(nama_dir, file)
+        desk_path = os.path.join(desk_dir, file)
+        db_path = os.path.join(db_dir, file)
 
-                members.append({
-                    "id": name,
-                    "nama": nama,
-                    "desk": desk,
-                    "data": data
-                })
+        try:
+            with open(nama_path, "r", encoding="utf-8") as f:
+                nama = f.read().strip()
 
-            except:
-                pass
+            with open(desk_path, "r", encoding="utf-8") as f:
+                desk = f.read().strip()
+
+            with open(db_path, "r", encoding="utf-8") as f:
+                db = f.read().strip()
+
+            members.append({
+                "id": user_id,
+                "nama": nama,
+                "desk": desk,
+                "db": db
+            })
+
+        except:
+            continue
 
     return members
 
 
 @app.route("/")
 def index():
-    members = load_members()
+    members = get_members()
     return render_template("index.html", members=members)
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
