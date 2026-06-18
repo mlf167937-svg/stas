@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>STAS Community - {{ member.nama }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="page-transition">
+    <header class="main-header">
+        <div class="profile-header-top">
+            <button class="back-btn" onclick="location.href='/home'">← Kembali</button>
+            <h1 style="flex:1; text-align:center; font-size:1.1rem; margin-right:60px;">STAS PROFILE</h1>
+        </div>
+    </header>
+
+    <main class="content-area">
+        <div class="profile-card">
+            <div class="profile-avatar-wrapper">
+                {% if member.avatar %}
+                    <img src="/avatar/{{ member.avatar }}" alt="Avatar" class="profile-avatar">
+                {% else %}
+                    <div class="profile-avatar-fallback">{{ member.letter }}</div>
+                {% endif %}
+            </div>
+            
+            <h2 class="profile-name">{{ member.nama }}</h2>
+            <div class="profile-tag">Anggota STAS</div>
+            
+            <div class="profile-section">
+                <h3>Deskripsi</h3>
+                <p class="profile-desk">{{ member.desk if member.desk else 'Tidak ada deskripsi.' }}</p>
+            </div>
+
+            <div class="profile-section">
+                <h3>Database Entry</h3>
+                <div class="database-box">
+                    <pre>{{ member.database if member.database else 'Kosong.' }}</pre>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="/home" class="nav-item">GENERAL</a>
+        <a href="/search" class="nav-item">PEMBARUAN</a>
+        <a href="/ai" class="nav-item">AI STAS</a>
+        <a href="/admin" class="nav-item">ADMIN UI</a>
+    </nav>
+    <script src="/static/app.js"></script>
+</body>
+</html>
