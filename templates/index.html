@@ -1,1 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>STAS Community</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
 
+<body>
+
+<header>
+  <h1>STAS COMMUNITY</h1>
+  <p>Sang Tuan Alhidayah Sutam</p>
+</header>
+
+<main>
+
+  <section class="grid">
+
+    {% for m in members %}
+    <div class="card">
+
+      <div class="avatar">
+        {{ m.nama[0] }}
+      </div>
+
+      <h3>{{ m.nama }}</h3>
+      <p>{{ m.desk }}</p>
+
+      <small>ID: {{ m.id }}</small>
+
+    </div>
+    {% endfor %}
+
+  </section>
+
+</main>
+
+</body>
+</html>
