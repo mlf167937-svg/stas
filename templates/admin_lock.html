@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STAS - Admin Verification</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .lock-layout { display: flex; justify-content: center; align-items: center; height: 80vh; padding: 20px; }
+        .lock-box { width: 100%; max-width: 400px; background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 32px; text-align: center; }
+        .form-input { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--bg-dark); color: var(--text-primary); font-size: 0.95rem; margin-bottom: 16px; outline: none; text-align: center; }
+        .form-input:focus { border-color: #f85149; }
+        .lock-btn { width: 100%; padding: 12px; font-weight: bold; background-color: #f85149; color: white; border: none; border-radius: 6px; cursor: pointer; }
+        .err-msg { color: #f85149; font-size: 0.85rem; margin-bottom: 16px; }
+    </style>
+</head>
+<body class="page-transition">
+    <header class="main-header">
+        <h1>STAS SYSTEM</h1>
+        <p class="subtitle">Protected Administrator Console</p>
+    </header>
+    <div class="lock-layout">
+        <div class="lock-box">
+            <h3 style="margin-bottom: 8px; color: #f85149;">Akses Terkunci</h3>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 24px;">Masukkan password administrator utama untuk membuka dashboard ini.</p>
+            
+            {% if error %}
+                <div class="err-msg">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="/admin">
+                <input type="password" name="admin_password" class="form-input" placeholder="••••••••" required>
+                <button type="submit" class="lock-btn">Buka Gembok UI</button>
+            </form>
+        </div>
+    </div>
+    <nav class="bottom-nav">
+        <a href="/home" class="nav-item">GENERAL</a>
+        <a href="/search" class="nav-item">PEMBARUAN</a>
+        <a href="/ai" class="nav-item">AI STAS</a>
+        <a href="/admin" class="nav-item active">ADMIN UI</a>
+    </nav>
+</body>
+</html>
