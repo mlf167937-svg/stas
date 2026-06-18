@@ -1,13 +1,13 @@
 import os
 import sys
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, jsonify, session
-from openai import OpenAI
 
 app = Flask(__name__)
+# Key untuk enkripsi session login web
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "stas_super_secret_session_encryption_key_2026")
 
 # =====================================================================
-# 1. FILE SYSTEM SETUP & AUTOMATIC DIRECTORY CREATION
+# 1. SETTING FOLDER DIREKTORI
 # =====================================================================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STAS_DIR = os.path.join(BASE_DIR, 'stas')
@@ -19,17 +19,40 @@ AVATAR_DIR = os.path.join(STAS_DIR, 'avatar')
 for folder in [NAMA_DIR, DESK_DIR, DB_DIR, AVATAR_DIR]:
     os.makedirs(folder, exist_ok=True)
 
-# =====================================================================
-# 2. OPENAI CLIENT INITIALIZATION
-# =====================================================================
-OPENAI_KEY = os.environ.get("OPENAI_API_KEY")
-try:
-    client = OpenAI(api_key=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) if OPENAI_KEY else None
-except Exception as e:
-    client = None
+# PASSWORD KHUSUS UNTUK MEMBUKA ADMIN UI (Silakan ganti sesuai keinginan)
+ADMIN_PASSWORD_KEY = "adminstas2026"
 
 # =====================================================================
-# 3. CONTROLLER UTILITIES (PASSWORD CHECKER INCLUDED)
+# 2. ENGINE AI LOKAL (LOGIKA IF-ELSE)
+# =====================================================================
+def respon_ai_lokal(pesan_user):
+    """Menggantikan OpenAI API dengan logika deteksi kata kunci berbasis If-Else."""
+    pesan = pesan_user.lower().strip()
+    
+    # Deteksi Kata Kunci & Jawaban Otomatis
+    if "halo" in pesan or "hai" in pesan or "assalamualaikum" in pesan:
+        return "Halo juga, cuks! Saya AI STAS lokal. Ada yang bisa saya bantu untuk komunitas hari ini?"
+        
+    elif "siapa kamu" in pesan or "artinya ai" in pesan:
+        return "Saya adalah AI STAS, sebuah program pintar berbasis logika lokal yang dibuat khusus untuk memandu anggota Sang Tuan Alhidayah Sutam."
+        
+    elif "stas" in pesan or "komunitas" in pesan:
+        return "STAS (Sang Tuan Alhidayah Sutam) adalah komunitas tempat berkumpulnya para Tuan hebat. Di sini kita berbagi informasi, teknologi, dan mempererat solidaritas."
+        
+    elif "password" in pesan or "login" in pesan:
+        return "Untuk login, gunakan nama file database kamu sebagai ID (misal: 'rauf') dan pastikan teks 'PASSWORD: pw_kamu' sudah tertulis di dalam file stas/database/nama_kamu.txt."
+        
+    elif "admin" in pesan or "ui admin" in pesan:
+        return "Halaman Admin UI digunakan untuk mengelola data direktori file. Untuk masuk, diperlukan password administrator khusus."
+        
+    elif "game" in pesan or "main" in pesan:
+        return "Waduh untuk fitur Game lagi dipersiapkan sama pengembang nih, cuks! Ditunggu saja ya pembaruan berikutnya."
+        
+    # Jawaban Standar jika tidak ada kata kunci yang cocok
+    return "Maaf cuks, AI STAS lokal belum paham maksudmu. Coba tanya hal lain seputar 'STAS', 'Login', 'Admin UI', atau sapa dengan 'Halo'."
+
+# =====================================================================
+# 3. UTILITAS DATABASE FILE
 # =====================================================================
 def load_members():
     members = []
@@ -61,7 +84,6 @@ def load_members():
     return sorted(members, key=lambda x: x['nama'].lower())
 
 def verify_user_login(user_id, password_input):
-    """Reads the member's database file to parse their unique password line."""
     db_path = os.path.join(DB_DIR, f"{user_id}.txt")
     if not os.path.exists(db_path):
         return False
@@ -91,7 +113,6 @@ def get_member(user_id):
         database = ""
         if os.path.exists(db_path):
             with open(db_path, 'r', encoding='utf-8') as f:
-                # Filter password string out of view so it stays hidden on the profile screen
                 lines = f.readlines()
                 database = "".join([l for l in lines if "PASSWORD:" not in l.upper()]).strip()
         avatar_file = None
@@ -107,7 +128,7 @@ def get_member(user_id):
         return None
 
 # =====================================================================
-# 4. AUTHENTICATION ROUTING CONTROLLERS
+# 4. ROUTING ROUTE & PROTEKSI LOGIN
 # =====================================================================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -127,6 +148,7 @@ def login():
 @app.route('/logout')
 def logout():
     session.pop('user', None)
+    session.pop('admin_authed', None) # Bersihkan status admin pas logout
     return redirect(url_for('login'))
 
 @app.route('/')
@@ -148,10 +170,29 @@ def ai():
     if 'user' not in session: return redirect(url_for('login'))
     return render_template('ai.html')
 
-@app.route('/admin')
+# =====================================================================
+# 5. ADMIN UI WITH SEPARATE PASSWORD PROTECT
+# =====================================================================
+@app.route('/admin', methods=['GET', 'POST'])
 def admin():
-    if 'user' not in session: return redirect(url_for('login'))
-    return render_template('admin.html', members=load_members())
+    if 'user' not in session: 
+        return redirect(url_for('login'))
+        
+    # Jika admin sudah berhasil memasukkan password sebelumnya di sesi ini
+    if session.get('admin_authed') == True:
+        return render_template('admin.html', members=load_members())
+        
+    error = None
+    if request.method == 'POST':
+        admin_pw = request.form.get('admin_password', '').strip()
+        if admin_pw == ADMIN_PASSWORD_KEY:
+            session['admin_authed'] = True
+            return render_template('admin.html', members=load_members())
+        else:
+            error = "Password Akses Administrator Salah!"
+            
+    # Tampilkan template form khusus gembok password admin jika belum diautentikasi
+    return render_template('admin_lock.html', error=error)
 
 @app.route('/user/<user_id>')
 def profile(user_id):
@@ -164,26 +205,21 @@ def profile(user_id):
 def serve_avatar(filename):
     return send_from_directory(AVATAR_DIR, filename)
 
+# =====================================================================
+# 6. ENDPOINT CHAT API (MENGGUNAKAN LOGIKA LOKAL)
+# =====================================================================
 @app.route('/api/chat', methods=['POST'])
 def api_chat():
     if 'user' not in session: return jsonify({'error': 'Unauthorized'}), 401
     data = request.get_json() or {}
     user_message = data.get('message', '').strip()
-    if not user_message: return jsonify({'error': 'Pesan kosong.'}), 400
-    if client is None:
-        return jsonify({'reply': 'Sistem AI Terbuka Terputus: Silakan konfigurasi nilai "OPENAI_API_KEY" pada menu Dashboard Environment Render Anda.'}), 200
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "Anda adalah AI STAS, asisten pintar untuk sistem komunitas Sang Tuan Alhidayah Sutam (STAS)."},
-                {"role": "user", "content": user_message}
-            ],
-            max_tokens=400
-        )
-        return jsonify({'reply': response.choices[0].message.content.strip()})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    
+    if not user_message: 
+        return jsonify({'error': 'Pesan kosong.'}), 400
+        
+    # Mengambil respons dari fungsi if-else di atas
+    jawaban = respon_ai_lokal(user_message)
+    return jsonify({'reply': jawaban})
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
