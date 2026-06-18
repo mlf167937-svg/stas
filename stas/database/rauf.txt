@@ -1,3 +1,4 @@
+PASSWORD: raufrex123
 ===========================================
 STAS INTERNAL MEMBER DATA BASE
 ===========================================
@@ -11,5 +12,5 @@ KREDENSI & LOG:
 - Hak Akses: Full  (Admin Dashboard)
 - Lisensi Komunitas: AKTIF hingga Desember 2027
 - Kontak Darurat: +62 838-7302-4650
-- Catatan: Aktif berkontribusi pada pembuatan sistem web.
+- Catatan: Aktif berkontribusi pada sistem web.
 ===========================================
