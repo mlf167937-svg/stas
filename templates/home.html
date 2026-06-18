@@ -1,36 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>STAS HOME</title>
+  <title>STAS Community</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 
 <body>
 
-<!-- TOP BAR -->
 <div class="topbar">
-  <h3>STAS</h3>
-  <a href="/logout">Logout</a>
+  <h3>STAS COMMUNITY</h3>
+  <a href="/logout">Keluar</a>
 </div>
 
-<!-- CONTENT -->
-<div class="content">
+<!-- GENERAL -->
+<div id="general" class="page active">
+  <h2>General Community</h2>
+  <p>Selamat datang {{ user }} di STAS</p>
 
-  <div id="general" class="page active">
-    <h2>General</h2>
-    <p>Welcome {{ user }}</p>
-  </div>
+  <hr>
 
-  <div id="search" class="page">
-    <h2>Search Profile</h2>
-    <input placeholder="Cari user...">
-  </div>
+  <p>📢 Info komunitas akan muncul di sini</p>
+</div>
 
-  <div id="profile" class="page">
-    <h2>Profile</h2>
-    <p>User: {{ user }}</p>
-  </div>
+<!-- SEARCH -->
+<div id="search" class="page">
+  <h2>Search Member</h2>
+  <input placeholder="Cari user komunitas...">
+</div>
 
+<!-- PROFILE -->
+<div id="profile" class="page">
+  <h2>Profile</h2>
+  <p>User: {{ user }}</p>
+  <p>Community: STAS</p>
 </div>
 
 <!-- BOTTOM NAV (WA STYLE) -->
