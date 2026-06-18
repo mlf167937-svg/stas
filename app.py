@@ -28,15 +28,12 @@ ADMIN_PASSWORD_KEY = "adminstas2026"
 ACTIVE_ROOMS = {}
 
 # =====================================================================
-# 2. ENGINE AI LOKAL (DENGAN TRIGER "RUN GAME")
+# 2. ENGINE AI LOKAL
 # =====================================================================
 def respon_ai_lokal(pesan_user):
     pesan = pesan_user.lower().strip()
-    
     if "run game" in pesan or "main game" in pesan or "buka game" in pesan:
-        # Mengembalikan flag khusus berupa struktur json/teks agar di-render sebagai tombol oleh Javascript
         return "TRIGGER_GAME_BUTTON"
-        
     elif "halo" in pesan or "hai" in pesan or "assalamualaikum" in pesan:
         return "Halo juga, cuks! Saya AI STAS lokal. Ada yang bisa saya bantu hari ini?"
     elif "siapa kamu" in pesan:
@@ -45,7 +42,6 @@ def respon_ai_lokal(pesan_user):
         return "STAS adalah komunitas tempat berkumpulnya para Tuan hebat untuk berbagi info dan teknologi."
     elif "admin" in pesan:
         return "Menu Admin UI digunakan untuk mengelola berkas database anggota menggunakan password khusus admin."
-        
     return "Maaf cuks, AI STAS lokal belum paham maksudmu. Coba tanya hal lain atau ketik 'run game' jika ingin bermain!"
 
 # =====================================================================
@@ -90,19 +86,7 @@ def verify_user_login(user_id, password_input):
     return False
 
 # =====================================================================
-# 4. ROUTING WEB VIEW (NAVIGASI BARU: GENERAL, GAME, AI, ADMIN)
-# =====================================================================
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if 'user' in session: return redirect(url_for('home'))
-    error = None
-    if request.method == 'POST':
-        user_id = request.form.get('username', '').strip()
-        password = request.form.get('password', '').strip()
-        if verify_user_login(user_id, password):
-            session['user'] = user_id
-# =====================================================================
-# 4. ROUTING WEB VIEW (NAVIGASI BARU: GENERAL, GAME, AI, ADMIN)
+# 4. ROUTING WEB VIEW (VERSI BERSIH TIDAK DUPLIKAT)
 # =====================================================================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -130,20 +114,17 @@ def home():
     if 'user' not in session: return redirect(url_for('login'))
     return render_template('index.html', members=load_members())
 
-# PENGGANTI HALAMAN SEARCH (SEKARANG MENJADI SELECTION HUB MENU BANYAK GAMES)
 @app.route('/games')
 def games_hub():
     if 'user' not in session: return redirect(url_for('login'))
     return render_template('games_hub.html')
 
-# DETEKSI UTAMA: MENYESUAIKAN URL PLAY DARI APP.JS (1HP & ONLINE MULTIPLAYER)
+# ROUTE PLAYING GAME MENANGKAP VARIABEL SECARA DINAMIS
 @app.route('/play/<mode>')
 def game_stickman(mode):
     if 'user' not in session: return redirect(url_for('login'))
-    # mode akan bernilai '1hp' atau 'online' sesuai lemparan dari static/app.js
     room = request.args.get('room', 'default')
     username = request.args.get('username', session['user'])
-    
     return render_template('game_stickman.html', mode=mode, room=room, username=username)
 
 @app.route('/ai')
@@ -186,46 +167,38 @@ def api_chat():
     data = request.get_json() or {}
     user_message = data.get('message', '').strip()
     if not user_message: return jsonify({'error': 'Pesan kosong.'}), 400
-    
     jawaban = respon_ai_lokal(user_message)
     return jsonify({'reply': jawaban})
 
 # =====================================================================
-# 5. NETWORKING GAME LOGIC (SOCKET.IO MULTIPLAYER BEDA HP)
+# 5. NETWORKING GAME LOGIC (SOCKET.IO)
 # =====================================================================
 @socketio.on('join_game')
 def on_join(data):
     room = data.get('room', 'default')
     username = data.get('username', 'Player')
     join_room(room)
-    
     if room not in ACTIVE_ROOMS:
         ACTIVE_ROOMS[room] = []
-        
     if username not in ACTIVE_ROOMS[room]:
-        # Membatasi maksimal hanya 2 pemain di dalam satu room tarung
         if len(ACTIVE_ROOMS[room]) < 2:
             ACTIVE_ROOMS[room].append(username)
         else:
-            emit('room_full', {'message': 'Room ini sudah penuh cuks!'}, to=request.sid)
+            emit('room_full', {'message': 'Room penuh!'}, to=request.sid)
             return
-            
-    # Cari tahu indeks urutan untuk menentukan siapa Player 1 / Player 2
     role = "player1" if ACTIVE_ROOMS[room].index(username) == 0 else "player2"
-    
-    # Broadcast data room terbaru ke semua perangkat di room tersebut
     emit('game_assigned', {'role': role, 'all_players': ACTIVE_ROOMS[room]}, room=room)
 
 @socketio.on('update_player_state')
 def on_update(data):
     room = data.get('room', 'default')
-    # Kirim data pergerakan koordinat stickman ke musuh (include_self=False)
     emit('enemy_moved', data, room=room, include_self=False)
 
-# EVENT HANDLING JIKA ADA PEMAIN YANG LEPAS KONEKSI (DC)
 @socketio.on('disconnect')
 def on_disconnect():
     for room, players in list(ACTIVE_ROOMS.items()):
-        # Jika player terputus, bersihkan namanya dari room aktif
-        # Di sini kita bisa menambahkan reset jika diperlukan
         pass
+
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5000))
+    socketio.run(app, host='0.0.0.0', port=port, debug=True)
