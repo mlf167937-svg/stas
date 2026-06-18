@@ -8,32 +8,29 @@
 <body>
 
 <header>
-  <h1>STAS COMMUNITY</h1>
-  <p>Sang Tuan Alhidayah Sutam</p>
+  <div class="title">STAS COMMUNITY</div>
+  <div class="subtitle">Sang Tuan Alhidayah Sutam</div>
 </header>
 
-<main>
+<section class="container">
 
-  <section class="grid">
+  {% for m in members %}
+  <div class="card">
 
-    {% for m in members %}
-    <div class="card">
+    <div class="avatar">
+      {{ m.nama[0] }}
+    </div>
 
-      <div class="avatar">
-        {{ m.nama[0] }}
-      </div>
-
+    <div class="info">
       <h3>{{ m.nama }}</h3>
       <p>{{ m.desk }}</p>
-
-      <small>ID: {{ m.id }}</small>
-
+      <span>ID: {{ m.id }}</span>
     </div>
-    {% endfor %}
 
-  </section>
+  </div>
+  {% endfor %}
 
-</main>
+</section>
 
 </body>
 </html>
