@@ -5,7 +5,7 @@ from openai import OpenAI
 app = Flask(__name__)
 
 # Initialize OpenAI Client (Reads OPENAI_API_KEY environment variable)
-client = OpenAI(api_key=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)
+client = OpenAI(api_key=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)
 
 # Constants for file paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
