@@ -1,1 +1,625 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STAS Arena - Game Hub Hub</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0c;
+            --bg-card: #121216;
+            --bg-input: #1a1a24;
+            --accent-gold: #ffb703;
+            --accent-cyan: #00f5d4;
+            --text-main: #f8f9fa;
+            --text-muted: #8a8d98;
+            --border-neon: rgba(255, 183, 3, 0.2);
+        }
 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255, 183, 3, 0.03) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 245, 148, 0.03) 0%, transparent 40%);
+        }
+
+        .navbar {
+            background-color: rgba(18, 18, 22, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-logo {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-logo span {
+            color: var(--accent-gold);
+            text-shadow: 0 0 10px rgba(255, 183, 3, 0.5);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            color: var(--accent-gold);
+        }
+
+        .btn-logout {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.2);
+            padding: 6px 15px;
+            border-radius: 5px;
+            color: #ff4d4d;
+        }
+
+        .btn-logout:hover {
+            background: #ff4d4d;
+            color: white;
+            box-shadow: 0 0 10px rgba(255, 77, 77, 0.4);
+        }
+
+        .hub-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 5%;
+        }
+
+        .hub-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .hub-header h1 {
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .hub-header h1 span {
+            background: linear-gradient(to right, var(--accent-gold), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hub-header p {
+            color: var(--text-muted);
+            font-size: 16px;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .game-card {
+            background-color: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            cursor: pointer;
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.8));
+            z-index: 1;
+        }
+
+        .game-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--accent-gold);
+            box-shadow: 0 10px 30px rgba(255, 183, 3, 0.1);
+        }
+
+        .game-card.blockblast:hover {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 10px 30px rgba(0, 245, 212, 0.1);
+        }
+
+        .game-banner {
+            height: 200px;
+            width: 100%;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            background-color: #1a1a24;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .banner-icon {
+            font-size: 60px;
+            filter: drop-shadow(0 0 15px rgba(255,255,255,0.2));
+        }
+
+        .game-info {
+            padding: 25px;
+            position: relative;
+            z-index: 2;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .game-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .badge-online {
+            font-size: 11px;
+            background: rgba(0, 245, 212, 0.1);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            padding: 2px 8px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .badge-local {
+            font-size: 11px;
+            background: rgba(255, 183, 3, 0.1);
+            border: 1px solid var(--accent-gold);
+            color: var(--accent-gold);
+            padding: 2px 8px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .game-desc {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .btn-play {
+            width: 100%;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .game-card:hover .btn-play {
+            background: var(--accent-gold);
+            border-color: var(--accent-gold);
+            color: #000;
+            box-shadow: 0 0 15px rgba(255, 183, 3, 0.4);
+        }
+
+        .game-card.blockblast:hover .btn-play {
+            background: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 245, 212, 0.4);
+        }
+
+        /* MODAL POPUP SYSTEM */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-box {
+            background-color: var(--bg-card);
+            border: 1px solid var(--accent-gold);
+            box-shadow: 0 0 30px rgba(255, 183, 3, 0.15);
+            width: 90%;
+            max-width: 450px;
+            border-radius: 15px;
+            padding: 30px;
+            position: relative;
+            transform: scale(0.8);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: scale(1);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        .modal-close:hover {
+            color: var(--text-main);
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .modal-subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .mode-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .mode-btn {
+            background: var(--bg-input);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            width: 100%;
+        }
+
+        .mode-btn:hover {
+            border-color: var(--accent-gold);
+            background: rgba(255, 183, 3, 0.02);
+        }
+
+        .mode-icon {
+            font-size: 28px;
+        }
+
+        .mode-info h4 {
+            font-size: 16px;
+            color: var(--text-main);
+            margin-bottom: 2px;
+        }
+
+        .mode-info p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* ONLINE ROOM FORM CONTAINER */
+        .room-form-container {
+            display: none;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .form-input {
+            width: 100%;
+            background-color: var(--bg-input);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            padding: 10px 12px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 10px rgba(255, 183, 3, 0.1);
+        }
+
+        .btn-submit-room {
+            width: 100%;
+            background: var(--accent-gold);
+            border: none;
+            color: #000;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 5px;
+        }
+
+        .btn-submit-room:hover {
+            box-shadow: 0 0 15px rgba(255, 183, 3, 0.5);
+        }
+
+        .btn-back-modes {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 12px;
+            cursor: pointer;
+            display: block;
+            margin: 15px auto 0 auto;
+            text-decoration: underline;
+        }
+
+        .btn-back-modes:hover {
+            color: var(--text-main);
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/home" class="nav-logo">⚡ STAS <span>ARENA</span></a>
+        <div class="nav-links">
+            <a href="/home" class="nav-btn">Home</a>
+            <a href="/ai" class="nav-btn">AI Chat</a>
+            <a href="/games" class="nav-btn active">Games Hub</a>
+            <a href="/admin" class="nav-btn">Admin</a>
+            <a href="/logout" class="nav-btn btn-logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="hub-container">
+        <div class="hub-header">
+            <h1>Komunitas <span>STAS Games Hub</span></h1>
+            <p>Pilih arena lu, cuks! Main santai sendirian atau adu mekanik multiplayer real-time beda HP.</p>
+        </div>
+
+        <div class="game-grid">
+            <!-- GAME CARD 1: STICKMAN WAR -->
+            <div class="game-card" id="cardStickman">
+                <div class="game-banner">
+                    <div class="banner-icon">🥷</div>
+                </div>
+                <div class="game-info">
+                    <div>
+                        <div class="game-title">
+                            Stickman War 2D
+                            <span class="badge-online">Online / Local</span>
+                        </div>
+                        <p class="game-desc">Adu baku hantam stickman menggunakan fisika ragdoll secara real-time. Bisa dimainkan 1 HP berdua atau bikin room multiplayer beda HP.</p>
+                    </div>
+                    <button class="btn-play">MASUK ARENA</button>
+                </div>
+            </div>
+
+            <!-- GAME CARD 2: BLOCK BLAST -->
+            <div class="game-card blockblast" id="cardBlockBlast">
+                <div class="game-banner">
+                    <div class="banner-icon">🧱</div>
+                </div>
+                <div class="game-info">
+                    <div>
+                        <div class="game-title">
+                            STAS Block Blast
+                            <span class="badge-local">Single Player</span>
+                        </div>
+                        <p class="game-desc">Asah otak khas anak IT! Susun blok-blok kode berwarna untuk membersihkan baris grid dan raih skor tertinggi di leaderboard komunitas.</p>
+                    </div>
+                    <button class="btn-play">MULAI BLAST</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STICKMAN MODE SELECTION MODAL -->
+    <div class="modal-overlay" id="stickmanModal">
+        <div class="modal-box">
+            <button class="modal-close" id="closeModal">&times;</button>
+            <div class="modal-title">Pilih Mode Tarung</div>
+            <div class="modal-subtitle">Stickman Ragdoll Arena v1.0</div>
+            
+            <!-- SELECTION OPTIONS -->
+            <div class="mode-options" id="modalOptionsGroup">
+                <button class="mode-btn" id="btnModeLocal">
+                    <div class="mode-icon">📱</div>
+                    <div class="mode-info">
+                        <h4>Local 1 HP (Berdua)</h4>
+                        <p>Main bareng temen lu di satu layar HP yang sama.</p>
+                    </div>
+                </button>
+                
+                <button class="mode-btn" id="btnModeOnline">
+                    <div class="mode-icon">🌐</div>
+                    <div class="mode-info">
+                        <h4>Multiplayer Beda HP</h4>
+                        <p>Bikin atau masuk room room pakai koneksi Socket.IO real-time.</p>
+                    </div>
+                </button>
+            </div>
+
+            <!-- ONLINE ROOM INTERFACE FORM -->
+            <div class="room-form-container" id="roomFormInterface">
+                <div class="form-group">
+                    <label for="roomInput">Nama / Kode Room</label>
+                    <input type="text" id="roomInput" class="form-input" placeholder="Contoh: stas-gacor" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="usernameInput">Nickname Lu (In-Game)</label>
+                    <input type="text" id="usernameInput" class="form-input" placeholder="Contoh: Tuan_Alhidayah" autocomplete="off">
+                </div>
+                <button class="btn-submit-room" id="btnSubmitJoinOnline">JOIN & MULAI TARUNG</button>
+                <button class="btn-back-modes" id="btnBackToModes">Kembali pilih mode</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cardStickman = document.getElementById('cardStickman');
+            const cardBlockBlast = document.getElementById('cardBlockBlast');
+            
+            const stickmanModal = document.getElementById('stickmanModal');
+            const closeModal = document.getElementById('closeModal');
+            
+            const modalOptionsGroup = document.getElementById('modalOptionsGroup');
+            const roomFormInterface = document.getElementById('roomFormInterface');
+            
+            const btnModeLocal = document.getElementById('btnModeLocal');
+            const btnModeOnline = document.getElementById('btnModeOnline');
+            const btnBackToModes = document.getElementById('btnBackToModes');
+            
+            const btnSubmitJoinOnline = document.getElementById('btnSubmitJoinOnline');
+            const roomInput = document.getElementById('roomInput');
+            const usernameInput = document.getElementById('usernameInput');
+
+            // Trigger Modal Buka
+            cardStickman.addEventListener('click', () => {
+                stickmanModal.classList.add('active');
+            });
+
+            // Trigger BlockBlast Pindah Route
+            cardBlockBlast.addEventListener('click', () => {
+                window.location.href = '/play/blockblast';
+            });
+
+            // Tutup Modal
+            const resetDanTutupModal = () => {
+                stickmanModal.classList.remove('active');
+                setTimeout(() => {
+                    modalOptionsGroup.style.display = 'flex';
+                    roomFormInterface.style.display = 'none';
+                    roomInput.value = '';
+                    usernameInput.value = '';
+                }, 300);
+            };
+
+            closeModal.addEventListener('click', resetDanTutupModal);
+            stickmanModal.addEventListener('click', (e) => {
+                if (e.target === stickmanModal) resetDanTutupModal();
+            });
+
+            // Pindah Sub-Menu ke Form Room Online
+            btnModeOnline.addEventListener('click', () => {
+                modalOptionsGroup.style.display = 'none';
+                roomFormInterface.style.display = 'block';
+            });
+
+            // Kembali dari form Room ke pilihan utama
+            btnBackToModes.addEventListener('click', () => {
+                roomFormInterface.style.display = 'none';
+                modalOptionsGroup.style.display = 'flex';
+            });
+
+            // Eksekusi Pindah Route Game Mode Local
+            btnModeLocal.addEventListener('click', () => {
+                window.location.href = '/play/local?room=offline&username=Player';
+            });
+
+            // Eksekusi Pindah Route Game Mode Online Room
+            btnSubmitJoinOnline.addEventListener('click', () => {
+                const roomName = roomInput.value.trim();
+                const nickname = usernameInput.value.trim();
+
+                if (!roomName || !nickname) {
+                    alert('Nama Room dan Nickname wajib diisi, cuks!');
+                    return;
+                }
+
+                // Redirect dinamis melempar variabel URL query string ke Flask
+                window.location.href = `/play/online?room=${encodeURIComponent(roomName)}&username=${encodeURIComponent(nickname)}`;
+            });
+        });
+    </script>
+</body>
+</html>
