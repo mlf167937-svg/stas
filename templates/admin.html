@@ -2,46 +2,942 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>STAS Community - Admin</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body class="page-transition">
-    <header class="main-header">
-        <h1>STAS COMMUNITY</h1>
-        <p class="subtitle">Sang Tuan Alhidayah Sutam</p>
-        <div class="search-bar-container" onclick="location.href='/search'">
-            <input type="text" class="wa-search-bar" placeholder="Cari anggota, tanya komunitas, atau search AI..." readonly>
-        </div>
-    </header>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STAS Arena - Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    <main class="content-area">
-        <div class="admin-panel">
-            <h2>Admin Dashboard</h2>
-            <p class="subtitle" style="margin-bottom: 20px;">Manage Community Members</p>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0c 0%, #1a1a1f 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding-top: 80px;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 12, 0.95);
+            border-bottom: 2px solid #ffb703;
+            padding: 0 40px;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(255, 183, 3, 0.2);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 80px;
+        }
+
+        .nav-logo {
+            font-size: 1.8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ffb703 0%, #00f5d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+        }
+
+        .admin-badge {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8c42 100%);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #ffffff;
+            margin-left: 15px;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 12px 20px;
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+
+        .nav-link:hover {
+            color: #ffb703;
+            background: rgba(255, 183, 3, 0.2);
+        }
+
+        .nav-link.active {
+            color: #ffb703;
+            border-bottom: 2px solid #ffb703;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: rgba(255, 59, 48, 0.2);
+            border: 1px solid #ff3b30;
+            color: #ff6b6b;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 59, 48, 0.3);
+            box-shadow: 0 0 15px rgba(255, 59, 48, 0.4);
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: #ffb703;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+
+        /* Header */
+        .admin-header {
+            background: linear-gradient(135deg, rgba(255, 183, 3, 0.1) 0%, rgba(0, 245, 212, 0.1) 100%);
+            border: 2px solid #333340;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .admin-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -100px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255, 183, 3, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .admin-header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .admin-title {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #ffb703;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .admin-title-icon {
+            font-size: 2.5rem;
+        }
+
+        .admin-subtitle {
+            color: #aaaaaa;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+        }
+
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            background: rgba(30, 30, 35, 0.5);
+            border: 1px solid #333340;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-item-label {
+            font-size: 0.85rem;
+            color: #aaaaaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-item-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #00f5d4;
+        }
+
+        /* Tabs */
+        .tab-container {
+            margin-bottom: 30px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            border-bottom: 2px solid #333340;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            color: #aaaaaa;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            position: relative;
+            font-size: 0.95rem;
+        }
+
+        .tab-btn:hover {
+            color: #ffb703;
+        }
+
+        .tab-btn.active {
+            color: #ffb703;
+            border-bottom-color: #ffb703;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Tables */
+        .table-wrapper {
+            background: rgba(30, 30, 35, 0.8);
+            border: 2px solid #333340;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: linear-gradient(135deg, rgba(255, 183, 3, 0.15) 0%, rgba(0, 245, 212, 0.15) 100%);
+            border-bottom: 2px solid #333340;
+        }
+
+        th {
+            padding: 16px;
+            text-align: left;
+            color: #ffb703;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #333340;
+            color: #cccccc;
+        }
+
+        tbody tr {
+            transition: all 0.3s ease;
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 183, 3, 0.05);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-active {
+            background: rgba(52, 211, 153, 0.2);
+            color: #86efac;
+            border: 1px solid #34d399;
+        }
+
+        .status-inactive {
+            background: rgba(107, 114, 128, 0.2);
+            color: #d1d5db;
+            border: 1px solid #6b7280;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            border: 1px solid #ffb703;
+            background: rgba(255, 183, 3, 0.1);
+            color: #ffb703;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-small:hover {
+            background: rgba(255, 183, 3, 0.2);
+            box-shadow: 0 0 10px rgba(255, 183, 3, 0.3);
+        }
+
+        .btn-small.delete {
+            border-color: #ff3b30;
+            color: #ff6b6b;
+            background: rgba(255, 59, 48, 0.1);
+        }
+
+        .btn-small.delete:hover {
+            background: rgba(255, 59, 48, 0.2);
+            box-shadow: 0 0 10px rgba(255, 59, 48, 0.3);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #aaaaaa;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #cccccc;
+        }
+
+        /* Controls */
+        .table-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 10px 15px;
+            background: rgba(30, 30, 35, 0.8);
+            border: 2px solid #333340;
+            border-radius: 8px;
+            color: #ffffff;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: #00f5d4;
+            box-shadow: 0 0 15px rgba(0, 245, 212, 0.3);
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #ffb703 0%, #ffa500 100%);
+            border: none;
+            border-radius: 8px;
+            color: #0a0a0c;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .action-btn:hover {
+            box-shadow: 0 0 20px rgba(255, 183, 3, 0.5);
+            transform: translateY(-2px);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            .nav-container {
+                padding: 0 20px;
+            }
+
+            .admin-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            table {
+                font-size: 0.9rem;
+            }
+
+            th, td {
+                padding: 12px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0 20px;
+            }
+
+            .nav-container {
+                height: 70px;
+            }
+
+            .nav-menu {
+                position: absolute;
+                top: 70px;
+                left: 0;
+                right: 0;
+                flex-direction: column;
+                background: rgba(10, 10, 12, 0.98);
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease;
+                border-bottom: 2px solid #ffb703;
+            }
+
+            .nav-menu.active {
+                max-height: 500px;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            body {
+                padding-top: 70px;
+            }
+
+            .container {
+                padding: 20px 15px;
+            }
+
+            .admin-header {
+                padding: 20px;
+            }
+
+            .admin-title {
+                font-size: 1.5rem;
+            }
+
+            .admin-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .table-controls {
+                flex-direction: column;
+            }
+
+            .search-input {
+                min-width: 100%;
+            }
+
+            .action-btn {
+                width: 100%;
+            }
+
+            .tab-buttons {
+                flex-wrap: wrap;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn-small {
+                width: 100%;
+            }
+
+            table {
+                font-size: 0.8rem;
+            }
+
+            th, td {
+                padding: 10px 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px 10px;
+            }
+
+            .admin-title {
+                font-size: 1.3rem;
+            }
+
+            .admin-title-icon {
+                font-size: 2rem;
+            }
+
+            .admin-header {
+                padding: 15px;
+            }
+
+            .stat-item {
+                padding: 12px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .stat-item-label {
+                font-size: 0.75rem;
+            }
+
+            .stat-item-value {
+                font-size: 1.3rem;
+            }
+
+            .tab-btn {
+                padding: 10px 15px;
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 8px 6px;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div style="display: flex; align-items: center;">
+                <div class="nav-logo">STAS ARENA</div>
+                <span class="admin-badge">ADMIN</span>
+            </div>
             
-            <div class="admin-controls">
-                <button class="admin-btn add-btn">+ Tambah User</button>
+            <button class="menu-toggle" id="menuToggle">☰</button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="{{ url_for('index') }}" class="nav-link">Home</a></li>
+                <li><a href="{{ url_for('ai') }}" class="nav-link">AI Chat</a></li>
+                <li><a href="{{ url_for('games') }}" class="nav-link">Games</a></li>
+                <li><a href="{{ url_for('admin') }}" class="nav-link active">Admin</a></li>
+                <li><a href="{{ url_for('profile') }}" class="nav-link">Profile</a></li>
+            </ul>
+
+            <div class="user-menu">
+                <form action="{{ url_for('logout') }}" method="POST" style="margin: 0;">
+                    <button type="submit" class="logout-btn">Logout</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Header -->
+        <div class="admin-header">
+            <div class="admin-header-content">
+                <h1 class="admin-title">
+                    <span class="admin-title-icon">⚙️</span>
+                    Admin Control Panel
+                </h1>
+                <p class="admin-subtitle">Manajemen data dan statistik komunitas STAS Arena</p>
+                
+                <div class="admin-stats">
+                    <div class="stat-item">
+                        <div class="stat-item-label">Total Members</div>
+                        <div class="stat-item-value">{{ stats.total_members | default(0) }}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-item-label">Active Users</div>
+                        <div class="stat-item-value">{{ stats.active_users | default(0) }}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-item-label">Total Games</div>
+                        <div class="stat-item-value">{{ stats.total_games | default(0) }}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-item-label">Server Uptime</div>
+                        <div class="stat-item-value">{{ stats.uptime | default('99.9%') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Container -->
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="switchTab('users')">👥 Users</button>
+                <button class="tab-btn" onclick="switchTab('games')">🎮 Games</button>
+                <button class="tab-btn" onclick="switchTab('logs')">📋 Activity Logs</button>
+                <button class="tab-btn" onclick="switchTab('settings')">⚙️ Settings</button>
             </div>
 
-            <div class="admin-list">
-                {% for m in members %}
-                <div class="admin-list-item">
-                    <span class="admin-uid">{{ m.id }}</span>
-                    <span class="admin-uname">{{ m.nama }}</span>
-                    <button class="admin-btn del-btn">Hapus</button>
+            <!-- Users Tab -->
+            <div id="users" class="tab-content active">
+                <div class="table-controls">
+                    <input 
+                        type="text" 
+                        class="search-input" 
+                        id="userSearch" 
+                        placeholder="Cari user berdasarkan username atau email..."
+                    >
+                    <button class="action-btn" onclick="exportUsers()">📥 Export</button>
                 </div>
-                {% endfor %}
+                
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Join Date</th>
+                                <th>Status</th>
+                                <th>Role</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTable">
+                            {% if users %}
+                                {% for user in users %}
+                                    <tr>
+                                        <td><strong>{{ user.username }}</strong></td>
+                                        <td>{{ user.email }}</td>
+                                        <td>{{ user.join_date }}</td>
+                                        <td>
+                                            <span class="status-badge status-active">Active</span>
+                                        </td>
+                                        <td>{{ user.role | default('Member') }}</td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="btn-small" onclick="editUser('{{ user.username }}')">Edit</button>
+                                                <button class="btn-small delete" onclick="deleteUser('{{ user.username }}')">Hapus</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6">
+                                        <div class="empty-state">
+                                            <div class="empty-state-icon">👤</div>
+                                            <h3>Tidak ada user</h3>
+                                            <p>Belum ada data user yang tersimpan</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Games Tab -->
+            <div id="games" class="tab-content">
+                <div class="table-controls">
+                    <input 
+                        type="text" 
+                        class="search-input" 
+                        id="gameSearch" 
+                        placeholder="Cari game berdasarkan nama..."
+                    >
+                    <button class="action-btn" onclick="exportGames()">📥 Export</button>
+                </div>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Game Name</th>
+                                <th>Total Plays</th>
+                                <th>Avg Score</th>
+                                <th>Status</th>
+                                <th>Last Updated</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gameTable">
+                            {% if games %}
+                                {% for game in games %}
+                                    <tr>
+                                        <td><strong>{{ game.name }}</strong></td>
+                                        <td>{{ game.total_plays | default(0) }}</td>
+                                        <td>{{ game.avg_score | default(0) }}</td>
+                                        <td>
+                                            <span class="status-badge status-active">Live</span>
+                                        </td>
+                                        <td>{{ game.last_updated }}</td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="btn-small" onclick="editGame('{{ game.id }}')">Edit</button>
+                                                <button class="btn-small delete" onclick="deleteGame('{{ game.id }}')">Hapus</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6">
+                                        <div class="empty-state">
+                                            <div class="empty-state-icon">🎮</div>
+                                            <h3>Tidak ada game</h3>
+                                            <p>Belum ada data game yang tersimpan</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Logs Tab -->
+            <div id="logs" class="tab-content">
+                <div class="table-controls">
+                    <input 
+                        type="text" 
+                        class="search-input" 
+                        id="logSearch" 
+                        placeholder="Cari activity logs..."
+                    >
+                    <button class="action-btn" onclick="clearLogs()">🗑️ Clear Logs</button>
+                </div>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Details</th>
+                                <th>IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logTable">
+                            {% if logs %}
+                                {% for log in logs %}
+                                    <tr>
+                                        <td>{{ log.timestamp }}</td>
+                                        <td>{{ log.user }}</td>
+                                        <td><strong>{{ log.action }}</strong></td>
+                                        <td>{{ log.details }}</td>
+                                        <td><code>{{ log.ip_address }}</code></td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5">
+                                        <div class="empty-state">
+                                            <div class="empty-state-icon">📋</div>
+                                            <h3>Tidak ada logs</h3>
+                                            <p>Belum ada activity logs yang tersimpan</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings" class="tab-content">
+                <div style="background: rgba(30, 30, 35, 0.8); border: 2px solid #333340; border-radius: 15px; padding: 30px;">
+                    <h2 style="color: #ffb703; margin-bottom: 20px;">⚙️ System Settings</h2>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                        <div style="background: rgba(50, 50, 60, 0.5); padding: 20px; border-radius: 10px; border: 1px solid #333340;">
+                            <h3 style="color: #00f5d4; margin-bottom: 10px;">🔧 Maintenance Mode</h3>
+                            <p style="color: #aaaaaa; margin-bottom: 15px; font-size: 0.9rem;">Aktifkan mode maintenance untuk memperbarui server</p>
+                            <button class="action-btn" style="width: 100%;">Activate Maintenance</button>
+                        </div>
+
+                        <div style="background: rgba(50, 50, 60, 0.5); padding: 20px; border-radius: 10px; border: 1px solid #333340;">
+                            <h3 style="color: #00f5d4; margin-bottom: 10px;">💾 Database Backup</h3>
+                            <p style="color: #aaaaaa; margin-bottom: 15px; font-size: 0.9rem;">Buat backup data komunitas secara otomatis</p>
+                            <button class="action-btn" style="width: 100%;">Create Backup</button>
+                        </div>
+
+                        <div style="background: rgba(50, 50, 60, 0.5); padding: 20px; border-radius: 10px; border: 1px solid #333340;">
+                            <h3 style="color: #00f5d4; margin-bottom: 10px;">🔐 Security Audit</h3>
+                            <p style="color: #aaaaaa; margin-bottom: 15px; font-size: 0.9rem;">Scan sistem untuk keamanan dan vulnerability</p>
+                            <button class="action-btn" style="width: 100%;">Run Audit</button>
+                        </div>
+
+                        <div style="background: rgba(50, 50, 60, 0.5); padding: 20px; border-radius: 10px; border: 1px solid #333340;">
+                            <h3 style="color: #00f5d4; margin-bottom: 10px;">📊 Server Stats</h3>
+                            <p style="color: #aaaaaa; margin-bottom: 15px; font-size: 0.9rem;">Lihat statistik performa server real-time</p>
+                            <button class="action-btn" style="width: 100%;">View Stats</button>
+                        </div>
+
+                        <div style="background: rgba(50, 50, 60, 0.5); padding: 20px; border-radius: 10px; border: 1px solid #333340;">
+                            <h3 style="color: #00f5d4; margin-bottom: 10px;">📬 Send Notification</h3>
+                            <p style="color: #aaaaaa; margin-bottom: 15px; font-size: 0.9rem;">Kirim notifikasi ke semua member komunitas</p>
+                            <button class="action-btn" style="width: 100%;">Send Broadcast</button>
+                        </div>
+
+                        <div style="background: rgba(50, 50, 60, 0.5); padding: 20px; border-radius: 10px; border: 1px solid #333340;">
+                            <h3 style="color: #00f5d4; margin-bottom: 10px;">🔄 Sync Data</h3>
+                            <p style="color: #aaaaaa; margin-bottom: 15px; font-size: 0.9rem;">Sinkronisasi data dari semua server node</p>
+                            <button class="action-btn" style="width: 100%;">Sync Now</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
 
-    <nav class="bottom-nav">
-        <a href="/home" class="nav-item">GENERAL</a>
-        <a href="/games" class="nav-item">GAME</a> <a href="/ai" class="nav-item">AI STAS</a>
-        <a href="/admin" class="nav-item">ADMIN UI</a>
-    </nav>
+    <script>
+        // Tab switching
+        function switchTab(tabName) {
+            const tabs = document.querySelectorAll('.tab-content');
+            const buttons = document.querySelectorAll('.tab-btn');
 
-    <script src="/static/app.js"></script>
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Mobile menu toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const navMenu = document.getElementById('navMenu');
+
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                navMenu.classList.toggle('active');
+            });
+        }
+
+        // Search functions
+        document.getElementById('userSearch').addEventListener('keyup', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#userTable tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+
+        document.getElementById('gameSearch').addEventListener('keyup', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#gameTable tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+
+        // Action functions
+        function editUser(username) {
+            alert(`Edit user: ${username} - Fitur coming soon cuks!`);
+        }
+
+        function deleteUser(username) {
+            if (confirm(`Yakin mau hapus user ${username} cuks?`)) {
+                alert(`User ${username} dihapus - Fitur coming soon cuks!`);
+            }
+        }
+
+        function editGame(gameId) {
+            alert(`Edit game: ${gameId} - Fitur coming soon cuks!`);
+        }
+
+        function deleteGame(gameId) {
+            if (confirm(`Yakin mau hapus game ini cuks?`)) {
+                alert(`Game dihapus - Fitur coming soon cuks!`);
+            }
+        }
+
+        function exportUsers() {
+            alert('Export users - Fitur coming soon cuks!');
+        }
+
+        function exportGames() {
+            alert('Export games - Fitur coming soon cuks!');
+        }
+
+        function clearLogs() {
+            if (confirm('Yakin mau clear semua logs cuks? Tindakan ini tidak bisa dibatalkan!')) {
+                alert('Logs dihapus - Fitur coming soon cuks!');
+            }
+        }
+    </script>
 </body>
 </html>

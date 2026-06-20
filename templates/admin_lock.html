@@ -3,41 +3,612 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STAS - Admin Verification</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <title>STAS Arena - Admin Lock</title>
     <style>
-        .lock-layout { display: flex; justify-content: center; align-items: center; height: 80vh; padding: 20px; }
-        .lock-box { width: 100%; max-width: 400px; background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 32px; text-align: center; }
-        .form-input { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--bg-dark); color: var(--text-primary); font-size: 0.95rem; margin-bottom: 16px; outline: none; text-align: center; }
-        .form-input:focus { border-color: #f85149; }
-        .lock-btn { width: 100%; padding: 12px; font-weight: bold; background-color: #f85149; color: white; border: none; border-radius: 6px; cursor: pointer; }
-        .err-msg { color: #f85149; font-size: 0.85rem; margin-bottom: 16px; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0c 0%, #1a1a1f 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+        }
+
+        .glow-orb {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .glow-orb-1 {
+            width: 300px;
+            height: 300px;
+            top: -100px;
+            right: -100px;
+            background: radial-gradient(circle, rgba(255, 183, 3, 0.15) 0%, transparent 70%);
+            animation: float 20s infinite;
+        }
+
+        .glow-orb-2 {
+            width: 400px;
+            height: 400px;
+            bottom: -150px;
+            left: -150px;
+            background: radial-gradient(circle, rgba(0, 245, 212, 0.1) 0%, transparent 70%);
+            animation: float 25s infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(40px);
+            }
+        }
+
+        /* Container */
+        .lock-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 500px;
+            margin: 20px;
+        }
+
+        .lock-card {
+            background: rgba(10, 10, 12, 0.95);
+            border: 2px solid #ffb703;
+            border-radius: 20px;
+            padding: 50px 40px;
+            box-shadow: 0 0 40px rgba(255, 183, 3, 0.3), inset 0 0 30px rgba(0, 245, 212, 0.05);
+            animation: slideInUp 0.6s ease-out;
+            text-align: center;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Lock Icon */
+        .lock-icon {
+            font-size: 5rem;
+            margin-bottom: 25px;
+            animation: rotate 3s infinite linear;
+        }
+
+        @keyframes rotate {
+            0% {
+                transform: rotateY(0deg);
+            }
+            50% {
+                transform: rotateY(10deg);
+            }
+            100% {
+                transform: rotateY(0deg);
+            }
+        }
+
+        /* Header */
+        .lock-header h1 {
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ffb703 0%, #00f5d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            letter-spacing: 2px;
+        }
+
+        .lock-header p {
+            color: #aaaaaa;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        /* Form */
+        .lock-form {
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+            text-align: left;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ffb703;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(30, 30, 35, 0.8);
+            border: 2px solid #333340;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+        }
+
+        .form-input::placeholder {
+            color: #666670;
+            letter-spacing: 1px;
+        }
+
+        .form-input:focus {
+            border-color: #00f5d4;
+            background: rgba(30, 30, 35, 1);
+            box-shadow: 0 0 20px rgba(0, 245, 212, 0.5), inset 0 0 10px rgba(0, 245, 212, 0.1);
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 14px;
+            top: 42px;
+            color: #ffb703;
+            font-size: 1.2rem;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus + .input-icon {
+            color: #00f5d4;
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #ffb703 0%, #ffa500 100%);
+            border: none;
+            border-radius: 10px;
+            color: #0a0a0c;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(255, 183, 3, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            box-shadow: 0 8px 30px rgba(255, 183, 3, 0.6), 0 0 20px rgba(0, 245, 212, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:hover:not(:disabled)::before {
+            left: 100%;
+        }
+
+        .submit-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            animation: slideDown 0.3s ease-out;
+            display: none;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-error {
+            background: rgba(255, 59, 48, 0.2);
+            border: 1px solid #ff3b30;
+            color: #ff6b6b;
+        }
+
+        .alert-warning {
+            background: rgba(255, 159, 64, 0.2);
+            border: 1px solid #ff9f40;
+            color: #ffb366;
+        }
+
+        .alert-success {
+            background: rgba(52, 211, 153, 0.2);
+            border: 1px solid #34d399;
+            color: #86efac;
+        }
+
+        /* Security Info */
+        .security-info {
+            background: rgba(255, 183, 3, 0.1);
+            border: 1px solid #ffb703;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 25px;
+            text-align: left;
+            font-size: 0.85rem;
+            color: #cccccc;
+            line-height: 1.6;
+        }
+
+        .security-info strong {
+            color: #ffb703;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .security-tips {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 183, 3, 0.3);
+        }
+
+        .security-tips li {
+            margin-left: 20px;
+            margin-bottom: 5px;
+        }
+
+        /* Footer Link */
+        .back-link {
+            margin-top: 25px;
+            text-align: center;
+        }
+
+        .back-link a {
+            color: #00f5d4;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .back-link a:hover {
+            color: #ffb703;
+            text-shadow: 0 0 10px rgba(255, 183, 3, 0.5);
+        }
+
+        /* Attempt Counter */
+        .attempt-counter {
+            font-size: 0.85rem;
+            color: #ff6b6b;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .attempt-counter.show {
+            display: block;
+        }
+
+        /* Loading State */
+        .btn-loading {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(10, 10, 12, 0.3);
+            border-top: 2px solid #0a0a0c;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .lock-card {
+                margin: 20px;
+                padding: 35px 25px;
+            }
+
+            .lock-icon {
+                font-size: 3.5rem;
+            }
+
+            .lock-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .lock-header p {
+                font-size: 0.9rem;
+            }
+
+            .security-info {
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .lock-container {
+                max-width: 100%;
+            }
+
+            .lock-card {
+                margin: 15px;
+                padding: 30px 20px;
+                border-radius: 15px;
+            }
+
+            .lock-icon {
+                font-size: 3rem;
+                margin-bottom: 15px;
+            }
+
+            .lock-header h1 {
+                font-size: 1.3rem;
+                margin-bottom: 10px;
+            }
+
+            .lock-header p {
+                font-size: 0.85rem;
+                margin-bottom: 20px;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+
+            .form-input {
+                padding: 12px 14px;
+                font-size: 0.95rem;
+            }
+
+            .input-icon {
+                right: 12px;
+                top: 39px;
+            }
+
+            .submit-btn {
+                padding: 12px;
+                font-size: 0.95rem;
+            }
+
+            .security-info {
+                margin-top: 20px;
+                padding: 12px;
+            }
+
+            .back-link {
+                margin-top: 20px;
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
-<body class="page-transition">
-    <header class="main-header">
-        <h1>STAS SYSTEM</h1>
-        <p class="subtitle">Protected Administrator Console</p>
-    </header>
-    <div class="lock-layout">
-        <div class="lock-box">
-            <h3 style="margin-bottom: 8px; color: #f85149;">Akses Terkunci</h3>
-            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 24px;">Masukkan password administrator utama untuk membuka dashboard ini.</p>
-            
-            {% if error %}
-                <div class="err-msg">{{ error }}</div>
-            {% endif %}
+<body>
+    <div class="animated-bg">
+        <div class="glow-orb glow-orb-1"></div>
+        <div class="glow-orb glow-orb-2"></div>
+    </div>
 
-            <form method="POST" action="/admin">
-                <input type="password" name="admin_password" class="form-input" placeholder="••••••••" required>
-                <button type="submit" class="lock-btn">Buka Gembok UI</button>
+    <div class="lock-container">
+        <div class="lock-card">
+            <div class="lock-icon">🔐</div>
+
+            <div class="lock-header">
+                <h1>Admin Lock</h1>
+                <p>Masukkan password admin untuk akses panel manajemen komunitas STAS Arena</p>
+            </div>
+
+            <div id="alertContainer"></div>
+
+            <form id="lockForm" class="lock-form">
+                <div class="form-group">
+                    <label class="form-label" for="adminPassword">Password Admin</label>
+                    <input 
+                        type="password" 
+                        id="adminPassword" 
+                        name="admin_password"
+                        class="form-input" 
+                        placeholder="••••••••"
+                        required
+                        autocomplete="off"
+                    >
+                    <span class="input-icon">🔑</span>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">Unlock Admin Panel</button>
+
+                <div class="attempt-counter" id="attemptCounter"></div>
             </form>
+
+            <div class="security-info">
+                <strong>⚠️ Informasi Keamanan</strong>
+                <p>Halaman ini dilindungi dengan sandi enkripsi tingkat enterprise. Setiap percobaan akses akan dicatat dan dipantau.</p>
+                <ul class="security-tips">
+                    <li>Jangan bagikan password ke siapapun</li>
+                    <li>Logout setelah selesai admin session</li>
+                    <li>Gunakan password yang kuat dan unik</li>
+                </ul>
+            </div>
+
+            <div class="back-link">
+                <a href="{{ url_for('index') }}">← Kembali ke Dashboard</a>
+            </div>
         </div>
     </div>
-    <nav class="bottom-nav">
-        <a href="/home" class="nav-item">GENERAL</a>
-        <a href="/games" class="nav-item">GAME</a> <a href="/ai" class="nav-item">AI STAS</a>
-        <a href="/admin" class="nav-item">ADMIN UI</a>
-    </nav>
+
+    <script>
+        const lockForm = document.getElementById('lockForm');
+        const adminPassword = document.getElementById('adminPassword');
+        const submitBtn = document.getElementById('submitBtn');
+        const alertContainer = document.getElementById('alertContainer');
+        const attemptCounter = document.getElementById('attemptCounter');
+
+        let attempts = 0;
+        const maxAttempts = 5;
+
+        lockForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            attempts++;
+
+            const password = adminPassword.value.trim();
+
+            if (!password) {
+                showAlert('Password tidak boleh kosong cuks!', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="btn-loading"><span class="spinner"></span>Verifying...</span>';
+
+            try {
+                const response = await fetch('{{ url_for("verify_admin") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ password: password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showAlert('Password benar! Membuka admin panel...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '{{ url_for("admin") }}';
+                    }, 1500);
+                } else {
+                    const remainingAttempts = maxAttempts - attempts;
+                    
+                    if (remainingAttempts <= 0) {
+                        showAlert('Password salah! Akses diblokir sementara cuks!', 'error');
+                        submitBtn.disabled = true;
+                        lockForm.style.opacity = '0.5';
+                        setTimeout(() => {
+                            attempts = 0;
+                            submitBtn.disabled = false;
+                            lockForm.style.opacity = '1';
+                            adminPassword.value = '';
+                            updateAttemptCounter();
+                        }, 30000);
+                    } else {
+                        showAlert(`Password salah! Sisa percobaan: ${remainingAttempts}`, 'warning');
+                        updateAttemptCounter();
+                    }
+                }
+            } catch (error) {
+                showAlert('Error koneksi! Cek internet kamu cuks.', 'error');
+                console.error('Error:', error);
+            }
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Unlock Admin Panel';
+            adminPassword.focus();
+        });
+
+        function showAlert(message, type) {
+            const alert = document.createElement('div');
+            alert.className = `alert show alert-${type}`;
+            alert.textContent = message;
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alert);
+
+            if (type !== 'error' && type !== 'success') {
+                setTimeout(() => {
+                    alert.classList.remove('show');
+                }, 5000);
+            }
+        }
+
+        function updateAttemptCounter() {
+            if (attempts > 0 && attempts < maxAttempts) {
+                attemptCounter.classList.add('show');
+                attemptCounter.textContent = `⚠️ Percobaan ${attempts}/${maxAttempts}`;
+            } else {
+                attemptCounter.classList.remove('show');
+            }
+        }
+
+        // Check for error parameter in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('error')) {
+            showAlert('Password tidak valid! Coba lagi cuks.', 'error');
+        }
+
+        // Focus on input
+        window.addEventListener('load', () => {
+            adminPassword.focus();
+        });
+
+        // Clear input value on page visibility
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                adminPassword.value = '';
+                adminPassword.focus();
+            }
+        });
+    </script>
 </body>
 </html>

@@ -2,50 +2,778 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>STAS Community - Home</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body class="page-transition">
-    <header class="main-header">
-        <h1>STAS COMMUNITY</h1>
-        <p class="subtitle">Sang Tuan Alhidayah Sutam</p>
-        <div class="search-bar-container" onclick="location.href='/search'">
-            <input type="text" class="wa-search-bar" placeholder="Cari anggota, tanya komunitas, atau search AI..." readonly>
-        </div>
-    </header>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STAS Arena - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    <main class="content-area">
-        <div class="feed-container">
-            {% for m in members %}
-            <div class="member-card" onclick="location.href='/user/{{ m.id }}'">
-                <div class="card-left">
-                    {% if m.avatar %}
-                        <img src="/avatar/{{ m.avatar }}" alt="Avatar" class="avatar-img">
-                    {% else %}
-                        <div class="avatar-fallback">{{ m.letter }}</div>
-                    {% endif %}
-                </div>
-                <div class="card-center">
-                    <h3 class="member-name">{{ m.nama }}</h3>
-                    <p class="member-desk">{{ m.desk }}</p>
-                </div>
-                <div class="card-right">
-                    <span class="info-tag">Active</span>
-                </div>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0c 0%, #1a1a1f 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding-top: 80px;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 12, 0.95);
+            border-bottom: 2px solid #ffb703;
+            padding: 0 40px;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(255, 183, 3, 0.2);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 80px;
+        }
+
+        .nav-logo {
+            font-size: 1.8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ffb703 0%, #00f5d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-logo:hover {
+            text-shadow: 0 0 20px rgba(255, 183, 3, 0.5);
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 12px 20px;
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 183, 3, 0.2);
+            transition: left 0.3s ease;
+            z-index: -1;
+        }
+
+        .nav-link:hover::before {
+            left: 0;
+        }
+
+        .nav-link:hover {
+            color: #ffb703;
+            text-shadow: 0 0 10px rgba(255, 183, 3, 0.5);
+        }
+
+        .nav-link.active {
+            color: #ffb703;
+            border-bottom: 2px solid #ffb703;
+        }
+
+        .nav-divider {
+            width: 2px;
+            height: 30px;
+            background: #ffb703;
+            border-radius: 1px;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffb703 0%, #00f5d4 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 183, 3, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .user-avatar:hover {
+            box-shadow: 0 0 25px rgba(255, 183, 3, 0.6);
+            transform: scale(1.1);
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: rgba(255, 59, 48, 0.2);
+            border: 1px solid #ff3b30;
+            color: #ff6b6b;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 59, 48, 0.3);
+            box-shadow: 0 0 15px rgba(255, 59, 48, 0.4);
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: #ffb703;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        /* Welcome Section */
+        .welcome-section {
+            text-align: center;
+            margin: 60px 0 50px;
+            animation: slideInDown 0.6s ease-out;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .welcome-title {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #ffb703 0%, #00f5d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.2rem;
+            color: #00f5d4;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .welcome-text {
+            max-width: 700px;
+            margin: 0 auto;
+            font-size: 1.05rem;
+            color: #cccccc;
+            line-height: 1.8;
+        }
+
+        /* Stats Section */
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+
+        .stat-card {
+            background: rgba(30, 30, 35, 0.8);
+            border: 2px solid #333340;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255, 183, 3, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: #ffb703;
+            background: rgba(30, 30, 35, 1);
+            box-shadow: 0 0 25px rgba(255, 183, 3, 0.3);
+            transform: translateY(-5px);
+        }
+
+        .stat-card:hover::before {
+            top: -25%;
+            right: -25%;
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #ffb703;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #cccccc;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        /* Menu Grid Section */
+        .menu-grid-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffb703;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 60px;
+        }
+
+        .menu-card {
+            background: linear-gradient(135deg, rgba(30, 30, 35, 0.9) 0%, rgba(20, 20, 25, 0.9) 100%);
+            border: 2px solid #333340;
+            border-radius: 15px;
+            padding: 35px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 280px;
+        }
+
+        .menu-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 183, 3, 0.2), transparent);
+            transition: left 0.5s ease;
+            z-index: 0;
+        }
+
+        .menu-card-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .menu-card:hover::before {
+            left: 100%;
+        }
+
+        .menu-card:hover {
+            border-color: #ffb703;
+            box-shadow: 0 0 30px rgba(255, 183, 3, 0.4), 0 0 60px rgba(0, 245, 212, 0.2);
+            transform: translateY(-10px);
+        }
+
+        .menu-icon {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .menu-card:hover .menu-icon {
+            color: #ffb703;
+            transform: scale(1.2);
+            text-shadow: 0 0 20px rgba(255, 183, 3, 0.6);
+        }
+
+        .menu-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #ffffff;
+        }
+
+        .menu-description {
+            font-size: 0.95rem;
+            color: #aaaaaa;
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(10, 10, 12, 0.95);
+            border-top: 2px solid #ffb703;
+            padding: 40px;
+            text-align: center;
+            color: #888890;
+            margin-top: 80px;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .footer-text {
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .footer-links a {
+            color: #00f5d4;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .footer-links a:hover {
+            color: #ffb703;
+            text-shadow: 0 0 10px rgba(255, 183, 3, 0.5);
+        }
+
+        .copyright {
+            font-size: 0.85rem;
+            color: #666670;
+            margin-top: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .container {
+                padding: 0 20px;
+            }
+
+            .nav-container {
+                padding: 0 20px;
+            }
+
+            .welcome-title {
+                font-size: 2rem;
+            }
+
+            .menu-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0 20px;
+            }
+
+            .nav-container {
+                height: 70px;
+            }
+
+            .nav-menu {
+                position: absolute;
+                top: 70px;
+                left: 0;
+                right: 0;
+                flex-direction: column;
+                background: rgba(10, 10, 12, 0.98);
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease;
+                border-bottom: 2px solid #ffb703;
+            }
+
+            .nav-menu.active {
+                max-height: 500px;
+            }
+
+            .nav-item {
+                width: 100%;
+                border-bottom: 1px solid #333340;
+            }
+
+            .nav-link {
+                display: block;
+                padding: 15px 20px;
+                border-radius: 0;
+                border-bottom: 2px solid transparent;
+            }
+
+            .nav-divider {
+                display: none;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .welcome-title {
+                font-size: 1.8rem;
+            }
+
+            .welcome-subtitle {
+                font-size: 1rem;
+            }
+
+            .menu-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .menu-card {
+                min-height: 200px;
+                padding: 25px;
+            }
+
+            .menu-icon {
+                font-size: 2.5rem;
+            }
+
+            .menu-title {
+                font-size: 1.2rem;
+            }
+
+            body {
+                padding-top: 70px;
+            }
+
+            .nav-container {
+                height: 70px;
+            }
+
+            .stats-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 15px;
+            }
+
+            .welcome-section {
+                margin: 30px 0 35px;
+            }
+
+            .welcome-title {
+                font-size: 1.5rem;
+            }
+
+            .welcome-text {
+                font-size: 0.95rem;
+            }
+
+            .menu-card {
+                min-height: 180px;
+                padding: 20px;
+            }
+
+            .menu-icon {
+                font-size: 2rem;
+            }
+
+            .menu-title {
+                font-size: 1rem;
+            }
+
+            .menu-description {
+                font-size: 0.85rem;
+            }
+
+            footer {
+                padding: 30px 15px;
+            }
+
+            .footer-links {
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">STAS ARENA</div>
+            
+            <button class="menu-toggle" id="menuToggle">☰</button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li class="nav-item">
+                    <a href="{{ url_for('index') }}" class="nav-link active">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('ai') }}" class="nav-link">AI Chat</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('games') }}" class="nav-link">Games</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin_lock') }}" class="nav-link">Admin</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+                </li>
+            </ul>
+
+            <div class="user-menu">
+                <div class="user-avatar" title="{{ username }}">{{ username[0].upper() }}</div>
+                <form action="{{ url_for('logout') }}" method="POST" style="margin: 0;">
+                    <button type="submit" class="logout-btn">Logout</button>
+                </form>
             </div>
-            {% else %}
-            <div class="empty-state">Belum ada data anggota di direktori stas/nama/</div>
-            {% endfor %}
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Welcome Section -->
+        <section class="welcome-section">
+            <h1 class="welcome-title">Selamat Datang, Cuks! 👾</h1>
+            <p class="welcome-subtitle">di Dunia STAS Arena yang Penuh Aksi</p>
+            <p class="welcome-text">
+                Bergabunglah dengan komunitas gaming dan AI terbesar di Indonesia. Mainkan game seru, 
+                chat dengan AI cerdas, dan tunjukkan skill kamu di arena global. Mari mulai petualangan 
+                digital kamu sekarang juga!
+            </p>
+        </section>
+
+        <!-- Statistics Section -->
+        <section class="stats-section">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-number">{{ total_members | default(15420) }}</div>
+                <div class="stat-label">Member Aktif</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🎮</div>
+                <div class="stat-number">{{ total_games | default(2048) }}</div>
+                <div class="stat-label">Total Games Dimainkan</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🏆</div>
+                <div class="stat-number">{{ total_tournaments | default(47) }}</div>
+                <div class="stat-label">Tournament Aktif</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">⚡</div>
+                <div class="stat-number">{{ uptime | default('99.8%') }}</div>
+                <div class="stat-label">Server Uptime</div>
+            </div>
+        </section>
+
+        <!-- Menu Grid Section -->
+        <h2 class="menu-grid-title">✨ Menu Utama Arena ✨</h2>
+
+        <div class="menu-grid">
+            <a href="{{ url_for('ai') }}" class="menu-card">
+                <div class="menu-card-content">
+                    <div class="menu-icon">🤖</div>
+                    <h3 class="menu-title">AI Chat</h3>
+                    <p class="menu-description">Ngobrol dengan AI cerdas. Tanya soal apapun, dari coding sampai random cuks!</p>
+                </div>
+            </a>
+
+            <a href="{{ url_for('games') }}" class="menu-card">
+                <div class="menu-card-content">
+                    <div class="menu-icon">🎯</div>
+                    <h3 class="menu-title">Game Hub</h3>
+                    <p class="menu-description">Kumpulan game seru menanti. Block Blast, Stickman Royale, dan masih banyak lagi!</p>
+                </div>
+            </a>
+
+            <a href="{{ url_for('profile') }}" class="menu-card">
+                <div class="menu-card-content">
+                    <div class="menu-icon">👤</div>
+                    <h3 class="menu-title">Profil Cuks</h3>
+                    <p class="menu-description">Kelola profil mu, lihat achievement, dan bagikan rank ke teman-teman cuks!</p>
+                </div>
+            </a>
+
+            <a href="{{ url_for('admin_lock') }}" class="menu-card">
+                <div class="menu-card-content">
+                    <div class="menu-icon">⚙️</div>
+                    <h3 class="menu-title">Admin Panel</h3>
+                    <p class="menu-description">Dashboard admin untuk manage data komunitas STAS Arena (VIP Only)</p>
+                </div>
+            </a>
+
+            <a href="https://github.com" target="_blank" class="menu-card">
+                <div class="menu-card-content">
+                    <div class="menu-icon">📚</div>
+                    <h3 class="menu-title">Dokumentasi</h3>
+                    <p class="menu-description">Baca dokumentasi lengkap, API reference, dan tutorial dari komunitas.</p>
+                </div>
+            </a>
+
+            <a href="https://discord.com" target="_blank" class="menu-card">
+                <div class="menu-card-content">
+                    <div class="menu-icon">💬</div>
+                    <h3 class="menu-title">Discord Server</h3>
+                    <p class="menu-description">Gabung Discord kami untuk diskusi, tournament, dan komunitas yang solid!</p>
+                </div>
+            </a>
         </div>
     </main>
 
-    <nav class="bottom-nav">
-        <a href="/home" class="nav-item">GENERAL</a>
-        <a href="/games" class="nav-item">GAME</a> <a href="/ai" class="nav-item">AI STAS</a>
-        <a href="/admin" class="nav-item">ADMIN UI</a>
-    </nav>
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <p class="footer-text">STAS Arena © 2024 - Made with ❤️ untuk komunitas Indonesia</p>
+            <div class="footer-links">
+                <a href="/">Home</a>
+                <a href="/about">Tentang Kami</a>
+                <a href="/terms">Terms of Service</a>
+                <a href="/privacy">Privacy Policy</a>
+                <a href="/contact">Kontak</a>
+            </div>
+            <p class="copyright">
+                Powered by Python Flask & WebSockets | Cyberpunk Dark Premium UI v1.0
+            </p>
+        </div>
+    </footer>
 
-    <script src="/static/app.js"></script>
+    <script>
+        // Mobile Menu Toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const navMenu = document.getElementById('navMenu');
+
+        menuToggle.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+
+        // Close menu when link is clicked
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('active');
+            });
+        });
+
+        // Active link highlighting
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.nav-link').forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+
+        // Smooth scroll animation for menu cards
+        document.querySelectorAll('.menu-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-10px)';
+            });
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+
+        // Stat card counter animation
+        function animateCounter(element, target, duration = 2000) {
+            if (isNaN(target)) return;
+            
+            const start = 0;
+            const increment = target / (duration / 50);
+            let current = start;
+
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    element.textContent = target.toLocaleString();
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.floor(current).toLocaleString();
+                }
+            }, 50);
+        }
+
+        // Trigger animations on scroll
+        window.addEventListener('scroll', () => {
+            const statCards = document.querySelectorAll('.stat-number');
+            statCards.forEach(card => {
+                const rect = card.getBoundingClientRect();
+                if (rect.top < window.innerHeight && !card.dataset.animated) {
+                    const number = parseInt(card.textContent.replace(/,/g, ''));
+                    if (!isNaN(number)) {
+                        animateCounter(card, number);
+                    }
+                    card.dataset.animated = 'true';
+                }
+            });
+        });
+    </script>
 </body>
 </html>

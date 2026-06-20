@@ -3,42 +3,370 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STAS System - Login</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <title>STAS Arena - Login</title>
     <style>
-        .login-layout { display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
-        .login-box { width: 100%; max-width: 400px; background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 32px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
-        .form-group { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
-        .form-group label { font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; }
-        .form-input { padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--bg-dark); color: var(--text-primary); font-size: 0.95rem; outline: none; }
-        .form-input:focus { border-color: var(--nav-active); }
-        .submit-btn { width: 100%; padding: 12px; font-weight: bold; background-color: var(--name-green); color: #0d1117; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; margin-top: 10px; transition: opacity 0.2s; }
-        .submit-btn:hover { opacity: 0.9; }
-        .err-banner { background-color: rgba(248, 81, 73, 0.15); color: #f85149; border: 1px solid #f85149; padding: 12px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 20px; text-align: center; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0c 0%, #1a1a1f 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+            padding: 40px;
+            background: rgba(10, 10, 12, 0.95);
+            border: 2px solid #ffb703;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(255, 183, 3, 0.3), inset 0 0 20px rgba(0, 245, 212, 0.05);
+            position: relative;
+            z-index: 1;
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ffb703 0%, #00f5d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 183, 3, 0.5);
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            color: #00f5d4;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ffb703;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(30, 30, 35, 0.8);
+            border: 2px solid #333340;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-input::placeholder {
+            color: #666670;
+        }
+
+        .form-input:focus {
+            border-color: #00f5d4;
+            background: rgba(30, 30, 35, 1);
+            box-shadow: 0 0 20px rgba(0, 245, 212, 0.5), inset 0 0 10px rgba(0, 245, 212, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-input:focus::placeholder {
+            color: #00f5d4;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #ffb703 0%, #ffa500 100%);
+            border: none;
+            border-radius: 10px;
+            color: #0a0a0c;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(255, 183, 3, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .login-btn:hover {
+            box-shadow: 0 8px 30px rgba(255, 183, 3, 0.6), 0 0 20px rgba(0, 245, 212, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .login-btn:hover::before {
+            left: 100%;
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            font-size: 0.85rem;
+        }
+
+        .remember-forgot a {
+            color: #00f5d4;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .remember-forgot a:hover {
+            color: #ffb703;
+            text-shadow: 0 0 10px rgba(0, 245, 212, 0.5);
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-container input {
+            cursor: pointer;
+            accent-color: #ffb703;
+        }
+
+        .footer-text {
+            text-align: center;
+            color: #888890;
+            font-size: 0.9rem;
+            margin-top: 25px;
+            line-height: 1.6;
+        }
+
+        .footer-text a {
+            color: #00f5d4;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .footer-text a:hover {
+            color: #ffb703;
+            text-shadow: 0 0 10px rgba(255, 183, 3, 0.5);
+        }
+
+        .glow-bg {
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(0, 245, 212, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .glow-bg-1 {
+            top: -100px;
+            right: -100px;
+            animation: float 15s infinite;
+        }
+
+        .glow-bg-2 {
+            bottom: -150px;
+            left: -150px;
+            background: radial-gradient(circle, rgba(255, 183, 3, 0.08) 0%, transparent 70%);
+            animation: float 20s infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(30px);
+            }
+        }
+
+        .error-message {
+            background: rgba(255, 59, 48, 0.2);
+            border: 1px solid #ff3b30;
+            color: #ff6b6b;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .success-message {
+            background: rgba(52, 211, 153, 0.2);
+            border: 1px solid #34d399;
+            color: #86efac;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .login-container {
+                margin: 20px;
+                padding: 30px;
+            }
+
+            .logo {
+                font-size: 2rem;
+            }
+
+            .remember-forgot {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+        }
     </style>
 </head>
-<body class="page-transition">
-    <div class="login-layout">
-        <div class="login-box">
-            <h2 style="text-align: center; margin-bottom: 4px;">STAS COMMUNITY</h2>
-            <p style="text-align: center; color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 24px;">Sang Tuan Alhidayah Sutam</p>
-            
-            {% if error %}
-                <div class="err-banner">{{ error }}</div>
-            {% endif %}
+<body>
+    <div class="glow-bg glow-bg-1"></div>
+    <div class="glow-bg glow-bg-2"></div>
 
-            <form method="POST" action="/login">
-                <div class="form-group">
-                    <label>ID Anggota (Filename ID)</label>
-                    <input type="text" name="username" class="form-input" placeholder="Contoh: 101" required autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" name="password" class="form-input" placeholder="Masukkan password Anda" required>
-                </div>
-                <button type="submit" class="submit-btn">Masuk Ke Sistem</button>
-            </form>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="logo">STAS</div>
+            <div class="subtitle">Arena Login</div>
         </div>
+
+        <form id="loginForm" action="{{ url_for('login') }}" method="POST">
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+
+            <div class="form-group">
+                <label class="form-label" for="username">Username</label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    name="username" 
+                    class="form-input" 
+                    placeholder="Masukkan username cuks"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    class="form-input" 
+                    placeholder="Masukkan password"
+                    required
+                >
+            </div>
+
+            <div class="remember-forgot">
+                <div class="checkbox-container">
+                    <input type="checkbox" id="remember" name="remember">
+                    <label for="remember">Ingatkan aku</label>
+                </div>
+                <a href="#forgot">Lupa password?</a>
+            </div>
+
+            <button type="submit" class="login-btn">Masuk Arena</button>
+
+            <div class="footer-text">
+                Belum punya akun? <a href="{{ url_for('register') }}">Daftar sekarang cuks</a>
+            </div>
+        </form>
     </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            if (!username || !password) {
+                e.preventDefault();
+                const errorMsg = document.getElementById('errorMessage');
+                errorMsg.textContent = 'Username dan password harus diisi cuks!';
+                errorMsg.style.display = 'block';
+                return false;
+            }
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('error')) {
+            const errorMsg = document.getElementById('errorMessage');
+            errorMsg.textContent = 'Username atau password salah, coba lagi cuks!';
+            errorMsg.style.display = 'block';
+        }
+
+        if (urlParams.get('success')) {
+            const successMsg = document.getElementById('successMessage');
+            successMsg.textContent = 'Registrasi berhasil! Silakan login sekarang.';
+            successMsg.style.display = 'block';
+        }
+
+        document.getElementById('username').addEventListener('focus', function() {
+            this.style.borderColor = '#00f5d4';
+        });
+
+        document.getElementById('password').addEventListener('focus', function() {
+            this.style.borderColor = '#00f5d4';
+        });
+    </script>
 </body>
 </html>
