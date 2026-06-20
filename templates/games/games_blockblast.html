@@ -1,1 +1,987 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STAS Arena - Block Blast Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0c 0%, #1a1a1f 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding-top: 80px;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 12, 0.95);
+            border-bottom: 2px solid #ffb703;
+            padding: 0 40px;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(255, 183, 3, 0.2);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 80px;
+        }
+
+        .nav-logo {
+            font-size: 1.8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ffb703 0%, #00f5d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 12px 20px;
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+
+        .nav-link:hover {
+            color: #ffb703;
+            background: rgba(255, 183, 3, 0.2);
+        }
+
+        .nav-link.active {
+            color: #ffb703;
+            border-bottom: 2px solid #ffb703;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffb703 0%, #00f5d4 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            box-shadow: 0 0 15px rgba(255, 183, 3, 0.3);
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: rgba(255, 59, 48, 0.2);
+            border: 1px solid #ff3b30;
+            color: #ff6b6b;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 59, 48, 0.3);
+            box-shadow: 0 0 15px rgba(255, 59, 48, 0.4);
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: #ffb703;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+
+        /* Game Wrapper */
+        .game-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        /* Game Area */
+        .game-area {
+            background: linear-gradient(135deg, rgba(255, 183, 3, 0.1) 0%, rgba(0, 245, 212, 0.1) 100%);
+            border: 2px solid #333340;
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+        }
+
+        .game-title {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #ffb703;
+            margin-bottom: 20px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .game-subtitle {
+            text-align: center;
+            color: #00f5d4;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        /* Game Board */
+        .game-board {
+            background: rgba(30, 30, 35, 0.9);
+            border: 3px solid #ffb703;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5), 0 0 25px rgba(255, 183, 3, 0.2);
+            aspect-ratio: 1;
+            max-height: 500px;
+            position: relative;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            height: 100%;
+            width: 100%;
+        }
+
+        .grid-cell {
+            background: rgba(50, 50, 60, 0.8);
+            border: 2px solid #333340;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .grid-cell:hover:not(.filled) {
+            border-color: #00f5d4;
+            box-shadow: 0 0 15px rgba(0, 245, 212, 0.4), inset 0 0 10px rgba(0, 245, 212, 0.1);
+            transform: scale(0.98);
+        }
+
+        .grid-cell.filled {
+            background: linear-gradient(135deg, #ffb703 0%, #ffa500 100%);
+            border-color: #ffb703;
+            color: #0a0a0c;
+            box-shadow: 0 0 20px rgba(255, 183, 3, 0.4);
+            animation: blockPlace 0.3s ease-out;
+        }
+
+        @keyframes blockPlace {
+            0% {
+                transform: scale(0.8) rotateZ(45deg);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1) rotateZ(0deg);
+                opacity: 1;
+            }
+        }
+
+        .grid-cell.filled.cyan {
+            background: linear-gradient(135deg, #00f5d4 0%, #00d4b4 100%);
+            color: #0a0a0c;
+            border-color: #00f5d4;
+        }
+
+        .grid-cell.filled.gold {
+            background: linear-gradient(135deg, #ffb703 0%, #ffa500 100%);
+            color: #0a0a0c;
+            border-color: #ffb703;
+        }
+
+        .grid-cell.filled.purple {
+            background: linear-gradient(135deg, #c084fc 0%, #9d4edd 100%);
+            color: #ffffff;
+            border-color: #c084fc;
+        }
+
+        /* Game Controls */
+        .game-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-game {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ffb703 0%, #ffa500 100%);
+            color: #0a0a0c;
+            box-shadow: 0 4px 15px rgba(255, 183, 3, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 25px rgba(255, 183, 3, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: rgba(0, 245, 212, 0.15);
+            border: 2px solid #00f5d4;
+            color: #00f5d4;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 245, 212, 0.25);
+            box-shadow: 0 0 20px rgba(0, 245, 212, 0.3);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, rgba(255, 183, 3, 0.1) 0%, rgba(0, 245, 212, 0.1) 100%);
+            border: 2px solid #333340;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .info-title {
+            color: #ffb703;
+            font-weight: 700;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 183, 3, 0.2);
+        }
+
+        .info-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #aaaaaa;
+            font-size: 0.9rem;
+        }
+
+        .info-value {
+            color: #00f5d4;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        /* Next Blocks Preview */
+        .next-blocks {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .block-preview {
+            width: 50px;
+            height: 50px;
+            background: rgba(50, 50, 60, 0.8);
+            border: 2px solid #333340;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        /* Instructions */
+        .instructions {
+            background: rgba(30, 30, 35, 0.8);
+            border: 2px solid #333340;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+
+        .instructions h3 {
+            color: #ffb703;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .instructions ul {
+            list-style: none;
+            color: #cccccc;
+            line-height: 2;
+            font-size: 0.95rem;
+        }
+
+        .instructions li::before {
+            content: "▸ ";
+            color: #00f5d4;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+
+        /* Game Over Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(10, 10, 12, 0.95);
+            border: 2px solid #ffb703;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 0 40px rgba(255, 183, 3, 0.3);
+            animation: modalPop 0.3s ease-out;
+        }
+
+        @keyframes modalPop {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #ffb703;
+            margin-bottom: 15px;
+        }
+
+        .modal-score {
+            font-size: 1.5rem;
+            color: #00f5d4;
+            margin-bottom: 25px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .modal-btn-primary {
+            background: linear-gradient(135deg, #ffb703 0%, #ffa500 100%);
+            color: #0a0a0c;
+        }
+
+        .modal-btn-primary:hover {
+            box-shadow: 0 0 25px rgba(255, 183, 3, 0.5);
+        }
+
+        .modal-btn-secondary {
+            background: rgba(100, 100, 110, 0.2);
+            border: 2px solid #666670;
+            color: #cccccc;
+        }
+
+        .modal-btn-secondary:hover {
+            border-color: #aaaaaa;
+            background: rgba(100, 100, 110, 0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            .game-wrapper {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .sidebar {
+                grid-template-columns: repeat(3, 1fr);
+                flex-direction: row;
+            }
+
+            .game-board {
+                max-height: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0 20px;
+            }
+
+            .nav-container {
+                height: 70px;
+            }
+
+            .nav-menu {
+                position: absolute;
+                top: 70px;
+                left: 0;
+                right: 0;
+                flex-direction: column;
+                background: rgba(10, 10, 12, 0.98);
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease;
+                border-bottom: 2px solid #ffb703;
+            }
+
+            .nav-menu.active {
+                max-height: 500px;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            body {
+                padding-top: 70px;
+            }
+
+            .container {
+                padding: 20px 15px;
+            }
+
+            .game-title {
+                font-size: 1.5rem;
+            }
+
+            .game-wrapper {
+                gap: 15px;
+            }
+
+            .sidebar {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .info-card {
+                padding: 15px;
+            }
+
+            .info-title {
+                font-size: 0.95rem;
+            }
+
+            .btn-game {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+
+            .game-board {
+                max-height: 350px;
+            }
+
+            .grid-container {
+                gap: 8px;
+            }
+
+            .grid-cell {
+                font-size: 1.5rem;
+            }
+
+            .instructions {
+                padding: 20px;
+            }
+
+            .instructions h3 {
+                font-size: 1rem;
+            }
+
+            .instructions ul {
+                font-size: 0.85rem;
+                line-height: 1.8;
+            }
+
+            .modal-content {
+                padding: 30px;
+                max-width: 90%;
+            }
+
+            .modal-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px 10px;
+            }
+
+            .game-title {
+                font-size: 1.3rem;
+            }
+
+            .game-area {
+                padding: 15px;
+            }
+
+            .game-board {
+                aspect-ratio: 1;
+                max-height: 320px;
+                padding: 15px;
+            }
+
+            .grid-container {
+                gap: 6px;
+            }
+
+            .grid-cell {
+                font-size: 1.2rem;
+            }
+
+            .sidebar {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .info-card {
+                padding: 12px;
+            }
+
+            .info-title {
+                font-size: 0.85rem;
+            }
+
+            .info-item {
+                font-size: 0.85rem;
+                margin-bottom: 8px;
+            }
+
+            .btn-game {
+                padding: 10px 12px;
+                font-size: 0.8rem;
+            }
+
+            .game-controls {
+                gap: 8px;
+            }
+
+            .instructions {
+                padding: 15px;
+            }
+
+            .instructions h3 {
+                font-size: 0.95rem;
+            }
+
+            .instructions ul {
+                font-size: 0.8rem;
+                line-height: 1.6;
+            }
+
+            .block-preview {
+                width: 45px;
+                height: 45px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">STAS ARENA</div>
+            
+            <button class="menu-toggle" id="menuToggle">☰</button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="{{ url_for('index') }}" class="nav-link">Home</a></li>
+                <li><a href="{{ url_for('ai') }}" class="nav-link">AI Chat</a></li>
+                <li><a href="{{ url_for('games') }}" class="nav-link active">Games</a></li>
+                <li><a href="{{ url_for('admin_lock') }}" class="nav-link">Admin</a></li>
+                <li><a href="{{ url_for('profile') }}" class="nav-link">Profile</a></li>
+            </ul>
+
+            <div class="user-menu">
+                <div class="user-avatar" title="{{ username }}">{{ username[0].upper() }}</div>
+                <form action="{{ url_for('logout') }}" method="POST" style="margin: 0;">
+                    <button type="submit" class="logout-btn">Logout</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+        <div class="game-wrapper">
+            <!-- Game Area -->
+            <div class="game-area">
+                <h1 class="game-title">🎮 Block Blast</h1>
+                <p class="game-subtitle">Strategi puzzle casual penuh aksi!</p>
+
+                <!-- Game Board -->
+                <div class="game-board">
+                    <div class="grid-container" id="gameBoard">
+                        <!-- Grid cells akan di-generate dengan JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Game Controls -->
+                <div class="game-controls">
+                    <button class="btn-game btn-primary" onclick="startGame()">▶️ Mulai Game</button>
+                    <button class="btn-game btn-secondary" onclick="pauseGame()">⏸️ Pause</button>
+                    <button class="btn-game btn-secondary" onclick="resetGame()">🔄 Reset</button>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Score Card -->
+                <div class="info-card">
+                    <div class="info-title">📊 Score</div>
+                    <div class="info-item">
+                        <span class="info-label">Current</span>
+                        <span class="info-value" id="currentScore">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Best</span>
+                        <span class="info-value" id="bestScore">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Level</span>
+                        <span class="info-value" id="currentLevel">1</span>
+                    </div>
+                </div>
+
+                <!-- Game Stats Card -->
+                <div class="info-card">
+                    <div class="info-title">⚡ Stats</div>
+                    <div class="info-item">
+                        <span class="info-label">Lines Clear</span>
+                        <span class="info-value" id="lineClears">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Combo</span>
+                        <span class="info-value" id="combo">0x</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Time</span>
+                        <span class="info-value" id="gameTime">0s</span>
+                    </div>
+                </div>
+
+                <!-- Next Blocks Card -->
+                <div class="info-card">
+                    <div class="info-title">📦 Next Block</div>
+                    <div class="next-blocks">
+                        <div class="block-preview" id="nextBlock1">🟨</div>
+                        <div class="block-preview" id="nextBlock2">🟦</div>
+                        <div class="block-preview" id="nextBlock3">🟪</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <section class="instructions">
+            <h3>📖 Cara Main</h3>
+            <ul>
+                <li>Klik atau tap cell untuk menempatkan block di grid</li>
+                <li>Isi seluruh baris atau kolom untuk menghapus dan dapat poin</li>
+                <li>Semakin banyak lines yang clear sekaligus, semakin tinggi score multiplier</li>
+                <li>Level naik setiap 1000 poin dengan kecepatan yang meningkat</li>
+                <li>Game over jika tidak ada tempat untuk block berikutnya - Good Luck cuks! 🚀</li>
+            </ul>
+        </section>
+    </main>
+
+    <!-- Game Over Modal -->
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <div class="modal-icon">🎊</div>
+            <h2 class="modal-title">Game Over!</h2>
+            <p class="modal-score">Final Score: <span id="finalScore">0</span></p>
+            <p style="color: #aaaaaa; margin-bottom: 25px;">
+                Level: <span style="color: #00f5d4; font-weight: 700;" id="finalLevel">1</span> | 
+                Lines: <span style="color: #00f5d4; font-weight: 700;" id="finalLines">0</span>
+            </p>
+            <div class="modal-buttons">
+                <button class="modal-btn-primary" onclick="startGame()">Play Again</button>
+                <button class="modal-btn-secondary" onclick="goToGames()">Back to Games</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game Variables
+        let gameBoard = [];
+        let gameActive = false;
+        let gamePaused = false;
+        let currentScore = 0;
+        let bestScore = localStorage.getItem('blockBlastBestScore') || 0;
+        let currentLevel = 1;
+        let lineClears = 0;
+        let combo = 0;
+        let gameTime = 0;
+        let gameTimer = null;
+
+        // Initialize Board
+        function initBoard() {
+            gameBoard = Array(25).fill(0);
+            renderBoard();
+        }
+
+        // Render Board
+        function renderBoard() {
+            const board = document.getElementById('gameBoard');
+            board.innerHTML = '';
+
+            gameBoard.forEach((cell, index) => {
+                const cellDiv = document.createElement('div');
+                cellDiv.className = 'grid-cell';
+                cellDiv.id = `cell-${index}`;
+                
+                if (cell !== 0) {
+                    cellDiv.classList.add('filled');
+                    cellDiv.classList.add(['gold', 'cyan', 'purple'][cell % 3]);
+                    cellDiv.textContent = ['🟨', '🟦', '🟪'][cell % 3];
+                }
+                
+                cellDiv.addEventListener('click', () => placeBlock(index));
+                board.appendChild(cellDiv);
+            });
+        }
+
+        // Place Block
+        function placeBlock(index) {
+            if (!gameActive || gamePaused || gameBoard[index] !== 0) return;
+
+            gameBoard[index] = Math.floor(Math.random() * 3) + 1;
+            currentScore += 10 * currentLevel;
+            
+            checkLines();
+            renderBoard();
+            updateStats();
+        }
+
+        // Check Lines
+        function checkLines() {
+            let clearedLines = 0;
+
+            // Check rows
+            for (let row = 0; row < 5; row++) {
+                const start = row * 5;
+                if (gameBoard.slice(start, start + 5).every(cell => cell !== 0)) {
+                    gameBoard.fill(0, start, start + 5);
+                    clearedLines++;
+                }
+            }
+
+            // Check columns
+            for (let col = 0; col < 5; col++) {
+                let isFull = true;
+                for (let row = 0; row < 5; row++) {
+                    if (gameBoard[row * 5 + col] === 0) {
+                        isFull = false;
+                        break;
+                    }
+                }
+                if (isFull) {
+                    for (let row = 0; row < 5; row++) {
+                        gameBoard[row * 5 + col] = 0;
+                    }
+                    clearedLines++;
+                }
+            }
+
+            if (clearedLines > 0) {
+                lineClears += clearedLines;
+                combo += clearedLines;
+                currentScore += 100 * clearedLines * combo * currentLevel;
+
+                if (lineClears % 10 === 0) {
+                    currentLevel++;
+                }
+            } else {
+                combo = 0;
+            }
+        }
+
+        // Update Stats
+        function updateStats() {
+            document.getElementById('currentScore').textContent = currentScore;
+            document.getElementById('bestScore').textContent = Math.max(currentScore, bestScore);
+            document.getElementById('currentLevel').textContent = currentLevel;
+            document.getElementById('lineClears').textContent = lineClears;
+            document.getElementById('combo').textContent = combo + 'x';
+        }
+
+        // Start Game
+        function startGame() {
+            gameActive = true;
+            gamePaused = false;
+            currentScore = 0;
+            currentLevel = 1;
+            lineClears = 0;
+            combo = 0;
+            gameTime = 0;
+            
+            document.getElementById('gameOverModal').classList.remove('show');
+            initBoard();
+            updateStats();
+
+            if (gameTimer) clearInterval(gameTimer);
+            gameTimer = setInterval(() => {
+                gameTime++;
+                document.getElementById('gameTime').textContent = gameTime + 's';
+            }, 1000);
+        }
+
+        // Pause Game
+        function pauseGame() {
+            if (!gameActive) return;
+            gamePaused = !gamePaused;
+            const btn = event.target.closest('.btn-game');
+            btn.textContent = gamePaused ? '▶️ Resume' : '⏸️ Pause';
+        }
+
+        // Reset Game
+        function resetGame() {
+            gameActive = false;
+            gamePaused = false;
+            if (gameTimer) clearInterval(gameTimer);
+            initBoard();
+            currentScore = 0;
+            currentLevel = 1;
+            lineClears = 0;
+            combo = 0;
+            gameTime = 0;
+            updateStats();
+        }
+
+        // Game Over
+        function gameOverFunc() {
+            gameActive = false;
+            if (gameTimer) clearInterval(gameTimer);
+
+            if (currentScore > bestScore) {
+                bestScore = currentScore;
+                localStorage.setItem('blockBlastBestScore', bestScore);
+            }
+
+            document.getElementById('finalScore').textContent = currentScore;
+            document.getElementById('finalLevel').textContent = currentLevel;
+            document.getElementById('finalLines').textContent = lineClears;
+            document.getElementById('gameOverModal').classList.add('show');
+        }
+
+        // Go To Games
+        function goToGames() {
+            window.location.href = '{{ url_for("games") }}';
+        }
+
+        // Mobile Menu Toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const navMenu = document.getElementById('navMenu');
+
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                navMenu.classList.toggle('active');
+            });
+        }
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            initBoard();
+            document.getElementById('bestScore').textContent = bestScore;
+        });
+    </script>
+</body>
+</html>
