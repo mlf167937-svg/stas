@@ -1,0 +1,11 @@
+PASSWORD: rizqi
+===========================================
+STAS INTERNAL MEMBER DATA BASE
+===========================================
+ID ANGGOTA     : STAS-2026-4
+STATUS UTAMA   : 
+DIVISI         : 
+TANGGAL LAHIR  : 02-05-2013
+UMUR           : 13
+REGIONAL       : 
+===========================================
