@@ -5,6 +5,7 @@ STAS INTERNAL MEMBER DATA BASE
 ID ANGGOTA     : STAS-2026-3
 STATUS UTAMA   : 
 DIVISI         : 
-TANGGAL GABUNG : 
+TANGGAL LAHIR  : 11-04-2012
+UMUR           : 14
 REGIONAL       : 
-==========================================
+===========================================
