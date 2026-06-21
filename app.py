@@ -224,7 +224,34 @@ def api_ai_assistant():
     }), 200
 
 
-# ─── Admin Routes ─────────────────────────────────────────────────────────────
+# ─── Admin Routes & Fitur Khusus ──────────────────────────────────────────────
+
+@app.route('/admin/chat', methods=['POST'])
+@admin_required
+def admin_chat_broadcast():
+    """Route untuk ngirim pesan broadcast sebagai SYSTEM dari Admin Dashboard"""
+    data = request.get_json(silent=True) or {}
+    text = data.get('text', '').strip()
+    if text:
+        wib_timezone = timezone(timedelta(hours=7))
+        waktu_sekarang = datetime.now(wib_timezone).strftime('%H:%M')
+        msg = {
+            'sender': '🛡️ SYSTEM',
+            'text': f"📢 PENGUMUMAN: {text}", 
+            'ts': waktu_sekarang
+        }
+        chat_messages.append(msg)
+    return jsonify({'status': 'ok'})
+
+
+@app.route('/admin/clear_chat', methods=['POST'])
+@admin_required
+def admin_clear_chat():
+    """Route untuk menghapus seluruh riwayat chat di Komunitas"""
+    chat_messages.clear() 
+    return jsonify({'status': 'ok'})
+
+
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if session.get('is_admin'):
