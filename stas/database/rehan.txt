@@ -1,0 +1,10 @@
+PASSWORD: rehan
+===========================================
+STAS INTERNAL MEMBER DATA BASE
+===========================================
+ID ANGGOTA     : STAS-2026-2
+STATUS UTAMA   : Sang Elit Cees
+DIVISI         : Sg 2 alok
+TANGGAL GABUNG : 14 Januari 2026
+REGIONAL       : Sutam
+===========================================
