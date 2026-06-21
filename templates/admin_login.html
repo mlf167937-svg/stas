@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STAS — Admin Login</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+<div class="login-wrapper">
+  <div class="login-box" style="border-color: var(--purple-neon); box-shadow: var(--shadow-purple), 0 0 60px rgba(0,0,0,.5);">
+
+    <!-- Brand -->
+    <div class="login-brand">
+      <div class="brand-name">
+        <span class="a-letter">ADMIN</span>
+      </div>
+      <div class="brand-sub" style="color: var(--purple-neon); opacity:.7;">Portal Khusus Administrator</div>
+    </div>
+
+    <!-- Warning badge -->
+    <div style="
+      background: rgba(191,95,255,.08);
+      border: 1px solid rgba(191,95,255,.3);
+      border-radius: 6px;
+      padding: .6rem .9rem;
+      font-size: .78rem;
+      color: var(--purple-neon);
+      text-align: center;
+      margin-bottom: 1.25rem;
+      letter-spacing: .04em;
+    ">
+      🔒 AKSES TERBATAS — HANYA UNTUK ADMIN
+    </div>
+
+    <!-- Error -->
+    {% if error %}
+    <div class="form-error">
+      <span>⚠</span> {{ error }}
+    </div>
+    {% endif %}
+
+    <!-- Form -->
+    <form method="POST" action="{{ url_for('admin_login') }}" autocomplete="off">
+
+      <div class="form-group">
+        <label for="password">Password Admin</label>
+        <input
+          id="password" name="password" type="password"
+          placeholder="••••••••••••••••"
+          required autofocus
+          autocomplete="new-password"
+        />
+      </div>
+
+      <!-- CAPTCHA -->
+      <div class="form-group">
+        <label>Verifikasi Kode (salin persis termasuk huruf besar/kecil)</label>
+        <div class="captcha-display" id="captcha-display" aria-label="Kode CAPTCHA">{{ captcha }}</div>
+        <input
+          id="captcha" name="captcha" type="text"
+          placeholder="Ketik kode di atas"
+          required
+          autocomplete="off"
+          spellcheck="false"
+          style="font-family: var(--font-mono); letter-spacing: .1em;"
+        />
+      </div>
+
+      <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, var(--purple-dim), #4a00a0);">
+        🛡 Masuk sebagai Admin
+      </button>
+    </form>
+
+    <div class="admin-badge mt-2">
+      <a href="{{ url_for('login') }}" style="color:var(--text-muted);">← Kembali ke Login Member</a>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STAS — Beranda</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+<!-- ── Navbar ── -->
+<nav class="navbar">
+  <div class="nav-brand">
+    <span class="logo-s">S</span><span class="logo-t">T</span><span class="logo-as">AS</span>
+    &nbsp;Web
+  </div>
+  <div class="nav-links">
+    <a href="{{ url_for('index') }}" class="active">Beranda</a>
+    <a href="{{ url_for('komunitas') }}">Komunitas</a>
+    <a href="{{ url_for('album') }}">Album</a>
+    <a href="{{ url_for('games') }}">Games</a>
+  </div>
+  <div class="nav-user">
+    <span class="greet">Halo, <strong>{{ session.fullname or session.member }}</strong></span>
+    <a href="{{ url_for('logout') }}" class="btn-logout">Keluar</a>
+  </div>
+</nav>
+
+<!-- ── Konten Utama ── -->
+<div class="page-wrapper">
+  <h1 class="page-title">
+    <span class="accent-g">◈</span>
+    Daftar Member
+    <span class="accent-p">STAS</span>
+  </h1>
+
+  {% if members %}
+  <div class="member-grid" id="member-grid">
+    {% for m in members %}
+    <div class="member-card" data-username="{{ m.username }}" title="Klik untuk lihat detail">
+      <div class="member-avatar">{{ m.name[0].upper() if m.name else m.username[0].upper() }}</div>
+      <div class="member-name">{{ m.name or m.username }}</div>
+      <div class="member-desk">{{ m.desk or 'Member STAS' }}</div>
+      <div class="member-tag">⚡ STAS Member</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="text-align:center; padding:4rem 1rem; color:var(--text-muted);">
+    <div style="font-size:3rem; margin-bottom:1rem;">👥</div>
+    <p>Belum ada member terdaftar.<br>Tambahkan file ke folder <code>stas/name/</code>.</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ── Modal Detail Member ── -->
+<div class="modal-overlay" id="member-modal" role="dialog" aria-modal="true" aria-label="Detail Member">
+  <div class="modal-box">
+    <button class="modal-close" id="modal-close" aria-label="Tutup">✕</button>
+
+    <div class="modal-header">
+      <div class="modal-avatar" id="modal-avatar">?</div>
+      <div>
+        <div class="modal-title-name" id="modal-name">—</div>
+        <div class="modal-title-desk" id="modal-desk">—</div>
+      </div>
+    </div>
+
+    <div class="modal-body">
+      <div id="modal-loading" style="text-align:center; padding:1.5rem; color:var(--text-muted); font-size:.85rem;">
+        ⏳ Memuat data...
+      </div>
+      <pre id="modal-db"></pre>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

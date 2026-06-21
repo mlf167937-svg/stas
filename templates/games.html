@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STAS — Games</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+<!-- ── Navbar ── -->
+<nav class="navbar">
+  <div class="nav-brand">
+    <span class="logo-s">S</span><span class="logo-t">T</span><span class="logo-as">AS</span>
+    &nbsp;Web
+  </div>
+  <div class="nav-links">
+    <a href="{{ url_for('index') }}">Beranda</a>
+    <a href="{{ url_for('komunitas') }}">Komunitas</a>
+    <a href="{{ url_for('album') }}">Album</a>
+    <a href="{{ url_for('games') }}" class="active">Games</a>
+  </div>
+  <div class="nav-user">
+    <span class="greet">Halo, <strong>{{ session.fullname or session.member }}</strong></span>
+    <a href="{{ url_for('logout') }}" class="btn-logout">Keluar</a>
+  </div>
+</nav>
+
+<!-- ── Konten ── -->
+<div class="page-wrapper">
+  <h1 class="page-title">
+    <span class="accent-g">◈</span>
+    Mini
+    <span class="accent-p">Games</span>
+  </h1>
+
+  <div class="games-grid">
+
+    <!-- ── SNAKE ── -->
+    <div class="game-card">
+      <h3>🐍 Snake Classic</h3>
+      <p>Kendalikan ular, makan bola ungu, jangan nabrak tembok atau dirimu sendiri. Gunakan tombol arah atau ↑↓←→ keyboard.</p>
+      <button class="btn-play game-tab" data-target="snake-container">▶ Main</button>
+
+      <div class="game-container active" id="snake-container">
+        <div class="game-score-display" id="snake-score">Skor: 0</div>
+        <canvas id="snake-canvas"></canvas>
+        <div class="game-score-display" id="snake-msg" style="margin-top:.5rem; font-size:.8rem; color:var(--text-muted);">
+          Tekan MULAI atau ↑↓←→
+        </div>
+        <div style="display:flex; gap:.5rem; justify-content:center; margin-top:.65rem;">
+          <button class="btn-game-action" id="btn-snake-start" style="margin:0;">▶ Mulai</button>
+          <button class="btn-game-action" id="btn-snake-reset" style="margin:0; background:var(--bg-surface); border:1px solid var(--border); color:var(--text-muted);">↺ Reset</button>
+        </div>
+        <!-- Kontrol mobile -->
+        <div style="display:grid; grid-template-columns:repeat(3,44px); grid-template-rows:repeat(2,44px); gap:4px; margin:1rem auto 0; width:fit-content;">
+          <div></div>
+          <button id="m-up"    style="background:var(--bg-surface);border:1px solid var(--border);border-radius:6px;color:var(--text-main);font-size:1.1rem;cursor:pointer;">↑</button>
+          <div></div>
+          <button id="m-left"  style="background:var(--bg-surface);border:1px solid var(--border);border-radius:6px;color:var(--text-main);font-size:1.1rem;cursor:pointer;">←</button>
+          <button id="m-down"  style="background:var(--bg-surface);border:1px solid var(--border);border-radius:6px;color:var(--text-main);font-size:1.1rem;cursor:pointer;">↓</button>
+          <button id="m-right" style="background:var(--bg-surface);border:1px solid var(--border);border-radius:6px;color:var(--text-main);font-size:1.1rem;cursor:pointer;">→</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CLICKER ── -->
+    <div class="game-card">
+      <h3>🌌 Cosmic Clicker</h3>
+      <p>Klik bola energi sebanyak mungkin! Beli Auto-Clicker untuk klik otomatis per detik. Seberapa jauh kamu bisa pergi?</p>
+      <button class="btn-play game-tab" data-target="clicker-container">▶ Main</button>
+
+      <div class="game-container active" id="clicker-container">
+        <div class="clicker-area">
+          <button class="clicker-btn" id="clicker-btn" title="Klik!">⚡</button>
+          <div class="clicker-stats" id="clicker-stats">
+            Klik: <span>0</span>
+          </div>
+        </div>
+        <div style="display:flex; gap:.5rem; justify-content:center; margin-top:.75rem; flex-wrap:wrap;">
+          <button class="btn-game-action" id="btn-clicker-auto" style="margin:0; background:linear-gradient(135deg,var(--purple-dim),#4a00a0);">
+            🤖 Auto-Clicker (+1 lvl)
+          </button>
+          <button class="btn-game-action" id="btn-clicker-reset" style="margin:0; background:var(--bg-surface); border:1px solid var(--border); color:var(--text-muted);">
+            ↺ Reset
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TEBAK ANGKA ── -->
+    <div class="game-card">
+      <h3>🎯 Tebak Angka</h3>
+      <p>Tebak angka rahasia antara 1 hingga 100. Kamu hanya punya 7 kesempatan. Sistem akan memberi petunjuk setiap tebakanmu!</p>
+      <button class="btn-play game-tab" data-target="guess-container">▶ Main</button>
+
+      <div class="game-container active" id="guess-container">
+        <div class="guess-area">
+          <p style="font-size:.85rem; color:var(--text-muted); margin-bottom:.85rem;">Pikirkan... apa angkanya? 🤔</p>
+          <div>
+            <input type="number" id="guess-input" min="1" max="100" placeholder="1–100" />
+            <button class="btn-game-action" id="btn-guess" style="display:inline-block; margin:0;">Tebak!</button>
+          </div>
+          <div class="guess-result" id="guess-result">Tebak angka 1–100! Kamu punya 7 kesempatan.</div>
+          <div class="guess-result" id="guess-tries" style="font-size:.8rem; color:var(--text-muted);"></div>
+          <button class="btn-game-action" id="btn-guess-new" style="margin-top:.5rem; background:var(--bg-surface); border:1px solid var(--border); color:var(--text-muted);">
+            🔄 Game Baru
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /games-grid -->
+</div>
+
+<script src="{{ url_for('static', filename='js/game_engine.js') }}"></script>
+<script>
+  // Mobile Snake controls
+  document.addEventListener('DOMContentLoaded', () => {
+    const fireKey = key => document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+    const map = { 'm-up': 'ArrowUp', 'm-down': 'ArrowDown', 'm-left': 'ArrowLeft', 'm-right': 'ArrowRight' };
+    Object.entries(map).forEach(([id, key]) => {
+      const btn = document.getElementById(id);
+      if (btn) btn.addEventListener('click', () => fireKey(key));
+    });
+  });
+</script>
+</body>
+</html>

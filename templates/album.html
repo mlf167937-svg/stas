@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STAS — Album</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+<!-- ── Navbar ── -->
+<nav class="navbar">
+  <div class="nav-brand">
+    <span class="logo-s">S</span><span class="logo-t">T</span><span class="logo-as">AS</span>
+    &nbsp;Web
+  </div>
+  <div class="nav-links">
+    <a href="{{ url_for('index') }}">Beranda</a>
+    <a href="{{ url_for('komunitas') }}">Komunitas</a>
+    <a href="{{ url_for('album') }}" class="active">Album</a>
+    <a href="{{ url_for('games') }}">Games</a>
+  </div>
+  <div class="nav-user">
+    <span class="greet">Halo, <strong>{{ session.fullname or session.member }}</strong></span>
+    <a href="{{ url_for('logout') }}" class="btn-logout">Keluar</a>
+  </div>
+</nav>
+
+<!-- ── Konten ── -->
+<div class="page-wrapper">
+  <h1 class="page-title">
+    <span class="accent-p">◈</span>
+    Album
+    <span class="accent-g">Dokumentasi</span>
+  </h1>
+
+  <div class="gallery-grid" id="gallery-grid">
+    {% if files %}
+      {% for file in files %}
+      <div class="gallery-item" onclick="openLightbox(this)" data-type="{{ file.type }}" data-src="/static/../stas/galery/{{ file.name }}" title="{{ file.name }}">
+        {% if file.type == 'video' %}
+          <video src="/stas/galery/{{ file.name }}" muted preload="metadata"></video>
+          <div style="
+            position:absolute; inset:0; display:flex; align-items:center;
+            justify-content:center; font-size:2.5rem; pointer-events:none;
+            background:rgba(0,0,0,.25);
+          ">▶</div>
+        {% else %}
+          <img src="/stas/galery/{{ file.name }}" alt="{{ file.name }}" loading="lazy" />
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="gallery-empty">
+        <div style="font-size:3rem; margin-bottom:.75rem;">📂</div>
+        <p>Belum ada foto/video.<br>
+        Tambahkan file ke folder <code>stas/galery/</code>.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ── Lightbox ── -->
+<div id="lightbox" style="
+  display:none; position:fixed; inset:0; z-index:300;
+  background:rgba(0,0,0,.9); backdrop-filter:blur(10px);
+  align-items:center; justify-content:center; padding:1rem;
+" onclick="closeLightbox()">
+  <button onclick="closeLightbox()" style="
+    position:fixed; top:1.25rem; right:1.5rem;
+    background:var(--bg-surface); border:1px solid var(--border);
+    border-radius:6px; color:var(--text-muted); width:36px; height:36px;
+    font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  ">✕</button>
+  <img  id="lb-img"   src="" alt="Preview" style="max-width:90vw; max-height:88vh; border-radius:8px; display:none; object-fit:contain;" />
+  <video id="lb-video" src="" controls style="max-width:90vw; max-height:88vh; border-radius:8px; display:none;"></video>
+</div>
+
+<script>
+  function openLightbox(el) {
+    const lb    = document.getElementById('lightbox');
+    const img   = document.getElementById('lb-img');
+    const video = document.getElementById('lb-video');
+    const src   = el.dataset.src;
+    const type  = el.dataset.type;
+
+    img.style.display   = 'none';
+    video.style.display = 'none';
+
+    if (type === 'video') {
+      video.src           = src;
+      video.style.display = 'block';
+    } else {
+      img.src           = src;
+      img.style.display = 'block';
+    }
+
+    lb.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    event.stopPropagation();
+  }
+
+  function closeLightbox() {
+    const lb    = document.getElementById('lightbox');
+    const video = document.getElementById('lb-video');
+    video.pause();
+    lb.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeLightbox();
+  });
+</script>
+</body>
+</html>

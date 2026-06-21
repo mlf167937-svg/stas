@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STAS — Login Member</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+<div class="login-wrapper">
+  <div class="login-box">
+
+    <!-- Brand -->
+    <div class="login-brand">
+      <div class="brand-name">
+        <span class="s-letter">S</span><span class="t-letter">T</span><span class="a-letter">A</span><span class="ss-letter">S</span>
+      </div>
+      <div class="brand-sub">Sang Technology And Science</div>
+    </div>
+
+    <!-- Error -->
+    {% if error %}
+    <div class="form-error">
+      <span>⚠</span> {{ error }}
+    </div>
+    {% endif %}
+
+    <!-- Form -->
+    <form method="POST" action="{{ url_for('login') }}" autocomplete="off">
+      <div class="form-group">
+        <label for="username">Username Member</label>
+        <input
+          id="username" name="username" type="text"
+          placeholder="Contoh: rauf"
+          required autofocus
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          id="password" name="password" type="password"
+          placeholder="••••••••••"
+          required
+          autocomplete="current-password"
+        />
+      </div>
+
+      <button type="submit" class="btn-primary">🔓 Masuk ke STAS</button>
+    </form>
+
+    <div class="admin-badge">
+      Admin? &nbsp;<a href="{{ url_for('admin_login') }}" style="color:var(--purple-neon);">Login Admin →</a>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

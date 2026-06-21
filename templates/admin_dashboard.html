@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STAS — Admin Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+<!-- ── Navbar Admin ── -->
+<nav class="navbar" style="border-bottom-color: var(--purple-dim);">
+  <div class="nav-brand">
+    <span class="logo-a" style="color:var(--purple-neon); text-shadow:var(--shadow-purple);">ADMIN</span>
+    &nbsp;<span style="color:var(--text-muted); font-size:.85rem;">STAS Dashboard</span>
+  </div>
+  <div class="nav-links">
+    <a href="{{ url_for('index') }}">Lihat Situs</a>
+  </div>
+  <div class="nav-user">
+    <span style="font-size:.82rem; color:var(--purple-neon);">🛡 Administrator</span>
+    <a href="{{ url_for('admin_logout') }}" class="btn-logout">Keluar</a>
+  </div>
+</nav>
+
+<!-- ── Konten ── -->
+<div class="page-wrapper">
+  <div class="admin-header">
+    <h1 class="page-title" style="margin:0;">
+      <span class="accent-p">◈</span>
+      Dashboard
+      <span class="accent-g">Admin</span>
+    </h1>
+    <div style="font-size:.82rem; color:var(--text-muted);">
+      STAS Web System — v1.0
+    </div>
+  </div>
+
+  <!-- Statistik -->
+  <div class="admin-stats">
+    <div class="stat-card">
+      <div class="stat-label">Total Member</div>
+      <div class="stat-value">{{ members | length }}</div>
+    </div>
+    <div class="stat-card" style="border-color: rgba(191,95,255,.3);">
+      <div class="stat-label">Status Server</div>
+      <div class="stat-value" style="font-size:1.4rem; color:var(--green-neon);">● Aktif</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Mode</div>
+      <div class="stat-value" style="font-size:1.4rem; color:var(--purple-neon);">File DB</div>
+    </div>
+  </div>
+
+  <!-- Tabel Member -->
+  <h2 style="font-size:1rem; font-weight:600; color:var(--text-muted); margin-bottom:.75rem; letter-spacing:.05em; text-transform:uppercase;">
+    Daftar Member Terdaftar
+  </h2>
+
+  <div class="admin-table-wrap">
+    {% if members %}
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Username</th>
+          <th>Nama Lengkap</th>
+          <th>Deskripsi</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in members %}
+        <tr>
+          <td style="color:var(--text-muted); font-size:.82rem;">{{ loop.index }}</td>
+          <td style="font-family:var(--font-mono); font-size:.85rem; color:var(--text-muted);">{{ m.username }}</td>
+          <td class="td-name">{{ m.name or '—' }}</td>
+          <td class="td-desk">{{ m.desk or '—' }}</td>
+          <td><span class="td-badge">✓ Aktif</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="padding:3rem; text-align:center; color:var(--text-muted);">
+      Belum ada member. Tambahkan file ke folder <code>stas/name/</code>.
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Panduan -->
+  <div style="
+    margin-top:2rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+  ">
+    <h3 style="font-size:.95rem; font-weight:600; color:var(--purple-neon); margin-bottom:1rem;">📋 Panduan Pengelolaan Member</h3>
+    <div style="font-size:.85rem; color:var(--text-muted); line-height:1.9; font-family:var(--font-mono);">
+      Tambah member baru → buat 3 file:<br>
+      &nbsp;&nbsp;<span style="color:var(--green-neon);">stas/name/[username].txt</span> &nbsp;— Nama lengkap (1 baris)<br>
+      &nbsp;&nbsp;<span style="color:var(--green-neon);">stas/desk/[username].txt</span> &nbsp;— Deskripsi singkat (1 baris)<br>
+      &nbsp;&nbsp;<span style="color:var(--green-neon);">stas/database/[username].txt</span> — Data lengkap (format baku STAS)<br>
+      <br>
+      Hapus member → hapus ketiga file tersebut.<br>
+      Galeri → taruh foto/video ke folder <span style="color:var(--purple-neon);">stas/galery/</span>
+    </div>
+  </div>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
