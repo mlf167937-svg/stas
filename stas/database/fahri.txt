@@ -1,0 +1,10 @@
+PASSWORD: fahri
+===========================================
+STAS INTERNAL MEMBER DATA BASE
+===========================================
+ID ANGGOTA     : STAS-2026-3
+STATUS UTAMA   : 
+DIVISI         : 
+TANGGAL GABUNG : 
+REGIONAL       : 
+==========================================
