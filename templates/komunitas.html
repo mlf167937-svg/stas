@@ -80,50 +80,68 @@
 
 <script src="{{ url_for('static', filename='js/ai.js') }}"></script>
 <script>
-  const ME       = {{ session.fullname | tojson }};
+  // Mengambil nama user yang sedang login dari session Flask
+  const ME       = {{ session.fullname or session.member | tojson }};
   const messages  = document.getElementById('chat-messages');
   const chatInput = document.getElementById('chat-input');
   const chatSend  = document.getElementById('chat-send');
   let   lastCount = 0;
 
+  // Fungsi render chat ala WhatsApp (Kanan-Kiri + Nama + Jam Akurat)
   function renderMsg(msg) {
     const isOwn = msg.sender === ME;
     const wrap  = document.createElement('div');
+    
+    // Jika pesan dari kita sendiri, kasih class 'own' biar rata kanan
     wrap.className = 'chat-msg' + (isOwn ? ' own' : '');
 
-    const initial = msg.sender ? msg.sender.charAt(0).toUpperCase() : '?';
+    // Format tampilan chat ala WA (Nama di atas teks, Jam di bawah/samping)
     wrap.innerHTML = `
-      <div class="chat-bubble-avatar">${initial}</div>
       <div class="chat-bubble-content">
-        <div class="chat-bubble-meta">${isOwn ? '' : msg.sender + ' · '}${msg.ts}</div>
-        <div class="chat-bubble-text">${escHtml(msg.text)}</div>
+        <div class="chat-bubble-text">
+          <!-- Nama Pengirim (Hanya muncul di chat orang lain/grup) -->
+          ${!isOwn ? `<div class="chat-bubble-sender-name" style="font-weight: 700; font-size: 0.78rem; color: var(--purple-neon); margin-bottom: 2px;">${msg.sender}</div>` : ''}
+          
+          <!-- Isi Pesan -->
+          <div class="chat-text-content" style="font-size: 0.9rem; line-height: 1.4; word-break: break-word;">${escHtml(msg.text)}</div>
+          
+          <!-- Jam Akurat -->
+          <div class="chat-bubble-time" style="font-size: 0.68rem; color: var(--text-muted); text-align: right; margin-top: 4px; display: block;">${msg.ts || '00:00'}</div>
+        </div>
       </div>
     `;
+    
     messages.appendChild(wrap);
+    // Auto-scroll ke bawah setiap ada pesan baru
     messages.scrollTop = messages.scrollHeight;
   }
 
+  // Security check biar gak bisa di-inject HTML (XSS Protection)
   function escHtml(str) {
     return str
       .replace(/&/g,'&amp;').replace(/</g,'&lt;')
       .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  // Ambil data chat dari Backend Python
   async function fetchChat() {
     try {
       const res  = await fetch('/api/chat');
       const data = await res.json();
       if (data.length !== lastCount) {
-        // Hanya render yang baru
+        // Ambil pesan yang benar-benar baru aja
         const newMsgs = data.slice(lastCount);
         newMsgs.forEach(renderMsg);
         lastCount = data.length;
+        
+        // Indikator Online internal dummy biar keliatan idup komunitasnya
         document.getElementById('online-count').textContent =
           `${Math.max(1, Math.floor(Math.random()*4)+1)} member online`;
       }
-    } catch(e) {}
+    } catch(e) { console.error("Gagal mengambil chat:", e); }
   }
 
+  // Kirim chat ke database/backend
   async function sendChat() {
     const text = chatInput.value.trim();
     if (!text) return;
@@ -134,14 +152,15 @@
         headers: { 'Content-Type': 'application/json' },
         body   : JSON.stringify({ text })
       });
-      await fetchChat();
-    } catch(e) {}
+      await fetchChat(); // Langsung refresh chat setelah kirim
+    } catch(e) { console.error("Gagal mengirim chat:", e); }
   }
 
+  // Event Listener Tombol & Enter
   chatSend.addEventListener('click', sendChat);
   chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
 
-  // Poll setiap 2 detik
+  // Jalankan polling realtime tiap 2 detik
   fetchChat();
   setInterval(fetchChat, 2000);
 </script>
