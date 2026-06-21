@@ -4,68 +4,62 @@ const aiInput   = document.getElementById('ai-input');
 const aiSend    = document.getElementById('ai-send');
 const aiLog     = document.getElementById('ai-log');
 
-// ─── Helper untuk Menambahkan Log ke System Log Panel ───────────
+// ─── Helper Log (Tanpa if-else) ─────────────────────────────────
 function addSystemLog(message) {
-  // Memastikan panel log tersedia di halaman sebelum menulis log
-  {if else kamu}
-
   const time = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const logEntry = document.createElement('div');
+  logEntry.className = "log-entry"; // Biar lu gampang styling di CSS
   logEntry.style.fontSize = '0.7rem';
   logEntry.style.color = 'var(--text-muted)';
-  logEntry.style.marginBottom = '2px';
   logEntry.style.fontFamily = 'monospace';
   logEntry.innerText = `[${time}] ${message}`;
   aiLog.appendChild(logEntry);
-  
-  // Auto-scroll ke bawah log-nya
   aiLog.scrollTop = aiLog.scrollHeight;
 }
 
-// ─── Helper untuk Render Bubble Chat AI ──────────────────────────
-function renderAiMsg(sender, text, isAi = false) {
-  // Memastikan container chatbox tersedia di halaman sebelum me-render pesan
-  {if else kamu}
-
+// ─── Helper Tampilan Chat AI & User (Tanpa if-else) ─────────────
+function renderUserMsg(text) {
   const msgDiv = document.createElement('div');
+  msgDiv.className = "ai-msg-wrap user";
   msgDiv.style.marginBottom = '0.75rem';
   msgDiv.style.display = 'flex';
   msgDiv.style.flexDirection = 'column';
-  
-  // Penentuan perataan bubble chat (kiri untuk AI, kanan untuk User)
-  {if else kamu}
+  msgDiv.style.alignItems = 'flex-end'; // User di kanan
 
-  // Desain bubble teks AI/User
-  const bubble = document.createElement('div');
-  bubble.style.padding = '0.55rem 0.75rem';
-  bubble.style.borderRadius = '8px';
-  bubble.style.fontSize = '0.85rem';
-  bubble.style.maxWidth = '85%';
-  bubble.style.lineHeight = '1.3';
-  bubble.style.wordBreak = 'break-word';
-
-  // Penentuan warna background & teks berdasarkan pengirim (AI atau User)
-  {if else kamu}
-
-  // Escape HTML / Input text sanitization
-  bubble.innerText = text;
-
-  msgDiv.appendChild(bubble);
+  msgDiv.innerHTML = `
+    <div style="padding: 0.55rem 0.75rem; border-radius: 8px; font-size: 0.85rem; max-width: 85%; background: var(--bg-surface); color: var(--green-neon); word-break: break-word;">
+      ${text}
+    </div>
+  `;
   aiChatbox.appendChild(msgDiv);
   aiChatbox.scrollTop = aiChatbox.scrollHeight;
 }
 
-// ─── Fungsi Utama Mengirim Prompt ke Backend AI ─────────────────
+function renderBotMsg(text) {
+  const msgDiv = document.createElement('div');
+  msgDiv.className = "ai-msg-wrap bot";
+  msgDiv.style.marginBottom = '0.75rem';
+  msgDiv.style.display = 'flex';
+  msgDiv.style.flexDirection = 'column';
+  msgDiv.style.alignItems = 'flex-start'; // AI di kiri
+
+  msgDiv.innerHTML = `
+    <div style="padding: 0.55rem 0.75rem; border-radius: 8px; font-size: 0.85rem; max-width: 85%; background: rgba(191, 95, 255, 0.1); border: 1px solid rgba(191, 95, 255, 0.2); color: var(--text-main); word-break: break-word;">
+      ${text}
+    </div>
+  `;
+  aiChatbox.appendChild(msgDiv);
+  aiChatbox.scrollTop = aiChatbox.scrollHeight;
+}
+
+// ─── Fungsi Kirim Data (CUMA 1 TEMPAT IF-ELSE DI SINI) ───────────
 async function handleAiSend() {
   const query = aiInput.value.trim();
-  
-  // Validasi input kosong
-  {if else kamu}
+  if (!query) return; // Validasi standar biar gak kirim chat kosong
 
-  // Tampilkan chat user di panel AI chatbox
-  renderAiMsg('User', query, false);
+  renderUserMsg(query);
   aiInput.value = '';
-  addSystemLog(`Mengirim prompt ke AI: "${query.substring(0, 15)}..."`);
+  addSystemLog(`Mengirim prompt ke AI...`);
 
   try {
     const res = await fetch('/api/ai', { 
@@ -75,35 +69,17 @@ async function handleAiSend() {
     });
     const data = await res.json();
     
-    // Tampilkan balasan AI ke panel chatbox
-    renderAiMsg('STAS-AI', data.reply || data.response, true);
-    addSystemLog("Respon AI berhasil diterima.");
-  } catch (e) {
-    addSystemLog("Error: Gagal terhubung ke STAS-AI.");
-    console.error(e);
-  }
-}
-
-// ─── Inisialisasi Event Listener Tombol & Enter ─────────────────
-// Memastikan element input dan button ada sebelum melakukan addEventListener
-{
+    // ─── SILAHKAN MASUKKAN KODE IF ELSE LU DI SINI ───
+    {
+    // ==========================================
+    // 1. SAPAAN & GREETING (CHATBOT META)
+    // ==========================================
+    sapaan: {
         keywords: ['halo', 'hai', 'hei', 'hi', 'hlo', 'p', 'assalamualaikum', 'oy', 'pagi', 'siang', 'malam', 'hello', 'hey', 'yo', 'hola'],
         reply: "Halo juga, cuks! 🙌 Ada yang bisa dibantu seputar dunia Informatika? Dari coding, web dev, database, sampe cybersecurity, aku siap bantu!"
     },
 
-    apa_itu_ai_sdatabase_adalah: {
-        keywords: ['apa itu database', 'database dalam aplikasi', 'fungsi database', 'mengapa butuh database', 'jenis jenis database'],
-        reply: "Database adalah sistem organized buat store, retrieve, manage data. Fungsi: simpan data persistent, query cepat, security, concurrency control. Ada 2 tipe: Relational (SQL - structured data), NoSQL (unstructured/semi-structured). Bayangin database seperti filing cabinet digital - organize folder, bikin index, cari file jadi instant. Essential buat aplikasi yang handle banyak data, cuks!"
-    },
-
-    sql_vs_nosql: {
-        keywords: ['sql vs nosql', 'perbedaan sql nosql', 'kapan pakai sql kapan nosql', 'relational vs nonrelational', 'sql dan nosql perbedaan'],
-        reply: "SQL: Relational database, structured schema, ACID properties, good buat data terstruktur. Contoh: MySQL, PostgreSQL. NoSQL: Non-relational, flexible schema, eventual consistency, good buat data tidak terstruktur. Contoh: MongoDB, Firebase. SQL = spreadsheet yang ketat, NoSQL = flexible folder. Pilih SQL buat data yang pasti struktur (financial), NoSQL buat data dynamic (social media), cuks!"
-    },
-
-    mysql_adalah: {
-        keywords: ['apa itu mysql', 'mysql database', 'cara pakai mysql', 'mysql dalam web', 'mysql dan php'],
-        reply: "MySQL adalah relatas: {
+    apa_itu_ai_stas: {
         keywords: ['siapa', 'apa itu ai stas', 'tentang stas', 'siapa itu stas', 'fungsi stas', 'kegunaan stas', 'untuk apa stas'],
         reply: "Yo cuks! Aku adalah AI STAS, chatbot lokal yang diadain buat komunitas IT. Aku dibuat buat membantu cuks ngejawab pertanyaan seputar Informatika, dari basic coding sampe cybersecurity. Aku bukan AI cloud, tapi AI lokal yang jauh lebih cepat dan aman!"
     },
@@ -282,7 +258,7 @@ async function handleAiSend() {
     // ==========================================
     // 4. DATABASE
     // ==========================================
-        database_adalah: {
+    database_adalah: {
         keywords: ['apa itu database', 'database dalam aplikasi', 'fungsi database', 'mengapa butuh database', 'jenis jenis database'],
         reply: "Database adalah sistem organized buat store, retrieve, manage data. Fungsi: simpan data persistent, query cepat, security, concurrency control. Ada 2 tipe: Relational (SQL - structured data), NoSQL (unstructured/semi-structured). Bayangin database seperti filing cabinet digital - organize folder, bikin index, cari file jadi instant. Essential buat aplikasi yang handle banyak data, cuks!"
     },
@@ -584,7 +560,7 @@ async function handleAiSend() {
 
     // ==========================================
     // 10. ADVANCED TOPICS
-    // ========================================== 
+    // ==========================================
     microservices: {
         keywords: ['apa itu microservices', 'microservices architecture', 'monolithic vs microservices', 'microservices advantages'],
         reply: "Microservices adalah architecture style dengan bikin aplikasi dari small, independent services. Tiap service: own database, own codebase, deployable independently. Keuntungan: scalability, flexibility, fast deployment, easy to maintain. Tantangan: complexity, distributed system issues, eventual consistency. Microservices cocok buat large, complex applications. Trade-off: simplicity vs scalability. Modern architecture trend adalah microservices, cuks!"
@@ -879,66 +855,20 @@ async function handleAiSend() {
 // Export untuk Node.js/Module system
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = dataJawabanAI;
-};
+}
+    // Contoh penggunaan di dalam if-else lu nanti:
+    // renderBotMsg(data.reply); -> Buat nampilin chat dari AI
+    // addSystemLog("Log pesan..."); -> Buat nambahin text ke system log
+    
+  } catch (e) {
+    addSystemLog("Error: Gagal terhubung ke STAS-AI.");
+    console.error(e);
+  }
+}
 
-    function dapatkanJawabanLokal(pesanUser) {
-        const pesanBersih = pesanUser.toLowerCase().trim();
+// ─── Event Listener Langsung Pasang (Tanpa if-else) ─────────────
+aiSend.addEventListener('click', handleAiSend);
+aiInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleAiSend(); });
 
-        for (let key in dataJawabanAI) {
-            const kelompok = dataJawabanAI[key];
-            
-            if (!kelompok || !kelompok.keywords || !Array.isArray(kelompok.keywords)) {
-                continue;
-            }
-
-            const cocok = kelompok.keywords.some(keyword => {
-                const kwBersih = keyword.toLowerCase().trim();
-                return pesanBersih.includes(kwBersih);
-            });
-            
-            if (cocok) {
-                return kelompok.reply;
-            }
-        }
-        return null;
-    }
-
-    function handleKirimPesan() {
-        const pesan = chatInput.value.trim();
-        if (!pesan) return;
-
-        tampilkanChatLayar(pesan, 'user');
-        chatInput.value = '';
-
-        const jawabanLokal = dapatkanJawabanLokal(pesan);
-
-        if (jawabanLokal) {
-            setTimeout(() => {
-                tampilkanChatLayar(jawabanLokal, 'ai');
-            }, 250);
-        } else {
-            tampilkanChatLayar("⏳ Menghubungi Server STAS...", 'system');
-            
-            fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: pesan })
-            })
-            .then(res => res.json())
-            .then(data => {
-                hapusLoadingSystem();
-                if (data && data.reply) {
-                    tampilkanChatLayar(data.reply, 'ai');
-                } else {
-                    tampilkanChatLayar("Maaf cuks, server gagal memberikan respon valid.", 'ai');
-                }
-            })
-            .catch(() => {
-                hapusLoadingSystem();
-                tampilkanChatLayar("⚠️ Gagal koneksi ke server Backend, cuks!", 'ai');
-            });
-        }
-    }
-
-// Log pembuka saat sistem pertama kali dimuat di halaman komunitas
+// Log pembuka otomatis saat halaman komunitas di-load
 addSystemLog("STAS-AI Core System initialized...");
