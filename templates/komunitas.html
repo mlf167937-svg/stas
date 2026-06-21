@@ -80,8 +80,9 @@
 
 <script src="{{ url_for('static', filename='js/ai.js') }}"></script>
 <script>
-  // Mengambil nama user yang sedang login dari session Flask
-  const ME       = {{ session.fullname or session.member | tojson }};
+  // FIX: Menggunakan logika conditional Jinja yang benar agar ter-render sebagai string JS yang valid
+  const ME = {% if session.fullname %}{{ session.fullname | tojson }}{% else %}{{ session.member | tojson }}{% endif %};
+  
   const messages  = document.getElementById('chat-messages');
   const chatInput = document.getElementById('chat-input');
   const chatSend  = document.getElementById('chat-send');
@@ -99,13 +100,10 @@
     wrap.innerHTML = `
       <div class="chat-bubble-content">
         <div class="chat-bubble-text">
-          <!-- Nama Pengirim (Hanya muncul di chat orang lain/grup) -->
           ${!isOwn ? `<div class="chat-bubble-sender-name" style="font-weight: 700; font-size: 0.78rem; color: var(--purple-neon); margin-bottom: 2px;">${msg.sender}</div>` : ''}
           
-          <!-- Isi Pesan -->
           <div class="chat-text-content" style="font-size: 0.9rem; line-height: 1.4; word-break: break-word;">${escHtml(msg.text)}</div>
           
-          <!-- Jam Akurat -->
           <div class="chat-bubble-time" style="font-size: 0.68rem; color: var(--text-muted); text-align: right; margin-top: 4px; display: block;">${msg.ts || '00:00'}</div>
         </div>
       </div>
