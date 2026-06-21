@@ -8,7 +8,6 @@
 </head>
 <body>
 
-<!-- ── Navbar ── -->
 <nav class="navbar">
   <div class="nav-brand">
     <span class="logo-s">S</span><span class="logo-t">T</span><span class="logo-as">AS</span>
@@ -26,11 +25,9 @@
   </div>
 </nav>
 
-<!-- ── Chat Layout ── -->
 <div class="page-wrapper" style="padding-top:1.25rem; padding-bottom:1.25rem;">
-  <div style="display:grid; grid-template-columns:1fr 300px; gap:1.25rem; height:calc(100vh - 62px - 2.5rem);">
+  <div class="chat-container-grid">
 
-    <!-- Chat Utama -->
     <div class="chat-layout">
       <div class="chat-header">
         <div class="dot"></div>
@@ -56,11 +53,9 @@
       </div>
     </div>
 
-    <!-- Panel AI Asisten -->
-    <div style="display:flex; flex-direction:column; gap:1rem; overflow:hidden;">
+    <div class="ai-panel-wrapper">
 
-      <!-- AI Chat -->
-      <div class="chat-layout" style="flex:1; min-height:0;">
+      <div class="chat-layout ai-chat-layout">
         <div class="chat-header" style="background: rgba(191,95,255,.06);">
           <span style="color:var(--purple-neon);">🤖</span>
           <span style="font-weight:600; font-size:.9rem;">STAS-AI Assistant</span>
@@ -72,16 +67,7 @@
         </div>
       </div>
 
-      <!-- System Log -->
-      <div style="
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: .85rem;
-        height: 160px;
-        overflow-y: auto;
-        flex-shrink: 0;
-      ">
+      <div class="system-log-panel">
         <div style="font-size:.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:.5rem;">
           ⚙ System Log
         </div>
