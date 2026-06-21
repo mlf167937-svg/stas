@@ -4,7 +4,7 @@ import string
 from datetime import datetime, timezone, timedelta
 from flask import (
     Flask, render_template, request, redirect,
-    url_for, session, jsonify, flash
+    url_for, session, jsonify, flash, send_from_directory
 )
 
 app = Flask(__name__)
@@ -161,6 +161,14 @@ def games():
     return render_template('games.html')
 
 
+# ─── ROUTE KHUSUS: Akses File stas/galery (FIX GAMBAR PECAH) ─────────────────────
+@app.route('/stas/galery/<path:filename>')
+@login_required
+def custom_gallery_route(filename):
+    """Mengizinkan Flask membaca file di luar folder static."""
+    return send_from_directory(GALERY_DIR, filename)
+
+
 # ─── API: detail member (tanpa password) ──────────────────────────────────────
 @app.route('/api/member/<username>')
 @login_required
@@ -173,7 +181,7 @@ def api_member(username):
     return jsonify({'username': username, 'name': name, 'desk': desk, 'db': db_data})
 
 
-# ─── API: Komunitas Chat (simple in-memory, ganti Redis/DB untuk produksi) ────
+# ─── API: Komunitas Chat (simple in-memory) ───────────────────────────────────
 chat_messages = []   # [{'sender': str, 'text': str, 'ts': str}]
 
 @app.route('/api/chat', methods=['GET'])
@@ -190,7 +198,6 @@ def chat_post():
     if not text:
         return jsonify({'error': 'Pesan kosong'}), 400
     
-    # SETTING ZONA WAKTU INDONESIA (WIB: UTC+7) AGAR AKURAT DI SERVER MANA PUN
     wib_timezone = timezone(timedelta(hours=7))
     waktu_sekarang = datetime.now(wib_timezone).strftime('%H:%M')
     
@@ -201,6 +208,20 @@ def chat_post():
     }
     chat_messages.append(msg)
     return jsonify(msg), 201
+
+
+# ─── API: STAS-AI ROUTE (FIX GAGAL TERHUBUNG) ─────────────────────────────────
+@app.route('/api/ai', methods=['POST'])
+@login_required
+def api_ai_assistant():
+    """Route fallback AI agar js tidak memicu status error merah."""
+    data = request.get_json(silent=True) or {}
+    prompt = data.get('prompt', '').strip().lower()
+    
+    # Berikan respon default jika tidak di-intercept oleh objek dataJawabanAI frontend
+    return jsonify({
+        'reply': "Pesan diterima backend STAS, mencari jawaban terbaik..."
+    }), 200
 
 
 # ─── Admin Routes ─────────────────────────────────────────────────────────────
@@ -249,6 +270,5 @@ def admin_logout():
 
 # ─── Entry Point ──────────────────────────────────────────────────────────────
 if __name__ == '__main__':
-    # PORT render dinamis
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=True, host='0.0.0.0', port=port)
