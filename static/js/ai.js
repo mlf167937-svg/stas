@@ -74,7 +74,7 @@ async function handleAiSend() {
     // ==========================================
     // 1. SAPAAN & GREETING (CHATBOT META)
     // ==========================================
-      const chatbotDatabase = {
+  const chatbotDatabase = {
     sapaan: {
         keywords: ['halo', 'hai', 'hei', 'hi', 'hlo', 'p', 'assalamualaikum', 'oy', 'pagi', 'siang', 'malam', 'hello', 'hey', 'yo', 'hola'],
         reply: "Halo juga, cuks! 🙌 Ada yang bisa dibantu seputar dunia Informatika? Dari coding, web dev, database, sampe cybersecurity, aku siap bantu!"
