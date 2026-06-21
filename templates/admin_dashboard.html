@@ -5,111 +5,216 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>STAS — Admin Dashboard</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <style>
+    /* CSS Khusus Dashboard Admin */
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    .panel-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .panel-title {
+      font-size: 1rem; font-weight: 600; color: var(--purple-neon);
+      margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .sys-input {
+      width: 100%; padding: 0.8rem; border-radius: 6px;
+      border: 1px solid rgba(191,95,255,0.3); background: var(--bg-surface);
+      color: var(--text-main); font-family: var(--font-main);
+      margin-bottom: 0.75rem;
+    }
+    .sys-input:focus { border-color: var(--purple-neon); outline: none; }
+    
+    .btn-sys {
+      width: 100%; padding: 0.8rem; border: none; border-radius: 6px;
+      background: rgba(191,95,255,0.15); color: var(--purple-neon);
+      font-weight: 600; cursor: pointer; transition: 0.2s;
+    }
+    .btn-sys:hover { background: var(--purple-neon); color: #000; }
+    
+    .btn-danger {
+      width: 100%; padding: 0.8rem; border: 1px solid rgba(255, 71, 87, 0.3); border-radius: 6px;
+      background: rgba(255, 71, 87, 0.1); color: #ff4757;
+      font-weight: 600; cursor: pointer; transition: 0.2s;
+    }
+    .btn-danger:hover { background: #ff4757; color: #fff; }
+
+    @media (max-width: 768px) {
+      .admin-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- ── Navbar Admin ── -->
-<nav class="navbar" style="border-bottom-color: var(--purple-dim);">
+<nav class="navbar" style="border-bottom-color: rgba(191,95,255,0.3); background: rgba(0,0,0,0.8);">
   <div class="nav-brand">
-    <span class="logo-a" style="color:var(--purple-neon); text-shadow:var(--shadow-purple);">ADMIN</span>
-    &nbsp;<span style="color:var(--text-muted); font-size:.85rem;">STAS Dashboard</span>
+    <span class="logo-a" style="color:var(--purple-neon); text-shadow:0 0 8px rgba(191,95,255,0.5);">ADMIN</span>
+    &nbsp;<span style="color:var(--text-muted); font-size:.85rem;">Control Panel</span>
   </div>
   <div class="nav-links">
-    <a href="{{ url_for('index') }}">Lihat Situs</a>
+    <a href="{{ url_for('index') }}" target="_blank">↗ Buka Situs</a>
   </div>
   <div class="nav-user">
-    <span style="font-size:.82rem; color:var(--purple-neon);">🛡 Administrator</span>
-    <a href="{{ url_for('admin_logout') }}" class="btn-logout">Keluar</a>
+    <span style="font-size:.82rem; color:var(--purple-neon);">🛡 System Admin</span>
+    <a href="{{ url_for('admin_logout') }}" class="btn-logout" style="border-color:var(--purple-neon); color:var(--purple-neon);">Keluar</a>
   </div>
 </nav>
 
-<!-- ── Konten ── -->
 <div class="page-wrapper">
   <div class="admin-header">
     <h1 class="page-title" style="margin:0;">
-      <span class="accent-p">◈</span>
-      Dashboard
-      <span class="accent-g">Admin</span>
+      <span class="accent-p">◈</span> Dashboard <span class="accent-g">Utama</span>
     </h1>
-    <div style="font-size:.82rem; color:var(--text-muted);">
-      STAS Web System — v1.0
+    <div style="font-size:.82rem; color:var(--text-muted); font-family:monospace;" id="server-time">
+      Mendeteksi waktu server...
     </div>
   </div>
 
-  <!-- Statistik -->
   <div class="admin-stats">
     <div class="stat-card">
       <div class="stat-label">Total Member</div>
       <div class="stat-value">{{ members | length }}</div>
     </div>
-    <div class="stat-card" style="border-color: rgba(191,95,255,.3);">
+    <div class="stat-card" style="border-color: rgba(191,95,255,.3); background:rgba(191,95,255,0.05);">
       <div class="stat-label">Status Server</div>
-      <div class="stat-value" style="font-size:1.4rem; color:var(--green-neon);">● Aktif</div>
+      <div class="stat-value" style="font-size:1.4rem; color:var(--green-neon);">● Online</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">Mode</div>
-      <div class="stat-value" style="font-size:1.4rem; color:var(--purple-neon);">File DB</div>
+      <div class="stat-label">Database Mode</div>
+      <div class="stat-value" style="font-size:1.4rem; color:var(--purple-neon);">TXT Static</div>
     </div>
   </div>
 
-  <!-- Tabel Member -->
-  <h2 style="font-size:1rem; font-weight:600; color:var(--text-muted); margin-bottom:.75rem; letter-spacing:.05em; text-transform:uppercase;">
-    Daftar Member Terdaftar
-  </h2>
-
-  <div class="admin-table-wrap">
-    {% if members %}
-    <table>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Username</th>
-          <th>Nama Lengkap</th>
-          <th>Deskripsi</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for m in members %}
-        <tr>
-          <td style="color:var(--text-muted); font-size:.82rem;">{{ loop.index }}</td>
-          <td style="font-family:var(--font-mono); font-size:.85rem; color:var(--text-muted);">{{ m.username }}</td>
-          <td class="td-name">{{ m.name or '—' }}</td>
-          <td class="td-desk">{{ m.desk or '—' }}</td>
-          <td><span class="td-badge">✓ Aktif</span></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-    <div style="padding:3rem; text-align:center; color:var(--text-muted);">
-      Belum ada member. Tambahkan file ke folder <code>stas/name/</code>.
+  <div class="admin-grid">
+    
+    <div class="left-col">
+      <h2 style="font-size:1rem; font-weight:600; color:var(--text-muted); margin-bottom:.75rem; text-transform:uppercase;">
+        Database Member
+      </h2>
+      <div class="admin-table-wrap">
+        {% if members %}
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Username</th>
+              <th>Nama Lengkap</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in members %}
+            <tr>
+              <td style="color:var(--text-muted); font-size:.82rem;">{{ loop.index }}</td>
+              <td style="font-family:var(--font-mono); font-size:.85rem; color:var(--green-neon);">@{{ m.username }}</td>
+              <td class="td-name">{{ m.name or '—' }}</td>
+              <td><span class="td-badge" style="background:rgba(32, 194, 14, 0.1); color:var(--green-neon); border:1px solid rgba(32, 194, 14, 0.3); padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem;">Aktif</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div style="padding:3rem; text-align:center; color:var(--text-muted);">
+          Belum ada member. Tambahkan file ke folder <code>stas/name/</code>.
+        </div>
+        {% endif %}
+      </div>
     </div>
-    {% endif %}
-  </div>
 
-  <!-- Panduan -->
-  <div style="
-    margin-top:2rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.5rem;
-  ">
-    <h3 style="font-size:.95rem; font-weight:600; color:var(--purple-neon); margin-bottom:1rem;">📋 Panduan Pengelolaan Member</h3>
-    <div style="font-size:.85rem; color:var(--text-muted); line-height:1.9; font-family:var(--font-mono);">
-      Tambah member baru → buat 3 file:<br>
-      &nbsp;&nbsp;<span style="color:var(--green-neon);">stas/name/[username].txt</span> &nbsp;— Nama lengkap (1 baris)<br>
-      &nbsp;&nbsp;<span style="color:var(--green-neon);">stas/desk/[username].txt</span> &nbsp;— Deskripsi singkat (1 baris)<br>
-      &nbsp;&nbsp;<span style="color:var(--green-neon);">stas/database/[username].txt</span> — Data lengkap (format baku STAS)<br>
-      <br>
-      Hapus member → hapus ketiga file tersebut.<br>
-      Galeri → taruh foto/video ke folder <span style="color:var(--purple-neon);">stas/galery/</span>
+    <div class="right-col">
+      
+      <div class="panel-card" style="border-color: var(--purple-neon); box-shadow: 0 0 15px rgba(191,95,255,0.1);">
+        <div class="panel-title">📡 System Broadcast</div>
+        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">Kirim pesan langsung ke ruang chat Komunitas sebagai <strong>SYSTEM</strong>.</p>
+        <input type="text" id="sysChatInput" class="sys-input" placeholder="Ketik pengumuman di sini..." />
+        <button class="btn-sys" onclick="sendBroadcast()" id="btnBroadcast">Kirim Pesan</button>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-title" style="color: #ff4757;">⚠️ Server Actions</div>
+        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">Hapus seluruh riwayat obrolan di halaman Komunitas. (Tindakan ini tidak bisa dibatalkan).</p>
+        <button class="btn-danger" onclick="clearCommunityChat()">Bersihkan Riwayat Chat</button>
+      </div>
+
+      <div class="panel-card" style="background: rgba(0,0,0,0.3);">
+        <div class="panel-title" style="color: var(--text-main);">📋 Panduan Root</div>
+        <div style="font-size:.8rem; color:var(--text-muted); line-height:1.8; font-family:var(--font-mono);">
+          <span style="color:var(--green-neon);">+ Tambah Member:</span> Buat 3 file TXT dengan nama username di folder <code>name/</code>, <code>desk/</code>, dan <code>database/</code>.<br><br>
+          <span style="color:#ff4757;">- Hapus Member:</span> Hapus ketiga file TXT tersebut secara manual dari server.
+        </div>
+      </div>
+
     </div>
   </div>
-
 </div>
 
-<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script>
+  // Script untuk Jam Realtime Server
+  setInterval(() => {
+    const time = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    document.getElementById('server-time').innerText = `STAS Core System — Waktu Lokal: ${time}`;
+  }, 1000);
+
+  // Script untuk ngirim chat sebagai SYSTEM
+  async function sendBroadcast() {
+    const input = document.getElementById('sysChatInput');
+    const btn = document.getElementById('btnBroadcast');
+    const text = input.value.trim();
+    
+    if (!text) return alert('Pesan tidak boleh kosong!');
+    
+    btn.innerText = "Mengirim...";
+    btn.style.opacity = "0.5";
+    
+    try {
+      const res = await fetch('/admin/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text })
+      });
+      
+      if (res.ok) {
+        input.value = '';
+        alert('✅ Pengumuman berhasil dikirim ke Komunitas!');
+      } else {
+        alert('Gagal mengirim pesan.');
+      }
+    } catch (e) {
+      alert('Terjadi kesalahan koneksi.');
+    }
+    
+    btn.innerText = "Kirim Pesan";
+    btn.style.opacity = "1";
+  }
+
+  // Script untuk menghapus chat komunitas
+  async function clearCommunityChat() {
+    const confirmDelete = confirm("⚠️ Yakin ingin menghapus semua chat di Komunitas? Ini tidak bisa dikembalikan.");
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch('/admin/clear_chat', { method: 'POST' });
+      if (res.ok) {
+        alert('✅ Seluruh riwayat obrolan komunitas berhasil dihapus!');
+      } else {
+        alert('Gagal membersihkan chat.');
+      }
+    } catch (e) {
+      alert('Terjadi kesalahan koneksi.');
+    }
+  }
+
+  // Enter buat kirim broadcast
+  document.getElementById('sysChatInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') sendBroadcast();
+  });
+</script>
 </body>
 </html>
