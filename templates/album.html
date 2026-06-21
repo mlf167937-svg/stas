@@ -5,6 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>STAS — Album</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <style>
+    /* CSS Tambahan Khusus untuk Tampilan TikTok */
+    #tt-lightbox {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      background: #000; overflow-y: scroll;
+      scroll-snap-type: y mandatory; /* Kunci efek TikTok */
+      scroll-behavior: smooth;
+    }
+    .tt-item {
+      height: 100dvh; width: 100vw;
+      scroll-snap-align: start; /* Ngunci pas di-scroll */
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+    }
+    .tt-item img, .tt-item video {
+      max-height: 100%; max-width: 100%; object-fit: contain;
+    }
+    .btn-close-tt {
+      position: fixed; top: 20px; right: 20px; z-index: 10000;
+      background: rgba(255, 255, 255, 0.2); color: white; border: none;
+      border-radius: 50%; width: 40px; height: 40px; font-size: 1.2rem;
+      cursor: pointer; backdrop-filter: blur(5px);
+    }
+  </style>
 </head>
 <body>
 
@@ -29,22 +53,16 @@
 <!-- ── Konten ── -->
 <div class="page-wrapper">
   <h1 class="page-title">
-    <span class="accent-p">◈</span>
-    Album
-    <span class="accent-g">STAS</span>
+    <span class="accent-p">◈</span> Album <span class="accent-g">STAS</span>
   </h1>
 
   <div class="gallery-grid" id="gallery-grid">
     {% if files %}
       {% for file in files %}
-      <div class="gallery-item" onclick="openLightbox(this)" data-type="{{ file.type }}" data-src="/static/../stas/galery/{{ file.name }}" title="{{ file.name }}">
+      <div class="gallery-item" onclick="openTikTok(this)" data-type="{{ file.type }}" data-src="/stas/galery/{{ file.name }}" title="{{ file.name }}">
         {% if file.type == 'video' %}
           <video src="/stas/galery/{{ file.name }}" muted preload="metadata"></video>
-          <div style="
-            position:absolute; inset:0; display:flex; align-items:center;
-            justify-content:center; font-size:2.5rem; pointer-events:none;
-            background:rgba(0,0,0,.25);
-          ">▶</div>
+          <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:2.5rem; pointer-events:none; background:rgba(0,0,0,.25);">▶</div>
         {% else %}
           <img src="/stas/galery/{{ file.name }}" alt="{{ file.name }}" loading="lazy" />
         {% endif %}
@@ -53,63 +71,65 @@
     {% else %}
       <div class="gallery-empty">
         <div style="font-size:3rem; margin-bottom:.75rem;">📂</div>
-        <p>Belum ada foto/video.<br>
-        Tambahkan file ke folder <code>stas/galery/</code>.</p>
+        <p>Belum ada foto/video.<br>Tambahkan file ke folder <code>stas/galery/</code>.</p>
       </div>
     {% endif %}
   </div>
 </div>
 
-<!-- ── Lightbox ── -->
-<div id="lightbox" style="
-  display:none; position:fixed; inset:0; z-index:300;
-  background:rgba(0,0,0,.9); backdrop-filter:blur(10px);
-  align-items:center; justify-content:center; padding:1rem;
-" onclick="closeLightbox()">
-  <button onclick="closeLightbox()" style="
-    position:fixed; top:1.25rem; right:1.5rem;
-    background:var(--bg-surface); border:1px solid var(--border);
-    border-radius:6px; color:var(--text-muted); width:36px; height:36px;
-    font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;
-  ">✕</button>
-  <img  id="lb-img"   src="" alt="Preview" style="max-width:90vw; max-height:88vh; border-radius:8px; display:none; object-fit:contain;" />
-  <video id="lb-video" src="" controls style="max-width:90vw; max-height:88vh; border-radius:8px; display:none;"></video>
+<!-- ── Lightbox Gaya TikTok ── -->
+<div id="tt-lightbox">
+  <button class="btn-close-tt" onclick="closeTikTok()">✕</button>
+  <div id="tt-feed">
+    <!-- Konten akan dimuat oleh JS disini -->
+  </div>
 </div>
 
 <script>
-  function openLightbox(el) {
-    const lb    = document.getElementById('lightbox');
-    const img   = document.getElementById('lb-img');
-    const video = document.getElementById('lb-video');
-    const src   = el.dataset.src;
-    const type  = el.dataset.type;
+  // Simpan semua data galeri pas halaman di-load
+  const allMedia = [];
+  document.querySelectorAll('.gallery-item').forEach(item => {
+      allMedia.push({ src: item.dataset.src, type: item.dataset.type });
+  });
 
-    img.style.display   = 'none';
-    video.style.display = 'none';
+  function openTikTok(el) {
+    const clickedSrc = el.dataset.src;
+    const feed = document.getElementById('tt-feed');
+    feed.innerHTML = ''; // Bersihkan feed sebelumnya
 
-    if (type === 'video') {
-      video.src           = src;
-      video.style.display = 'block';
-    } else {
-      img.src           = src;
-      img.style.display = 'block';
-    }
+    // Bikin elemen TikTok satu-satu secara vertikal
+    allMedia.forEach(media => {
+        const section = document.createElement('div');
+        section.className = 'tt-item';
 
-    lb.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    event.stopPropagation();
+        if (media.type === 'video') {
+            section.innerHTML = `<video src="${media.src}" controls controlsList="nodownload" preload="metadata"></video>`;
+        } else {
+            section.innerHTML = `<img src="${media.src}" alt="STAS Gallery">`;
+        }
+        feed.appendChild(section);
+
+        // Langsung scroll ke foto/video yang di-klik
+        if (media.src === clickedSrc) {
+            setTimeout(() => section.scrollIntoView({ behavior: 'auto' }), 10);
+        }
+    });
+
+    document.getElementById('tt-lightbox').style.display = 'block';
+    document.body.style.overflow = 'hidden'; // Kunci scroll background
   }
 
-  function closeLightbox() {
-    const lb    = document.getElementById('lightbox');
-    const video = document.getElementById('lb-video');
-    video.pause();
-    lb.style.display = 'none';
+  function closeTikTok() {
+    document.getElementById('tt-lightbox').style.display = 'none';
     document.body.style.overflow = '';
+    
+    // Pause semua video yang lagi nyala pas tombol X ditekan
+    document.querySelectorAll('#tt-feed video').forEach(v => v.pause());
   }
 
+  // Bisa ditutup pake tombol ESC di keyboard
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'Escape') closeTikTok();
   });
 </script>
 </body>
