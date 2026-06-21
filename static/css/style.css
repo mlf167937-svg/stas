@@ -473,15 +473,45 @@ a:hover { color: var(--purple-neon); }
   letter-spacing: .05em;
 }
 
-/* ── Chat Komunitas ────────────────────────────────────────── */
+/* ── Custom Wrapper Untuk Fitur Komunitas ──────────────────── */
+.chat-container-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 1.25rem;
+  height: calc(100vh - 62px - 2.5rem);
+}
+
+.ai-panel-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow: hidden;
+}
+
+.system-log-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .85rem;
+  height: 160px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+/* ── Chat Layout (General) ─────────────────────────────────── */
 .chat-layout {
   display      : flex;
   flex-direction: column;
-  height       : calc(100vh - 62px - 4rem);
   background   : var(--bg-card);
   border       : 1px solid var(--border);
   border-radius: var(--radius);
   overflow     : hidden;
+  height       : 100%;
+}
+
+.ai-chat-layout {
+  flex: 1;
+  min-height: 0;
 }
 
 .chat-header {
@@ -891,15 +921,36 @@ tbody tr:hover td { background: var(--bg-surface); }
 .mt-1 { margin-top: .5rem; }
 .mt-2 { margin-top: 1rem; }
 
-/* ── Responsive ────────────────────────────────────────────── */
+/* ── Responsive Mobile Optimization ────────────────────────── */
 @media (max-width: 768px) {
   .navbar       { padding: 0 1rem; }
   .nav-links a  { padding: .4rem .6rem; font-size: .8rem; }
   .page-wrapper { padding: 1.25rem 1rem 3rem; }
   .member-grid  { grid-template-columns: 1fr 1fr; }
   .games-grid   { grid-template-columns: 1fr; }
-  .chat-layout  { height: calc(100vh - 62px - 2.5rem); }
   .nav-user .greet { display: none; }
+
+  /* Fix Layout Chat Komunitas di Layar Kecil (HP) */
+  .chat-container-grid {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    gap: 1.5rem;
+  }
+  
+  .chat-layout {
+    height: 60vh; /* Main chat ngambil 60% tinggi layar HP */
+    min-height: 400px;
+  }
+  
+  .ai-panel-wrapper {
+    overflow: visible;
+  }
+  
+  .ai-chat-layout {
+    height: 350px; /* AI Panel ukurannya disesuaikan buat HP */
+    flex: none;
+  }
 }
 
 @media (max-width: 480px) {
