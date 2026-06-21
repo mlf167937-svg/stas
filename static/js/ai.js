@@ -1,80 +1,18 @@
-// ─── Selector Elemen STAS-AI Assistant ──────────────────────────
+// =================================================================
+// 1. SELECTOR ELEMEN (Jangan Diubah)
+// =================================================================
 const aiChatbox = document.getElementById('ai-chatbox');
 const aiInput   = document.getElementById('ai-input');
 const aiSend    = document.getElementById('ai-send');
 const aiLog     = document.getElementById('ai-log');
 
-// ─── Helper Log (Tanpa if-else) ─────────────────────────────────
-function addSystemLog(message) {
-  const time = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const logEntry = document.createElement('div');
-  logEntry.className = "log-entry"; // Biar lu gampang styling di CSS
-  logEntry.style.fontSize = '0.7rem';
-  logEntry.style.color = 'var(--text-muted)';
-  logEntry.style.fontFamily = 'monospace';
-  logEntry.innerText = `[${time}] ${message}`;
-  aiLog.appendChild(logEntry);
-  aiLog.scrollTop = aiLog.scrollHeight;
-}
-
-// ─── Helper Tampilan Chat AI & User (Tanpa if-else) ─────────────
-function renderUserMsg(text) {
-  const msgDiv = document.createElement('div');
-  msgDiv.className = "ai-msg-wrap user";
-  msgDiv.style.marginBottom = '0.75rem';
-  msgDiv.style.display = 'flex';
-  msgDiv.style.flexDirection = 'column';
-  msgDiv.style.alignItems = 'flex-end'; // User di kanan
-
-  msgDiv.innerHTML = `
-    <div style="padding: 0.55rem 0.75rem; border-radius: 8px; font-size: 0.85rem; max-width: 85%; background: var(--bg-surface); color: var(--green-neon); word-break: break-word;">
-      ${text}
-    </div>
-  `;
-  aiChatbox.appendChild(msgDiv);
-  aiChatbox.scrollTop = aiChatbox.scrollHeight;
-}
-
-function renderBotMsg(text) {
-  const msgDiv = document.createElement('div');
-  msgDiv.className = "ai-msg-wrap bot";
-  msgDiv.style.marginBottom = '0.75rem';
-  msgDiv.style.display = 'flex';
-  msgDiv.style.flexDirection = 'column';
-  msgDiv.style.alignItems = 'flex-start'; // AI di kiri
-
-  msgDiv.innerHTML = `
-    <div style="padding: 0.55rem 0.75rem; border-radius: 8px; font-size: 0.85rem; max-width: 85%; background: rgba(191, 95, 255, 0.1); border: 1px solid rgba(191, 95, 255, 0.2); color: var(--text-main); word-break: break-word;">
-      ${text}
-    </div>
-  `;
-  aiChatbox.appendChild(msgDiv);
-  aiChatbox.scrollTop = aiChatbox.scrollHeight;
-}
-
-// ─── Fungsi Kirim Data (CUMA 1 TEMPAT IF-ELSE DI SINI) ───────────
-async function handleAiSend() {
-  const query = aiInput.value.trim();
-  if (!query) return; // Validasi standar biar gak kirim chat kosong
-
-  renderUserMsg(query);
-  aiInput.value = '';
-  addSystemLog(`Mengirim prompt ke AI...`);
-
-  try {
-    const res = await fetch('/api/ai', { 
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: query })
-    });
-    const data = await res.json();
-    
-    // ─── SILAHKAN MASUKKAN KODE IF ELSE LU DI SINI ───
-    {
+// =================================================================
+// 2. TEMPAT BACKUP DATA LU (Tinggal ganti tanda kurung di bawah)
+// =================================================================
+const dataJawabanAI = {
     // ==========================================
     // 1. SAPAAN & GREETING (CHATBOT META)
     // ==========================================
-  const chatbotDatabase = {
     sapaan: {
         keywords: ['halo', 'hai', 'hei', 'hi', 'hlo', 'p', 'assalamualaikum', 'oy', 'pagi', 'siang', 'malam', 'hello', 'hey', 'yo', 'hola'],
         reply: "Halo juga, cuks! 🙌 Ada yang bisa dibantu seputar dunia Informatika? Dari coding, web dev, database, sampe cybersecurity, aku siap bantu!"
@@ -857,17 +795,88 @@ async function handleAiSend() {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = dataJawabanAI;
 }
-    // Contoh penggunaan di dalam if-else lu nanti:
-    // renderBotMsg(data.reply); -> Buat nampilin chat dari AI
-    // addSystemLog("Log pesan..."); -> Buat nambahin text ke system log
+
+
+// =================================================================
+// 3. HELPER TAMPILAN LOG & CHAT (Jangan Diubah)
+// =================================================================
+function addSystemLog(message) {
+  const time = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const logEntry = document.createElement('div');
+  logEntry.style.fontSize = '0.7rem';
+  logEntry.style.color = 'var(--text-muted)';
+  logEntry.style.fontFamily = 'monospace';
+  logEntry.innerText = `[${time}] ${message}`;
+  aiLog.appendChild(logEntry);
+  aiLog.scrollTop = aiLog.scrollHeight;
+}
+
+function renderUserMsg(text) {
+  const msgDiv = document.createElement('div');
+  msgDiv.style.marginBottom = '0.75rem';
+  msgDiv.style.display = 'flex';
+  msgDiv.style.flexDirection = 'column';
+  msgDiv.style.alignItems = 'flex-end';
+  msgDiv.innerHTML = `<div style="padding: 0.55rem 0.75rem; border-radius: 8px; font-size: 0.85rem; max-width: 85%; background: var(--bg-surface); color: var(--green-neon); word-break: break-word;">${text}</div>`;
+  aiChatbox.appendChild(msgDiv);
+  aiChatbox.scrollTop = aiChatbox.scrollHeight;
+}
+
+function renderBotMsg(text) {
+  const msgDiv = document.createElement('div');
+  msgDiv.style.marginBottom = '0.75rem';
+  msgDiv.style.display = 'flex';
+  msgDiv.style.flexDirection = 'column';
+  msgDiv.style.alignItems = 'flex-start';
+  msgDiv.innerHTML = `<div style="padding: 0.55rem 0.75rem; border-radius: 8px; font-size: 0.85rem; max-width: 85%; background: rgba(191, 95, 255, 0.1); border: 1px solid rgba(191, 95, 255, 0.2); color: var(--text-main); word-break: break-word;">${text}</div>`;
+  aiChatbox.appendChild(msgDiv);
+  aiChatbox.scrollTop = aiChatbox.scrollHeight;
+}
+
+// =================================================================
+// 4. FUNGSI UTAMA PENGIRIMAN PESAN AI
+// =================================================================
+async function handleAiSend() {
+  const query = aiInput.value.trim().toLowerCase();
+  if (!query) return;
+
+  renderUserMsg(aiInput.value.trim());
+  aiInput.value = '';
+  addSystemLog(`Memproses prompt...`);
+
+  try {
+    // Jalur 1: Hit ke Server Flask dulu buat nyiapin respon default
+    const res = await fetch('/api/ai', { 
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: query })
+    });
+    const data = await res.json();
     
+    // Simpan jawaban default dari server Gemini/Claude backend lu
+    let jawabanFinal = data.reply || data.response;
+
+    // Jalur 2: Cek kecocokan di data lokal dataJawabanAI lu secara otomatis
+    for (let key in dataJawabanAI) {
+        if (dataJawabanAI[key].keywords.some(k => query.includes(k))) {
+            jawabanFinal = dataJawabanAI[key].reply;
+            break; 
+        }
+    }
+    
+    // Tampilkan hasil akhir ke chatbox komunitas
+    renderBotMsg(jawabanFinal);
+    addSystemLog("Respon AI berhasil dimuat.");
+
   } catch (e) {
     addSystemLog("Error: Gagal terhubung ke STAS-AI.");
     console.error(e);
   }
 }
 
-// ─── Event Listener Langsung Pasang (Tanpa if-else) ─────────────
+// =================================================================
+// 5. EVENT LISTENER (Jangan Diubah)
+// =================================================================
 aiSend.addEventListener('click', handleAiSend);
 aiInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleAiSend(); });
 
