@@ -1,6 +1,7 @@
 import os
 import random
 import string
+from datetime import datetime, timezone, timedelta
 from flask import (
     Flask, render_template, request, redirect,
     url_for, session, jsonify, flash
@@ -18,7 +19,7 @@ DESK_DIR   = os.path.join(STAS_DIR, 'desk')
 GALERY_DIR = os.path.join(STAS_DIR, 'galery')
 
 # Password Admin (ganti sesuai kebutuhan)
-ADMIN_PASSWORD = "STAS_Admin_raufrex"
+ADMIN_PASSWORD = "STAS@ayfuwb71iahy!"
 
 
 # ─── Helper ────────────────────────────────────────────────────────────────────
@@ -188,11 +189,15 @@ def chat_post():
     text = data.get('text', '').strip()
     if not text:
         return jsonify({'error': 'Pesan kosong'}), 400
-    from datetime import datetime
+    
+    # SETTING ZONA WAKTU INDONESIA (WIB: UTC+7) AGAR AKURAT DI SERVER MANA PUN
+    wib_timezone = timezone(timedelta(hours=7))
+    waktu_sekarang = datetime.now(wib_timezone).strftime('%H:%M')
+    
     msg = {
         'sender': session.get('fullname', session['member']),
         'text'  : text,
-        'ts'    : datetime.now().strftime('%H:%M')
+        'ts'    : waktu_sekarang
     }
     chat_messages.append(msg)
     return jsonify(msg), 201
@@ -244,4 +249,6 @@ def admin_logout():
 
 # ─── Entry Point ──────────────────────────────────────────────────────────────
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # PORT render dinamis
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=True, host='0.0.0.0', port=port)
