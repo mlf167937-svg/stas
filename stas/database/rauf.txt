@@ -3,14 +3,9 @@ PASSWORD: raufrex123
 STAS INTERNAL MEMBER DATA BASE
 ===========================================
 ID ANGGOTA     : STAS-2026-1
-STATUS UTAMA   : Sang Technology 
-DIVISI         : Teknologi & Keamanan Informasi
-TANGGAL GABUNG : 14 Januari 2026
-REGIONAL       : Sutam Pusat
-
-KREDENSI & LOG:
-- Hak Akses: Full  (Admin Dashboard)
-- Lisensi Komunitas: AKTIF hingga Desember 2027
-- Kontak Darurat: +62 838-7302-4650
-- Catatan: Aktif berkontribusi pada sistem web.
+STATUS UTAMA   : 
+DIVISI         : 
+TANGGAL LAHIR  : 28-01-2013
+UMUR           : 13
+REGIONAL       : 
 ===========================================
