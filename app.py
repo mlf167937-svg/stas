@@ -18,7 +18,7 @@ DESK_DIR   = os.path.join(STAS_DIR, 'desk')
 GALERY_DIR = os.path.join(STAS_DIR, 'galery')
 
 # Password Admin (ganti sesuai kebutuhan)
-ADMIN_PASSWORD = "STAS@AdminSecure2026!"
+ADMIN_PASSWORD = "STAS_Admin_raufrex"
 
 
 # ─── Helper ────────────────────────────────────────────────────────────────────
