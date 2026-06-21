@@ -1,13 +1,92 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const chatInput = document.getElementById('chatInput');
-    const btnSend   = document.getElementById('btnSend');
-    const chatBox   = document.getElementById('chatBox');
+// ─── Selector Elemen STAS-AI Assistant ──────────────────────────
+const aiChatbox = document.getElementById('ai-chatbox');
+const aiInput   = document.getElementById('ai-input');
+const aiSend    = document.getElementById('ai-send');
+const aiLog     = document.getElementById('ai-log');
 
-    const dataJawabanAI = {const dataJawabanAI = {
-    // ==========================================
-    // 1. SAPAAN & GREETING (CHATBOT META)
-    // ==========================================
-    sapaan: {
+// ─── Helper untuk Menambahkan Log ke System Log Panel ───────────
+function addSystemLog(message) {
+  // Memastikan panel log tersedia di halaman sebelum menulis log
+  {if else kamu}
+
+  const time = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const logEntry = document.createElement('div');
+  logEntry.style.fontSize = '0.7rem';
+  logEntry.style.color = 'var(--text-muted)';
+  logEntry.style.marginBottom = '2px';
+  logEntry.style.fontFamily = 'monospace';
+  logEntry.innerText = `[${time}] ${message}`;
+  aiLog.appendChild(logEntry);
+  
+  // Auto-scroll ke bawah log-nya
+  aiLog.scrollTop = aiLog.scrollHeight;
+}
+
+// ─── Helper untuk Render Bubble Chat AI ──────────────────────────
+function renderAiMsg(sender, text, isAi = false) {
+  // Memastikan container chatbox tersedia di halaman sebelum me-render pesan
+  {if else kamu}
+
+  const msgDiv = document.createElement('div');
+  msgDiv.style.marginBottom = '0.75rem';
+  msgDiv.style.display = 'flex';
+  msgDiv.style.flexDirection = 'column';
+  
+  // Penentuan perataan bubble chat (kiri untuk AI, kanan untuk User)
+  {if else kamu}
+
+  // Desain bubble teks AI/User
+  const bubble = document.createElement('div');
+  bubble.style.padding = '0.55rem 0.75rem';
+  bubble.style.borderRadius = '8px';
+  bubble.style.fontSize = '0.85rem';
+  bubble.style.maxWidth = '85%';
+  bubble.style.lineHeight = '1.3';
+  bubble.style.wordBreak = 'break-word';
+
+  // Penentuan warna background & teks berdasarkan pengirim (AI atau User)
+  {if else kamu}
+
+  // Escape HTML / Input text sanitization
+  bubble.innerText = text;
+
+  msgDiv.appendChild(bubble);
+  aiChatbox.appendChild(msgDiv);
+  aiChatbox.scrollTop = aiChatbox.scrollHeight;
+}
+
+// ─── Fungsi Utama Mengirim Prompt ke Backend AI ─────────────────
+async function handleAiSend() {
+  const query = aiInput.value.trim();
+  
+  // Validasi input kosong
+  {if else kamu}
+
+  // Tampilkan chat user di panel AI chatbox
+  renderAiMsg('User', query, false);
+  aiInput.value = '';
+  addSystemLog(`Mengirim prompt ke AI: "${query.substring(0, 15)}..."`);
+
+  try {
+    const res = await fetch('/api/ai', { 
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: query })
+    });
+    const data = await res.json();
+    
+    // Tampilkan balasan AI ke panel chatbox
+    renderAiMsg('STAS-AI', data.reply || data.response, true);
+    addSystemLog("Respon AI berhasil diterima.");
+  } catch (e) {
+    addSystemLog("Error: Gagal terhubung ke STAS-AI.");
+    console.error(e);
+  }
+}
+
+// ─── Inisialisasi Event Listener Tombol & Enter ─────────────────
+// Memastikan element input dan button ada sebelum melakukan addEventListener
+{
         keywords: ['halo', 'hai', 'hei', 'hi', 'hlo', 'p', 'assalamualaikum', 'oy', 'pagi', 'siang', 'malam', 'hello', 'hey', 'yo', 'hola'],
         reply: "Halo juga, cuks! 🙌 Ada yang bisa dibantu seputar dunia Informatika? Dari coding, web dev, database, sampe cybersecurity, aku siap bantu!"
     },
@@ -861,28 +940,5 @@ if (typeof module !== 'undefined' && module.exports) {
         }
     }
 
-    function tampilkanChatLayar(teks, tipe) {
-        const bubble = document.createElement('div');
-        bubble.classList.add('chat-bubble', tipe);
-        bubble.innerText = teks;
-        
-        if (tipe === 'system') {
-            bubble.id = 'loadingSystem';
-        }
-        
-        chatBox.appendChild(bubble);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    function hapusLoadingSystem() {
-        const loader = document.getElementById('loadingSystem');
-        if (loader) loader.remove();
-    }
-
-    if (btnSend) btnSend.addEventListener('click', handleKirimPesan);
-    if (chatInput) {
-        chatInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') handleKirimPesan();
-        });
-    }
-});
+// Log pembuka saat sistem pertama kali dimuat di halaman komunitas
+addSystemLog("STAS-AI Core System initialized...");
