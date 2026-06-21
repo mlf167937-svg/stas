@@ -10,12 +10,12 @@
     #tt-lightbox {
       display: none; position: fixed; inset: 0; z-index: 9999;
       background: #000; overflow-y: scroll;
-      scroll-snap-type: y mandatory; /* Kunci efek TikTok */
+      scroll-snap-type: y mandatory;
       scroll-behavior: smooth;
     }
     .tt-item {
       height: 100dvh; width: 100vw;
-      scroll-snap-align: start; /* Ngunci pas di-scroll */
+      scroll-snap-align: start;
       display: flex; align-items: center; justify-content: center;
       position: relative;
     }
@@ -32,7 +32,6 @@
 </head>
 <body>
 
-<!-- ── Navbar ── -->
 <nav class="navbar">
   <div class="nav-brand">
     <span class="logo-s">S</span><span class="logo-t">T</span><span class="logo-as">AS</span>
@@ -50,7 +49,6 @@
   </div>
 </nav>
 
-<!-- ── Konten ── -->
 <div class="page-wrapper">
   <h1 class="page-title">
     <span class="accent-p">◈</span> Album <span class="accent-g">STAS</span>
@@ -77,17 +75,16 @@
   </div>
 </div>
 
-<!-- ── Lightbox Gaya TikTok ── -->
 <div id="tt-lightbox">
   <button class="btn-close-tt" onclick="closeTikTok()">✕</button>
   <div id="tt-feed">
-    <!-- Konten akan dimuat oleh JS disini -->
-  </div>
+    </div>
 </div>
 
 <script>
-  // Simpan semua data galeri pas halaman di-load
   const allMedia = [];
+  
+  // Ambil semua item galeri setelah DOM siap dimuat
   document.querySelectorAll('.gallery-item').forEach(item => {
       allMedia.push({ src: item.dataset.src, type: item.dataset.type });
   });
@@ -95,39 +92,36 @@
   function openTikTok(el) {
     const clickedSrc = el.dataset.src;
     const feed = document.getElementById('tt-feed');
-    feed.innerHTML = ''; // Bersihkan feed sebelumnya
+    feed.innerHTML = ''; 
 
-    // Bikin elemen TikTok satu-satu secara vertikal
     allMedia.forEach(media => {
         const section = document.createElement('div');
         section.className = 'tt-item';
 
         if (media.type === 'video') {
-            section.innerHTML = `<video src="${media.src}" controls controlsList="nodownload" preload="metadata"></video>`;
+            section.innerHTML = `<video src="${media.src}" controls controlsList="nodownload" autoplay loop style="width:100%; max-height:100dvh;"></video>`;
         } else {
             section.innerHTML = `<img src="${media.src}" alt="STAS Gallery">`;
         }
         feed.appendChild(section);
 
-        // Langsung scroll ke foto/video yang di-klik
         if (media.src === clickedSrc) {
-            setTimeout(() => section.scrollIntoView({ behavior: 'auto' }), 10);
+            setTimeout(() => section.scrollIntoView({ behavior: 'auto' }), 50);
         }
     });
 
     document.getElementById('tt-lightbox').style.display = 'block';
-    document.body.style.overflow = 'hidden'; // Kunci scroll background
+    document.body.style.overflow = 'hidden'; 
   }
 
   function closeTikTok() {
     document.getElementById('tt-lightbox').style.display = 'none';
     document.body.style.overflow = '';
     
-    // Pause semua video yang lagi nyala pas tombol X ditekan
+    // Pause seluruh video yang aktif di dalam feed tiktok ketika ditutup
     document.querySelectorAll('#tt-feed video').forEach(v => v.pause());
   }
 
-  // Bisa ditutup pake tombol ESC di keyboard
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeTikTok();
   });
