@@ -10,7 +10,6 @@
 <div class="login-wrapper">
   <div class="login-box">
 
-    <!-- Brand -->
     <div class="login-brand">
       <div class="brand-name">
         <span class="s-letter">S</span><span class="t-letter">T</span><span class="a-letter">A</span><span class="ss-letter">S</span>
@@ -18,14 +17,12 @@
       <div class="brand-sub">Sang Tuan Alhidayah Sutam</div>
     </div>
 
-    <!-- Error -->
     {% if error %}
     <div class="form-error">
       <span>⚠</span> {{ error }}
     </div>
     {% endif %}
 
-    <!-- Form -->
     <form method="POST" action="{{ url_for('login') }}" autocomplete="off">
       <div class="form-group">
         <label for="username">Username Member</label>
@@ -50,7 +47,13 @@
       <button type="submit" class="btn-primary">🔓 Masuk ke STAS</button>
     </form>
 
-    <div class="admin-badge">
+    <div style="margin-top: 0.85rem; text-align: center;">
+      <a href="{{ url_for('login_guest') }}" style="display: block; padding: 0.75rem; border-radius: 6px; background: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(255, 255, 255, 0.2); color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: bold; transition: 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+        👀 Jelajahi Sebagai Pengunjung (Mode Tamu)
+      </a>
+    </div>
+
+    <div class="admin-badge" style="margin-top: 1.5rem;">
       Admin? &nbsp;<a href="{{ url_for('admin_login') }}" style="color:var(--purple-neon);">Login Admin →</a>
     </div>
 
