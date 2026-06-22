@@ -124,9 +124,25 @@ def login():
         if verify_member(username, password):
             session['member']   = username
             session['fullname'] = read_file(os.path.join(NAME_DIR, f'{username}.txt'))
+            session['is_guest'] = False
             return redirect(url_for('index'))
         error = 'Username atau password salah.'
     return render_template('login.html', error=error)
+
+
+@app.route('/login-guest')
+def login_guest():
+    """Jalur bypass masuk untuk pengunjung tanpa login"""
+    if 'member' in session:
+        return redirect(url_for('index'))
+        
+    # Generate identitas tamu acak agar sistem tidak error saat membaca session
+    guest_id = random.randint(1000, 9999)
+    session['member']   = f'guest_{guest_id}'
+    session['fullname'] = f'Tamu_{guest_id}'
+    session['is_guest'] = True  # Penanda di HTML kalau dia cuma pengunjung
+    
+    return redirect(url_for('index'))
 
 
 @app.route('/logout')
