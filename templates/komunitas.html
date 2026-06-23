@@ -811,7 +811,6 @@
   const messages  = document.getElementById('chat-messages');
   const chatInput = document.getElementById('chat-input');
   const chatSend  = document.getElementById('chat-send');
-  let   lastCount = 0;
 
   // Fungsi render chat ala WhatsApp (Kanan-Kiri + Nama + Jam Akurat)
   function renderMsg(msg) {
@@ -835,8 +834,6 @@
     `;
     
     messages.appendChild(wrap);
-    // Auto-scroll ke bawah setiap ada pesan baru
-    messages.scrollTop = messages.scrollHeight;
   }
 
   // Security check biar gak bisa di-inject HTML (XSS Protection)
@@ -851,23 +848,31 @@
     try {
       const res  = await fetch('/api/chat');
       const data = await res.json();
-      if (data.length !== lastCount) {
-        // Ambil pesan yang benar-benar baru aja
-        const newMsgs = data.slice(lastCount);
-        newMsgs.forEach(renderMsg);
-        lastCount = data.length;
-        
-        // Indikator Online internal dummy biar keliatan idup komunitasnya
-        document.getElementById('online-count').textContent =
-          `${Math.max(1, Math.floor(Math.random()*4)+1)} member online`;
+      
+      // Ambil posisi scroll saat ini sebelum dikosongkan
+      const wasAtBottom = messages.scrollHeight - messages.scrollTop <= messages.clientHeight + 40;
+
+      // HAPUS SEMUA CHAT LAMA BIAR GAK DUPLIKAT/EROR
+      messages.innerHTML = ''; 
+
+      // Render ulang semua pesan dari data terbaru
+      data.forEach(renderMsg);
+      
+      // Auto-scroll ke bawah hanya jika user tadinya di posisi paling bawah
+      if (wasAtBottom) {
+        messages.scrollTop = messages.scrollHeight;
       }
+
+      // Indikator Online internal dummy biar keliatan idup komunitasnya
+      document.getElementById('online-count').textContent =
+        `${Math.max(1, Math.floor(Math.random()*4)+1)} member online`;
+
     } catch(e) { console.error("Gagal mengambil chat:", e); }
   }
 
   // Kirim chat ke database/backend
   async function sendChat() {
-    // Hadang di sisi JS jika akun tamu mencoba membypass penguncian HTML
-    if (IS_GUEST) return;
+    if (IS_GUEST) return; // Hadang jika akun tamu coba-coba kirim
 
     const text = chatInput.value.trim();
     if (!text) return;
@@ -882,7 +887,7 @@
     } catch(e) { console.error("Gagal mengirim chat:", e); }
   }
 
-  // Event Listener Tombol & Enter (Hanya diaktifkan jika elemennya ada/bukan tamu)
+  // Event Listener Tombol & Enter
   if (chatSend && chatInput) {
     chatSend.addEventListener('click', sendChat);
     chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
