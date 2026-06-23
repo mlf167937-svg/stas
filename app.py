@@ -189,8 +189,27 @@ def api_member(username):
         return jsonify({'error': 'Member tidak ditemukan'}), 404
     return jsonify({'username': username, 'name': name, 'desk': desk, 'db': db_data})
 
-
 # ─── API CHAT KOMUNITAS (DENGAN PROTEKSI STRUKTUR DATA & ALIAS) ────────────────
+@app.route('/api/chat', methods=['GET'])
+@login_required
+def chat_get():
+    chat_data = load_chat()
+    
+    # 🛡️ AUTO-NORMALIZATION: Mencegah JS crash akibat data teks lama yang kosongan
+    for msg in chat_data:
+        if 'id' not in msg:
+            msg['id'] = str(uuid.uuid4())
+        if 'username' not in msg:
+            msg['username'] = msg.get('sender', 'unknown').lower()
+        if 'type' not in msg:
+            msg['type'] = 'text'
+        if 'file_url' not in msg:
+            msg['file_url'] = ''
+        if 'reactions' not in msg or not isinstance(msg['reactions'], dict):
+            msg['reactions'] = {"👍": [], "❤️": [], "😂": [], "😮": [], "🙏": []}
+            
+    return jsonify(chat_data[-50:])
+
 @app.route('/api/chat', methods=['POST'])
 @login_required
 def chat_post():
