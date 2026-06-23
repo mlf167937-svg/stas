@@ -5,10 +5,76 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>STAS — Games</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <style>
+    /* Custom style tambahan biar tampilan game baru lu makin cakep & presisi */
+    .typing-word-display {
+      background: var(--bg-surface, #1e1e2e);
+      border: 1px solid var(--border, #313244);
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 1.15rem;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+      text-align: left;
+      letter-spacing: 0.5px;
+      user-select: none;
+    }
+    .typing-word-display span {
+      transition: color 0.1s ease;
+    }
+    .char-correct { color: #a6e3a1 !important; background: rgba(166, 227, 161, 0.1); }
+    .char-incorrect { color: #f38ba8 !important; background: rgba(243, 139, 168, 0.1); border-bottom: 2px solid #f38ba8; }
+    .char-current { background: rgba(203, 166, 247, 0.3); border-left: 2px solid #cba6f7; }
+    
+    .typing-input {
+      width: 100%;
+      background: var(--bg-body, #11111b);
+      border: 2px solid var(--border, #313244);
+      color: var(--text-main, #cdd6f4);
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .typing-input:focus { border-color: #cba6f7; }
+    
+    .stats-container {
+      display: flex;
+      gap: 1rem;
+      justify-content: space-around;
+      margin-top: 1rem;
+      background: rgba(255,255,255,0.03);
+      padding: 0.5rem;
+      border-radius: 6px;
+    }
+    .stat-box { text-align: center; }
+    .stat-val { font-size: 1.4rem; font-weight: bold; color: #cba6f7; }
+    .stat-lbl { font-size: 0.75rem; color: var(--text-muted, #a6adc8); }
+
+    /* Block Blast Styles */
+    .block-blast-layout {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+    #block-canvas {
+      background: #11111b;
+      border: 3px solid #313244;
+      border-radius: 8px;
+      cursor: pointer;
+      max-width: 100%;
+    }
+    .block-instructions {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
 
-<!-- ── Navbar ── -->
 <nav class="navbar">
   <div class="nav-brand">
     <span class="logo-s">STAS</span>
@@ -26,104 +92,446 @@
   </div>
 </nav>
 
-<!-- ── Konten ── -->
 <div class="page-wrapper">
   <h1 class="page-title">
     <span class="accent-g">◈</span>
-    Mini
-    <span class="accent-p">Games</span>
+    STAS
+    <span class="accent-p">Arcade</span>
   </h1>
 
   <div class="games-grid">
 
-    <!-- ── SNAKE ── -->
     <div class="game-card">
-      <h3>🐍 Snake Classic</h3>
-      <p>Kendalikan ular, makan bola ungu, jangan nabrak tembok atau dirimu sendiri. Gunakan tombol arah atau ↑↓←→ keyboard.</p>
-      <button class="btn-play game-tab" data-target="snake-container">▶ Main</button>
-
-      <div class="game-container active" id="snake-container">
-        <div class="game-score-display" id="snake-score">Skor: 0</div>
-        <canvas id="snake-canvas"></canvas>
-        <div class="game-score-display" id="snake-msg" style="margin-top:.5rem; font-size:.8rem; color:var(--text-muted);">
-          Tekan MULAI atau ↑↓←→
-        </div>
-        <div style="display:flex; gap:.5rem; justify-content:center; margin-top:.65rem;">
-          <button class="btn-game-action" id="btn-snake-start" style="margin:0;">▶ Mulai</button>
-          <button class="btn-game-action" id="btn-snake-reset" style="margin:0; background:var(--bg-surface); border:1px solid var(--border); color:var(--text-muted);">↺ Reset</button>
-        </div>
-        <!-- Kontrol mobile -->
-        <div style="display:grid; grid-template-columns:repeat(3,44px); grid-template-rows:repeat(2,44px); gap:4px; margin:1rem auto 0; width:fit-content;">
-          <div></div>
-          <button id="m-up"    style="background:var(--bg-surface);border:1px solid var(--border);border-radius:6px;color:var(--text-main);font-size:1.1rem;cursor:pointer;">↑</button>
-          <div></div>
-          <button id="m-left"  style="background:var(--bg-surface);border:1px solid var(--border);border-radius:6px;color:var(--text-main);font-size:1.1rem;cursor:pointer;">←</button>
-          <button id="m-down"  style="background:var(--bg-surface);border:1px solid var(--border);border-radius:6px;color:var(--text-main);font-size:1.1rem;cursor:pointer;">↓</button>
-          <button id="m-right" style="background:var(--bg-surface);border:1px solid var(--border);border-radius:6px;color:var(--text-main);font-size:1.1rem;cursor:pointer;">→</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── CLICKER ── -->
-    <div class="game-card">
-      <h3>🌌 Cosmic Clicker</h3>
-      <p>Klik bola energi sebanyak mungkin! Beli Auto-Clicker untuk klik otomatis per detik. Seberapa jauh kamu bisa pergi?</p>
-      <button class="btn-play game-tab" data-target="clicker-container">▶ Main</button>
-
-      <div class="game-container active" id="clicker-container">
-        <div class="clicker-area">
-          <button class="clicker-btn" id="clicker-btn" title="Klik!">⚡</button>
-          <div class="clicker-stats" id="clicker-stats">
-            Klik: <span>0</span>
+      <h3>⌨️ STAS Speed Typing</h3>
+      <p>Uji kecepatan jarimu di sini, cuks! Ketik kalimat di bawah dengan cepat dan tepat untuk mendapatkan skor WPS tertinggi.</p>
+      
+      <div class="game-container active" id="typing-container">
+        <div class="typing-word-display" id="text-target">Memuat teks...</div>
+        
+        <input type="text" class="typing-input" id="text-input" placeholder="Klik 'Mulai' untuk mengaktifkan ketikan..." disabled autocomplete="off"/>
+        
+        <div class="stats-container">
+          <div class="stat-box">
+            <div class="stat-val" id="stat-wps">0.00</div>
+            <div class="stat-lbl">WPS (Word/Sec)</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="stat-wpm">0</div>
+            <div class="stat-lbl">WPM</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="stat-acc">100%</div>
+            <div class="stat-lbl">Akurasi</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="stat-time">30s</div>
+            <div class="stat-lbl">Waktu</div>
           </div>
         </div>
-        <div style="display:flex; gap:.5rem; justify-content:center; margin-top:.75rem; flex-wrap:wrap;">
-          <button class="btn-game-action" id="btn-clicker-auto" style="margin:0; background:linear-gradient(135deg,var(--purple-dim),#4a00a0);">
-            🤖 Auto-Clicker (+1 lvl)
-          </button>
-          <button class="btn-game-action" id="btn-clicker-reset" style="margin:0; background:var(--bg-surface); border:1px solid var(--border); color:var(--text-muted);">
-            ↺ Reset
-          </button>
+
+        <div style="display:flex; gap:.5rem; justify-content:center; margin-top:1rem;">
+          <button class="btn-game-action" id="btn-typing-start" style="margin:0;">▶ Mulai Tes</button>
+          <button class="btn-game-action" id="btn-typing-reset" style="margin:0; background:var(--bg-surface); border:1px solid var(--border); color:var(--text-muted);">↺ Reset</button>
         </div>
       </div>
     </div>
 
-    <!-- ── TEBAK ANGKA ── -->
     <div class="game-card">
-      <h3>🎯 Tebak Angka</h3>
-      <p>Tebak angka rahasia antara 1 hingga 100. Kamu hanya punya 7 kesempatan. Sistem akan memberi petunjuk setiap tebakanmu!</p>
-      <button class="btn-play game-tab" data-target="guess-container">▶ Main</button>
-
-      <div class="game-container active" id="guess-container">
-        <div class="guess-area">
-          <p style="font-size:.85rem; color:var(--text-muted); margin-bottom:.85rem;">Pikirkan... apa angkanya? 🤔</p>
-          <div>
-            <input type="number" id="guess-input" min="1" max="100" placeholder="1–100" />
-            <button class="btn-game-action" id="btn-guess" style="display:inline-block; margin:0;">Tebak!</button>
-          </div>
-          <div class="guess-result" id="guess-result">Tebak angka 1–100! Kamu punya 7 kesempatan.</div>
-          <div class="guess-result" id="guess-tries" style="font-size:.8rem; color:var(--text-muted);"></div>
-          <button class="btn-game-action" id="btn-guess-new" style="margin-top:.5rem; background:var(--bg-surface); border:1px solid var(--border); color:var(--text-muted);">
-            🔄 Game Baru
-          </button>
+      <h3>🧱 Block Blast Mini</h3>
+      <p>Taktik & Logika! Klik balok pilihan di bagian bawah, lalu klik area papan 8x8 untuk menaruhnya. Penuhi baris atau kolom untuk meledakkannya!</p>
+      
+      <div class="game-container active" id="blockblast-container">
+        <div class="block-blast-layout">
+          <div class="game-score-display" id="block-score" style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.2rem;">Skor: 0</div>
+          <canvas id="block-canvas" width="280" height="420"></canvas>
+          <div class="block-instructions" id="block-msg">Klik balok di bawah, lalu klik kotak di papan atas!</div>
+          <button class="btn-game-action" id="btn-block-reset" style="background:var(--bg-surface); border:1px solid var(--border); color:var(--text-muted);">↺ Reset Game</button>
         </div>
       </div>
     </div>
 
-  </div><!-- /games-grid -->
-</div>
+  </div></div>
 
-<script src="{{ url_for('static', filename='js/game_engine.js') }}"></script>
 <script>
-  // Mobile Snake controls
-  document.addEventListener('DOMContentLoaded', () => {
-    const fireKey = key => document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
-    const map = { 'm-up': 'ArrowUp', 'm-down': 'ArrowDown', 'm-left': 'ArrowLeft', 'm-right': 'ArrowRight' };
-    Object.entries(map).forEach(([id, key]) => {
-      const btn = document.getElementById(id);
-      if (btn) btn.addEventListener('click', () => fireKey(key));
+document.addEventListener('DOMContentLoaded', () => {
+    // =========================================================================
+    // 🔤 ENGINE GAME 1: SPEED TYPING TEST (WPS)
+    // =========================================================================
+    const KUMPULAN_TEKS = [
+        "struktur data json sangat berguna untuk menyimpan informasi dan database sistem",
+        "belajar coding di komunitas stas membuat kita berkembang menjadi programmer jagoan",
+        "pastikan tidak ada sintaksis yang eror sebelum melakukan deploy ke server produksi",
+        "kecepatan mengetik sepuluh jari adalah keahlian penting bagi seorang developer sejati",
+        "jangan lupa meminum kopi hangat saat sedang ngoding aplikasi di malam hari bray",
+        "fungsi decorator pada flask digunakan untuk memproteksi rute halaman website kita",
+        "javascript dan python adalah dua bahasa pemrograman paling populer di dunia saat ini",
+        "kreativitas tanpa batas digabungkan dengan logika algoritma akan menghasilkan karya hebat"
+    ];
+
+    let waktuMulai = null;
+    let timerInterval = null;
+    let waktuMaksimal = 30; // 30 detik permainan
+    let waktuSisa = waktuMaksimal;
+    let gameTypingBerjalan = false;
+    let teksTargetSekarang = "";
+
+    const elTarget = document.getElementById('text-target');
+    const elInput = document.getElementById('text-input');
+    const elWps = document.getElementById('stat-wps');
+    const elWpm = document.getElementById('stat-wpm');
+    const elAcc = document.getElementById('stat-acc');
+    const elTime = document.getElementById('stat-time');
+    const btnTypingStart = document.getElementById('btn-typing-start');
+    const btnTypingReset = document.getElementById('btn-typing-reset');
+
+    function acakTeks() {
+        const index = Math.floor(Math.random() * KUMPULAN_TEKS.length);
+        teksTargetSekarang = KUMPULAN_TEKS[index];
+        elTarget.innerHTML = teksTargetSekarang.split('').map((char, i) => {
+            if(i === 0) return `<span class="char-current">${char}</span>`;
+            return `<span>${char}</span>`;
+        }).join('');
+    }
+
+    function startTypingGame() {
+        if (gameTypingBerjalan) return;
+        gameTypingBerjalan = true;
+        waktuSisa = waktuMaksimal;
+        elInput.disabled = false;
+        elInput.value = "";
+        elInput.focus();
+        acakTeks();
+        
+        elWps.innerText = "0.00";
+        elWpm.innerText = "0";
+        elAcc.innerText = "100%";
+        elTime.innerText = waktuSisa + "s";
+
+        waktuMulai = new Date();
+        timerInterval = setInterval(() => {
+            waktuSisa--;
+            elTime.innerText = waktuSisa + "s";
+            
+            // Hitung statistik real-time berjalan
+            hitungSkorTyping();
+
+            if (waktuSisa <= 0) {
+                endTypingGame();
+            }
+        }, 1000);
+    }
+
+    function hitungSkorTyping() {
+        const teksKetik = elInput.value;
+        const karakterTarget = teksTargetSekarang.split('');
+        const spanKarakter = elTarget.querySelectorAll('span');
+        
+        let salahKetik = 0;
+        let benarKetik = 0;
+
+        for (let i = 0; i < spanKarakter.length; i++) {
+            const charKetik = teksKetik[i];
+            
+            if (charKetik == null) {
+                // Belum diketik
+                spanKarakter[i].className = (i === teksKetik.length) ? 'char-current' : '';
+            } else if (charKetik === karakterTarget[i]) {
+                // Ketikan Benar
+                spanKarakter[i].className = 'char-correct';
+                benarKetik++;
+            } else {
+                // Ketikan Salah
+                spanKarakter[i].className = 'char-incorrect';
+                salahKetik++;
+            }
+        }
+
+        // Rumus Standar Mengetik: 1 Kata dihitung per 5 Karakter
+        let jumlahKataBenar = benarKetik / 5;
+        let waktuBerjalan = (waktuMaksimal - waktuSisa);
+        if (waktuBerjalan <= 0) waktuBerjalan = 0.1; 
+
+        // HITUNG WPS & WPM
+        let wps = jumlahKataBenar / waktuBerjalan;
+        let wpm = Math.round(wps * 60);
+
+        elWps.innerText = wps.toFixed(2);
+        elWpm.innerText = wpm;
+
+        // HITUNG AKURASI
+        let totalKetik = benarKetik + salahKetik;
+        let akurasi = totalKetik > 0 ? Math.round((benarKetik / totalKetik) * 100) : 100;
+        elAcc.innerText = akurasi + "%";
+
+        // Auto-complete kalau user selesai ngetik semua teks target sebelum waktu habis
+        if (teksKetik.length >= teksTargetSekarang.length) {
+            endTypingGame();
+        }
+    }
+
+    function endTypingGame() {
+        clearInterval(timerInterval);
+        gameTypingBerjalan = false;
+        elInput.disabled = true;
+        alert(`Tes Selesai! Skor Akhir Kamu:\nKecepatan: ${elWps.innerText} WPS (${elWpm.innerText} WPM)\nAkurasi: ${elAcc.innerText}`);
+    }
+
+    elInput.addEventListener('input', () => {
+        if (!gameTypingBerjalan) return;
+        hitungSkorTyping();
     });
-  });
+
+    btnTypingStart.addEventListener('click', startTypingGame);
+    btnTypingReset.addEventListener('click', () => {
+        clearInterval(timerInterval);
+        gameTypingBerjalan = false;
+        elInput.value = "";
+        elInput.disabled = true;
+        elWps.innerText = "0.00";
+        elWpm.innerText = "0";
+        elAcc.innerText = "100%";
+        elTime.innerText = "30s";
+        elTarget.innerText = "Klik 'Mulai' untuk memuat teks...";
+    });
+
+
+    // =========================================================================
+    // 🧱 ENGINE GAME 2: BLOCK BLAST MINI (8x8 GRID CANVAS)
+    // =========================================================================
+    const canvas = document.getElementById('block-canvas');
+    const ctx = canvas.getContext('2d');
+    const elBlockScore = document.getElementById('block-score');
+    const btnBlockReset = document.getElementById('btn-block-reset');
+
+    const BARIS = 8;
+    const KOLOM = 8;
+    const UKURAN_KOTAK = 32; // pixel per grid kotak kecil
+    const OFFSET_X = 12;    // margin kiri papan
+    const OFFSET_Y = 15;    // margin atas papan
+
+    let papan = Array(BARIS).fill().map(() => Array(KOLOM).fill(0));
+    let skorBlock = 0;
+    let balokPilihan = []; // Wadah menaruh 3 bentuk balok di bawah
+    let indexBalokTerpilih = null;
+
+    // Daftar bentuk pola cetakan balok (Matrix)
+    const SHAPES = [
+        { color: '#ff6080', matrix: [[1]] }, // Kotak Singgel 1x1
+        { color: '#ffb86c', matrix: [[1, 1]] }, // Garis Horizontal 1x2
+        { color: '#8be9fd', matrix: [[1], [1]] }, // Garis Vertikal 2x1
+        { color: '#50fa7b', matrix: [[1, 1], [1, 1]] }, // Kubus Gede 2x2
+        { color: '#bd93f9', matrix: [[1, 1, 1]] }, // Garis Panjang 1x3
+        { color: '#ff79c6', matrix: [[1, 1], [1, 0]] }  // Balok Huruf L mini
+    ];
+
+    function acakBalokBaru() {
+        balokPilihan = [];
+        for (let i = 0; i < 3; i++) {
+            const acak = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+            balokPilihan.push({
+                ...acak,
+                used: false,
+                x: 20 + (i * 85), // Posisi render display di bagian bawah canvas
+                y: 300
+            });
+        }
+    }
+
+    function gambarPapan() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Gambar Background Grid Papan 8x8
+        for (let r = 0; r < BARIS; r++) {
+            for (let c = 0; c < KOLOM; c++) {
+                ctx.fillStyle = papan[r][c] ? papan[r][c] : '#212230';
+                ctx.fillRect(OFFSET_X + c * UKURAN_KOTAK, OFFSET_Y + r * UKURAN_KOTAK, UKURAN_KOTAK - 2, UKURAN_KOTAK - 2);
+            }
+        }
+
+        // Gambar Pembatas Area Bawah Tempat Balok Belanjaan
+        ctx.strokeStyle = '#313244';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, 280);
+        ctx.lineTo(canvas.width, 280);
+        ctx.stroke();
+
+        // Gambar 3 Pilihan Balok di Bawah
+        balokPilihan.forEach((block, idx) => {
+            if (block.used) return;
+
+            // Kasih border warna ungu penanda kalau balok ini lagi di-klik / diseleksi
+            if (indexBalokTerpilih === idx) {
+                ctx.strokeStyle = '#cba6f7';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(block.x - 5, block.y - 5, 75, 75);
+            }
+
+            // Gambar bentuk balok matrix aslinya
+            ctx.fillStyle = block.color;
+            block.matrix.forEach((row, r) => {
+                row.forEach((val, c) => {
+                    if (val) {
+                        ctx.fillRect(block.x + c * 18, block.y + r * 18, 16, 16);
+                    }
+                });
+            });
+        });
+    }
+
+    // Deteksi Klik di Area Canvas (Bisa milih balok bawah, atau nempatin balok di atas)
+    canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        // KONDISI A: Klik area bawah (Memilih Balok)
+        if (mouseY > 280) {
+            balokPilihan.forEach((block, idx) => {
+                if (block.used) return;
+                // Cek koordinat klik mendekati area kotak opsi balok 1, 2, atau 3
+                if (mouseX >= block.x - 5 && mouseX <= block.x + 70 && mouseY >= block.y - 5 && mouseY <= block.y + 70) {
+                    indexBalokTerpilih = idx;
+                    gambarPapan();
+                }
+            });
+            return;
+        }
+
+        // KONDISI B: Klik area atas papan 8x8 (Menaruh Balok)
+        if (indexBalokTerpilih !== null) {
+            // Konversi posisi pixel klik mouse menjadi koordinat index baris & kolom grid Papan
+            const targetKolom = Math.floor((mouseX - OFFSET_X) / UKURAN_KOTAK);
+            const targetBaris = Math.floor((mouseY - OFFSET_Y) / UKURAN_KOTAK);
+
+            if (targetBaris >= 0 && targetBaris < BARIS && targetKolom >= 0 && targetKolom < KOLOM) {
+                if (bisaTaruhBalok(targetBaris, targetKolom, balokPilihan[indexBalokTerpilih].matrix)) {
+                    taruhBalok(targetBaris, targetKolom, balokPilihan[indexBalokTerpilih]);
+                    cekLedakanBarisDanKolom();
+                    
+                    indexBalokTerpilih = null; // Reset seleksi
+
+                    // Kalau 3 balok di bawah sudah terpakai semua, generate 3 balok baru lagi otomatis
+                    if (balokPilihan.every(b => b.used)) {
+                        acakBalokBaru();
+                    }
+
+                    gambarPapan();
+                    cekKondisiKalah();
+                }
+            }
+        }
+    });
+
+    function bisaTaruhBalok(startRow, startCol, matrix) {
+        for (let r = 0; r < matrix.length; r++) {
+            for (let c = 0; c < matrix[r].length; c++) {
+                if (matrix[r][c]) {
+                    let papanR = startRow + r;
+                    let papanC = startCol + c;
+                    
+                    // Cek nabrak batas dinding luar papan luar atau nabrak balok yg udah ada isinya
+                    if (papanR >= BARIS || papanC >= KOLOM || papan[papanR][papanC] !== 0) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    function taruhBalok(startRow, startCol, block) {
+        block.matrix.forEach((row, r) => {
+            row.forEach((val, c) => {
+                if (val) {
+                    papan[startRow + r][startCol + c] = block.color;
+                    skorBlock += 10; // Dapat 10 poin setiap susunan kotak kecil terpasang
+                }
+            });
+        });
+        block.used = true;
+    }
+
+    function cekLedakanBarisDanKolom() {
+        let barisHancur = [];
+        let kolomHancur = [];
+
+        // 1. Scan Baris yang Full
+        for (let r = 0; r < BARIS; r++) {
+            if (papan[r].every(cell => cell !== 0)) {
+                barisHancur.push(r);
+            }
+        }
+
+        // 2. Scan Kolom yang Full
+        for (let c = 0; c < KOLOM; c++) {
+            let kolFull = true;
+            for (let r = 0; r < BARIS; r++) {
+                if (papan[r][c] === 0) {
+                    kolFull = false;
+                    break;
+                }
+            }
+            if (kolFull) kolomHancur.push(c);
+        }
+
+        // 3. Eksekusi Hancurkan & beri Bonus Poin Besar (Meledak ala Block Blast)
+        barisHancur.forEach(r => {
+            for (let c = 0; c < KOLOM; c++) papan[r][c] = 0;
+            skorBlock += 100;
+        });
+
+        kolomHancur.forEach(c => {
+            for (let r = 0; r < BARIS; r++) papan[r][c] = 0;
+            skorBlock += 100;
+        });
+
+        elBlockScore.innerText = "Skor: " + skorBlock;
+    }
+
+    function cekKondisiKalah() {
+        // Cek apakah masih ada ruang tersisa di papan untuk meletakkan balok-balok yang belum dipakai
+        let masihBisaMain = false;
+
+        for (let idx = 0; idx < balokPilihan.length; idx++) {
+            if (balokPilihan[idx].used) continue;
+
+            // Coba simulasikan tes pasang balok ini di seluruh slot koordinat papan kosong manapun
+            for (let r = 0; r < BARIS; r++) {
+                for (let c = 0; c < KOLOM; c++) {
+                    if (bisaTaruhBalok(r, c, balokPilihan[idx].matrix)) {
+                        masihBisaMain = true;
+                        break;
+                    }
+                }
+                if (masihBisaMain) break;
+            }
+            if (masihBisaMain) break;
+        }
+
+        if (!masihBisaMain) {
+            setTimeout(() => {
+                alert("Game Over, Bosku! Tidak ada ruang tersisa untuk balok pilihan berikutnya.\nSkor Akhir: " + skorBlock);
+                resetBlockBlast();
+            }, 200);
+        }
+    }
+
+    function resetBlockBlast() {
+        papan = Array(BARIS).fill().map(() => Array(KOLOM).fill(0));
+        skorBlock = 0;
+        indexBalokTerpilih = null;
+        elBlockScore.innerText = "Skor: 0";
+        acakBalokBaru();
+        gambarPapan();
+    }
+
+    btnBlockReset.addEventListener('click', resetBlockBlast);
+
+    // Jalankan inisialisasi awal Block Blast saat halaman kelar diload
+    acakBalokBaru();
+    gambarPapan();
+});
 </script>
 </body>
 </html>
