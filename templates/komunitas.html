@@ -6,7 +6,7 @@
   <title>STAS — Komunitas</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <style>
-    /* ─── FLEX LAYOUT VERTIKAL (ATAS - BAWAH) ─── */
+    /* ─── FLEX LAYOUT VERTIKAL ─── */
     .vertical-layout {
       display: flex;
       flex-direction: column;
@@ -15,35 +15,36 @@
       max-height: 900px;
     }
     .section-komunitas {
-      flex: 1.4; /* Chat utama lebih luas */
+      flex: 1.4;
       display: flex;
       flex-direction: column;
-      background: #0b141a; /* Background WA Dark */
-      border: 1px solid rgba(255,255,255,0.05);
-      border-radius: 12px;
+      background: #12131a; /* Dark Matte Obsidian */
+      border: 1px solid rgba(255,255,255,0.03);
+      border-radius: 16px;
       overflow: hidden;
     }
     .section-ai {
-      flex: 0.8; /* Panel AI di bawah lebih ringkas */
+      flex: 0.8;
       display: flex;
       flex-direction: column;
-      background: #111b21;
-      border: 1px solid rgba(191,95,255,0.15);
-      border-radius: 12px;
+      background: #161722;
+      border: 1px solid rgba(191,95,255,0.12);
+      border-radius: 16px;
       overflow: hidden;
     }
 
-    /* ─── WHATSAPP BUBBLE STYLING ─── */
+    /* ─── NEW PREMIUM AESTHETIC BACKGROUND (BUKAN WA) ─── */
     .msg-list-wa {
       flex: 1;
       overflow-y: auto;
-      padding: 1rem;
+      padding: 1.2rem;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
-      background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* WA pattern opacity rendah */
-      background-alpha: 0.04;
+      gap: 0.6rem;
+      /* Background gradasi halus cyber-dark minimalist */
+      background: radial-gradient(circle at top right, #1a1b26, #0e1015);
     }
+    
     .wa-bubble-wrap {
       display: flex;
       width: 100%;
@@ -52,81 +53,91 @@
     }
     .wa-bubble-wrap.own { justify-content: flex-end; }
     
+    /* Bubble Chat Modern Minimalist */
     .wa-bubble {
       max-width: 65%;
-      padding: 6px 10px 4px 10px;
-      border-radius: 8px;
+      padding: 10px 14px;
+      border-radius: 16px;
       position: relative;
-      cursor: pointer; /* Menandakan bisa diklik buat emot */
-      transition: background 0.2s;
-      box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.03);
     }
+    
+    /* Warna Bubble Lu (Premium Dark Indigo) */
     .wa-bubble-wrap.own .wa-bubble {
-      background: #005c4b; /* Hijau WA */
-      color: #e9edef;
-      border-top-right-radius: 0;
+      background: #2e3047; 
+      color: #f1f1f6;
+      border-bottom-right-radius: 4px;
     }
+    
+    /* Warna Bubble Orang Lain (Slate Grey Matte) */
     .wa-bubble-wrap:not(.own) .wa-bubble {
-      background: #202c33; /* Abu-abu WA */
-      color: #e9edef;
-      border-top-left-radius: 0;
+      background: #1f202e;
+      color: #e1e2ec;
+      border-bottom-left-radius: 4px;
     }
-    .wa-bubble:hover { filter: brightness(1.1); }
+    .wa-bubble:hover { 
+      transform: translateY(-1px);
+      filter: brightness(1.1); 
+    }
 
     .wa-meta-row {
       display: flex;
       align-items: center;
       justify-content: flex-end;
-      gap: 4px;
-      margin-top: 2px;
-      font-size: 0.68rem;
-      color: rgba(255,255,255,0.5);
-      text-align: right;
+      gap: 6px;
+      margin-top: 6px;
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.35);
     }
 
     .mention-tag {
-      color: #53bdeb;
+      color: #7aa2f7;
       font-weight: 500;
-      background: rgba(83,189,235,0.1);
-      padding: 0px 4px;
-      border-radius: 4px;
+      background: rgba(122,162,247,0.12);
+      padding: 1px 5px;
+      border-radius: 6px;
     }
 
-    /* ─── FLOATING REACTION POPUP (KLIK BUBBLE) ─── */
+    /* ─── FLOATING REACTION POPUP ─── */
     .reaction-popup {
       position: absolute;
-      background: #233138;
-      border-radius: 20px;
-      padding: 4px 8px;
+      background: #252736;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 6px 10px;
       display: flex;
-      gap: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      gap: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
       z-index: 99;
-      top: -35px;
-      animation: popIn 0.15s ease-out;
+      top: -42px;
+      animation: popIn 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    .reaction-popup span { cursor: pointer; font-size: 1.1rem; transition: transform 0.1s; }
+    @keyframes popIn { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .reaction-popup span { cursor: pointer; font-size: 1.2rem; transition: transform 0.1s; }
     .reaction-popup span:hover { transform: scale(1.3); }
 
     .badge-reactions {
       display: flex;
-      gap: 2px;
+      gap: 3px;
       position: absolute;
-      bottom: -10px;
-      right: 10px;
-      background: #202c33;
-      border: 1px solid #374248;
-      border-radius: 10px;
-      padding: 1px 4px;
-      font-size: 0.65rem;
+      bottom: -12px;
+      right: 12px;
+      background: #1f202e;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 2px 6px;
+      font-size: 0.68rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
 
-    /* ─── MODAL PREVIEW MEDIA SEBELUM KIRIM ─── */
+    /* ─── MODAL PREVIEW MEDIA ─── */
     .wa-modal {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(11,20,26,0.95);
+      background: rgba(10,11,16,0.96);
       display: none;
       flex-direction: column;
       align-items: center;
@@ -139,52 +150,54 @@
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      gap: 1.2rem;
     }
     .modal-preview-zone img, .modal-preview-zone video {
       max-width: 100%;
       max-height: 400px;
-      border-radius: 8px;
+      border-radius: 12px;
       object-fit: contain;
     }
     .modal-input-area {
       display: flex;
-      background: #2a3942;
-      border-radius: 8px;
-      padding: 0.5rem;
-      gap: 0.5rem;
+      background: #1f202e;
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 10px;
+      padding: 0.6rem;
+      gap: 0.6rem;
     }
 
-    /* ─── SLEEK VOICE NOTE AUDIO PLAYER ─── */
+    /* ─── AUDIO PLAYER AUDIO SLEEK ─── */
     .custom-vn-player {
       display: flex;
       align-items: center;
-      gap: 8px;
-      background: rgba(0,0,0,0.15);
-      padding: 6px 10px;
-      border-radius: 6px;
-      margin-top: 4px;
+      gap: 10px;
+      background: rgba(0,0,0,0.2);
+      padding: 8px 12px;
+      border-radius: 10px;
+      margin-top: 6px;
+      border: 1px solid rgba(255,255,255,0.02);
     }
     .custom-vn-player audio {
-      height: 30px;
-      max-width: 180px;
+      height: 32px;
+      max-width: 200px;
     }
 
     .mention-suggest {
       position: absolute;
-      bottom: 60px;
+      bottom: 65px;
       left: 50px;
-      background: #233138;
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 8px;
+      background: #1f202e;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
       max-height: 140px;
       overflow-y: auto;
       z-index: 999;
       display: none;
       width: 220px;
     }
-    .mention-item { padding: 0.5rem; cursor: pointer; font-size: 0.85rem; color: #e9edef; }
-    .mention-item:hover { background: #182229; color: #00a884; }
+    .mention-item { padding: 0.6rem; cursor: pointer; font-size: 0.85rem; color: #e1e2ec; }
+    .mention-item:hover { background: #2e3047; color: #7aa2f7; }
   </style>
 </head>
 <body>
@@ -206,56 +219,60 @@
 <div class="page-wrapper" style="padding-top:0.75rem; padding-bottom:0.75rem;">
   <div class="vertical-layout">
 
+    <!-- CHAT KOMUNITAS -->
     <div class="section-komunitas">
-      <div class="chat-header">
+      <div class="chat-header" style="background:#161722; border-bottom:1px solid rgba(255,255,255,0.03);">
         <div class="dot"></div>
-        <span style="font-weight:600;">💬 Ruang Grup WhatsApp STAS</span>
+        <span style="font-weight:600; color:#e1e2ec;">💬 Ruang Komunitas STAS</span>
         <span style="font-size:.8rem; color:var(--text-muted); margin-left:auto;" id="online-count">1 online</span>
       </div>
 
+      <!-- Container Chat -->
       <div class="msg-list-wa" id="chat-messages" onclick="closeAllReactionPopups(event)"></div>
 
       <div class="mention-suggest" id="mention-box"></div>
 
       {% if session.is_guest %}
         <div style="padding: 0.75rem; background: rgba(255, 65, 54, 0.05); text-align: center; color: #ff4136; font-size: 0.82rem; border-top:1px solid rgba(255,255,255,0.05);">
-          🔒 Fungsi mengetik, kirim media, & bereaksi dinonaktifkan untuk akun Tamu.
+          🔒 Fungsi mengetik & media dinonaktifkan untuk akun Tamu.
         </div>
       {% else %}
-        <div class="chat-input-area" style="background:#111b21; padding:0.5rem 0.75rem; gap:8px;">
-          <button type="button" class="btn-send" style="background:transparent; font-size:1.2rem;" onclick="document.getElementById('file-input').click()">📎</button>
+        <div class="chat-input-area" style="background:#12131a; padding:0.6rem 0.8rem; gap:10px; border-top:1px solid rgba(255,255,255,0.03);">
+          <button type="button" class="btn-send" style="background:transparent; font-size:1.2rem; color:#a9b1d6;" onclick="document.getElementById('file-input').click()">📎</button>
           <input type="file" id="file-input" style="display:none;" accept="image/*,video/*" onchange="openMediaPreview(this)" />
           
-          <button type="button" id="vn-btn" class="btn-send" style="background:transparent; font-size:1.1rem;">🎙️</button>
+          <button type="button" id="vn-btn" class="btn-send" style="background:transparent; font-size:1.1rem; color:#a9b1d6;">🎙️</button>
 
-          <input type="text" id="chat-input" placeholder="Ketik pesan..." maxlength="500" autocomplete="off" style="background:#2a3942; border:none; border-radius:8px; color:#fff;" />
-          <button class="btn-send" id="chat-send" style="background:#00a884; color:#fff; border-radius:50%; width:36px; height:36px; padding:0; display:flex; align-items:center; justify-content:center;">➤</button>
+          <input type="text" id="chat-input" placeholder="Ketik pesan..." maxlength="500" autocomplete="off" style="background:#1f202e; border:none; border-radius:10px; color:#fff;" />
+          <button class="btn-send" id="chat-send" style="background:#7aa2f7; color:#fff; border-radius:50%; width:38px; height:38px; padding:0; display:flex; align-items:center; justify-content:center;">➤</button>
         </div>
       {% endif %}
     </div>
 
+    <!-- CHAT AI ASSISTANT -->
     <div class="section-ai">
-      <div class="chat-header" style="background: rgba(191,95,255,.06); padding: 0.4rem 1rem;">
+      <div class="chat-header" style="background: rgba(191,95,255,.04); padding: 0.5rem 1rem; border-bottom:1px solid rgba(191,95,255,0.08);">
         <span>🤖</span>
-        <span style="font-weight:600; font-size:.85rem;">STAS-AI Assistant (Privat)</span>
+        <span style="font-weight:600; font-size:.85rem; color:#e1e2ec;">STAS-AI Assistant (Privat)</span>
       </div>
-      <div class="msg-list-wa" id="ai-chatbox" style="padding: 0.5rem 1rem;"></div>
-      <div class="chat-input-area" style="background:#111b21; padding: 0.4rem 0.75rem;">
-        <input type="text" id="ai-input" placeholder="Tanya AI Asisten..." maxlength="200" autocomplete="off" style="background:#2a3942; border:none; border-radius:8px; height:32px; font-size:0.85rem;" />
-        <button class="btn-send" id="ai-send" style="background:var(--purple-neon); height:32px; padding:0 0.75rem; font-size:0.85rem;">➤</button>
+      <div class="msg-list-wa" id="ai-chatbox" style="padding: 0.6rem 1rem; background: #12131a;"></div>
+      <div class="chat-input-area" style="background:#161722; padding: 0.5rem 0.8rem;">
+        <input type="text" id="ai-input" placeholder="Tanya AI Asisten..." maxlength="200" autocomplete="off" style="background:#1f202e; border:none; border-radius:10px; height:34px; font-size:0.85rem;" />
+        <button class="btn-send" id="ai-send" style="background:var(--purple-neon); height:34px; padding:0 0.85rem; font-size:0.85rem;">➤</button>
       </div>
     </div>
 
   </div>
 </div>
 
+<!-- MODAL POP-UP PREVIEW MEDIA -->
 <div class="wa-modal" id="media-modal">
   <div class="modal-content-box">
     <div style="text-align: right; color: #fff; font-size: 1.5rem; cursor: pointer;" onclick="closeMediaPreview()">✕</div>
     <div class="modal-preview-zone" id="modal-preview-zone"></div>
     <div class="modal-input-area">
       <input type="text" id="modal-caption" placeholder="Tambah keterangan..." autocomplete="off" style="flex:1; background:transparent; border:none; color:#fff; outline:none;" />
-      <button class="btn-send" id="modal-submit-btn" style="background:#00a884; color:#fff;" onclick="submitMediaUpload()">Kirim ➤</button>
+      <button class="btn-send" id="modal-submit-btn" style="background:#7aa2f7; color:#fff;" onclick="submitMediaUpload()">Kirim ➤</button>
     </div>
   </div>
 </div>
@@ -273,7 +290,6 @@
   const mentionBox  = document.getElementById('mention-box');
   const vnBtn       = document.getElementById('vn-btn');
   
-  // Variabel untuk modal upload media
   const mediaModal = document.getElementById('media-modal');
   const previewZone = document.getElementById('modal-preview-zone');
   const modalCaption = document.getElementById('modal-caption');
@@ -282,9 +298,7 @@
   let mediaRecorder;
   let audioChunks = [];
   let isRecording = false;
-  let activeReactionMsgId = null;
 
-  // Formatting filter text kata kunci @ nama member
   function defFilterText(text) {
     let html = escHtml(text);
     html = html.replace(/@stasai/gi, '<span class="mention-tag">@stasai</span>');
@@ -299,75 +313,102 @@
     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  // ─── RENDER BUBBLE MODEL WA ASLI ───
-  function renderMsg(msg) {
-    const isOwn = msg.username === ME_USER;
-    const wrap = document.createElement('div');
-    wrap.className = 'wa-bubble-wrap' + (isOwn ? ' own' : '');
-    wrap.setAttribute('id', `wrap-${msg.id}`);
+  // ─── ENGINE SMART REFRESH (ANTI RUSAK VOICE NOTE) ───
+  async function fetchChat() {
+    try {
+      const res = await fetch('/api/chat');
+      const data = await res.json();
+      
+      const wasAtBottom = messagesBox.scrollHeight - messagesBox.scrollTop <= messagesBox.clientHeight + 90;
+      
+      // Ambil semua elemen chat yang ada di layar sekarang
+      const existingBubbles = messagesBox.querySelectorAll('.wa-bubble-wrap');
+      const existingIds = Array.from(existingBubbles).map(el => el.getAttribute('id').replace('wrap-', ''));
+      const serverIds = data.map(msg => String(msg.id));
 
-    // Olah display total reaksi emoji
-    let reactionBadgeHtml = '';
-    let totalReact = 0;
-    for (let emo in msg.reactions) {
-      if (msg.reactions[emo].length > 0) {
-        reactionBadgeHtml += `<span>${emo}</span>`;
-        totalReact += msg.reactions[emo].length;
-      }
-    }
-    if(totalReact > 0) {
-      reactionBadgeHtml = `<div class="badge-reactions">${reactionBadgeHtml} <sub style="color:rgba(255,255,255,0.6);">${totalReact}</sub></div>`;
-    }
+      // 1. Bersihkan chat yang dihapus admin/rauf di server
+      existingBubbles.forEach(el => {
+        const currentId = el.getAttribute('id').replace('wrap-', '');
+        if (!serverIds.includes(currentId)) { el.remove(); }
+      });
 
-    // Blok media jika ada foto/video/audio
-    let mediaHtml = '';
-    if (msg.type === 'image') {
-      mediaHtml = `<div style="margin-bottom:4px;"><img src="${msg.file_url}" style="max-width:100%; border-radius:6px; max-height:220px; cursor:pointer;" onclick="window.open(this.src)"/></div>`;
-    } else if (msg.type === 'video') {
-      mediaHtml = `<div style="margin-bottom:4px;"><video src="${msg.file_url}" controls style="max-width:100%; border-radius:6px; max-height:220px;"></video></div>`;
-    } else if (msg.type === 'audio') {
-      mediaHtml = `
-        <div class="custom-vn-player">
-          <span style="font-size:1.1rem;">🎙️</span>
-          <audio src="${msg.file_url}" controls controlsList="nodownload"></audio>
-        </div>`;
-    }
+      // 2. Loop data server untuk disinkronkan ke DOM layar
+      data.forEach(msg => {
+        const msgId = String(msg.id);
+        let wrap = document.getElementById(`wrap-${msgId}`);
 
-    let deleteBtnHtml = (ME_USER === 'rauf') ? `<span style="cursor:pointer; color:#ff4136; font-size:0.65rem; margin-right:8px;" onclick="deleteMessage(event, '${msg.id}')">🗑️ Hapus</span>` : '';
+        // Hitung string html untuk reaksi emoji
+        let reactionBadgeHtml = '';
+        let totalReact = 0;
+        for (let emo in msg.reactions) {
+          if (msg.reactions[emo].length > 0) {
+            reactionBadgeHtml += `<span>${emo}</span>`;
+            totalReact += msg.reactions[emo].length;
+          }
+        }
+        if(totalReact > 0) {
+          reactionBadgeHtml = `<div class="badge-reactions">${reactionBadgeHtml} <sub style="color:rgba(255,255,255,0.5);">${totalReact}</sub></div>`;
+        }
 
-    // Isi Konten Bubble
-    wrap.innerHTML = `
-      <div class="wa-bubble" onclick="toggleReactionPopup(event, '${msg.id}')">
-        ${!isOwn ? `<div style="font-weight:700; font-size:0.75rem; color:#53bdeb; margin-bottom:2px;">${msg.sender}</div>` : ''}
-        
-        ${mediaHtml}
-        
-        <div style="font-size:0.88rem; line-height:1.4; word-break:break-word; padding-right:10px;">
-          ${defFilterText(msg.text)}
-        </div>
-        
-        <div class="wa-meta-row">
-          ${deleteBtnHtml}
-          <span>${msg.ts}</span>
-        </div>
+        // KONDISI A: Pesan benar-benar baru (Belum ada di layar) -> Kita Inject!
+        if (!wrap) {
+          const isOwn = msg.username === ME_USER;
+          wrap = document.createElement('div');
+          wrap.className = 'wa-bubble-wrap' + (isOwn ? ' own' : '');
+          wrap.setAttribute('id', `wrap-${msgId}`);
 
-        ${reactionBadgeHtml}
-      </div>
-    `;
-    messagesBox.appendChild(wrap);
+          let mediaHtml = '';
+          if (msg.type === 'image') {
+            mediaHtml = `<div style="margin-bottom:6px;"><img src="${msg.file_url}" style="max-width:100%; border-radius:10px; max-height:220px; cursor:pointer;" onclick="window.open(this.src)"/></div>`;
+          } else if (msg.type === 'video') {
+            mediaHtml = `<div style="margin-bottom:6px;"><video src="${msg.file_url}" controls style="max-width:100%; border-radius:10px; max-height:220px;"></video></div>`;
+          } else if (msg.type === 'audio') {
+            // Player VN dibuat di sini sekali, tidak akan ter-refresh paksa lagi!
+            mediaHtml = `
+              <div class="custom-vn-player">
+                <span style="font-size:1.2rem;">🎙️</span>
+                <audio src="${msg.file_url}" controls controlsList="nodownload"></audio>
+              </div>`;
+          }
+
+          let deleteBtnHtml = (ME_USER === 'rauf') ? `<span style="cursor:pointer; color:#ff4136; font-size:0.65rem; margin-right:8px;" onclick="deleteMessage(event, '${msg.id}')">🗑️ Hapus</span>` : '';
+
+          wrap.innerHTML = `
+            <div class="wa-bubble" onclick="toggleReactionPopup(event, '${msg.id}')">
+              ${!isOwn ? `<div style="font-weight:700; font-size:0.75rem; color:#7aa2f7; margin-bottom:4px;">${msg.sender}</div>` : ''}
+              ${mediaHtml}
+              <div style="font-size:0.88rem; line-height:1.4; word-break:break-word; padding-right:8px;">
+                ${defFilterText(msg.text)}
+              </div>
+              <div class="wa-meta-row">
+                ${deleteBtnHtml}
+                <span>${msg.ts}</span>
+              </div>
+              <div class="reaction-container">${reactionBadgeHtml}</div>
+            </div>
+          `;
+          messagesBox.appendChild(wrap);
+        } 
+        // KONDISI B: Pesan sudah ada di layar -> Cukup sinkronkan reaksi emojinya aja (Gak ganggu AUDIO/VN)
+        else {
+          const reactBox = wrap.querySelector('.reaction-container');
+          if (reactBox && reactBox.innerHTML !== reactionBadgeHtml) {
+            reactBox.innerHTML = reactionBadgeHtml;
+          }
+        }
+      });
+
+      if (wasAtBottom) { messagesBox.scrollTop = messagesBox.scrollHeight; }
+    } catch(e) { console.error("Sync Error:", e); }
   }
 
-  // INTERAKSI TEKAN BUBBLE UNTUK MUNCULIN PILIHAN EMOJI ALA WA
+  // REACTION POPUP MANAGEMENTS
   function toggleReactionPopup(e, msgId) {
     e.stopPropagation();
     if(IS_GUEST) return;
-
-    // Bersihkan popup lama jika ada
     closeAllReactionPopups();
 
     const bubbleElement = e.currentTarget;
-    activeReactionMsgId = msgId;
-
     const popup = document.createElement('div');
     popup.className = 'reaction-popup';
     popup.id = `popup-${msgId}`;
@@ -378,14 +419,11 @@
       <span onclick="triggerReact('${msgId}', '😮')">😮</span>
       <span onclick="triggerReact('${msgId}', '🙏')">🙏</span>
     `;
-
     bubbleElement.appendChild(popup);
   }
 
   function closeAllReactionPopups() {
-    const activePopups = document.querySelectorAll('.reaction-popup');
-    activePopups.forEach(p => p.remove());
-    activeReactionMsgId = null;
+    document.querySelectorAll('.reaction-popup').forEach(p => p.remove());
   }
 
   async function triggerReact(msgId, emoji) {
@@ -396,20 +434,6 @@
         body: JSON.stringify({ msg_id: msgId, emoji: emoji })
       });
       fetchChat();
-    } catch(e) { console.error(e); }
-  }
-
-  // ENGINE REFRESH / POLLING DATA CHAT
-  async function fetchChat() {
-    try {
-      const res = await fetch('/api/chat');
-      const data = await res.json();
-      
-      const wasAtBottom = messagesBox.scrollHeight - messagesBox.scrollTop <= messagesBox.clientHeight + 80;
-      messagesBox.innerHTML = '';
-      
-      data.forEach(renderMsg);
-      if (wasAtBottom) { messagesBox.scrollTop = messagesBox.scrollHeight; }
     } catch(e) { console.error(e); }
   }
 
@@ -431,7 +455,7 @@
 
   async function deleteMessage(e, msgId) {
     e.stopPropagation();
-    if(confirm("Hapus pesan ini dari semua member?")) {
+    if(confirm("Hapus pesan ini?")) {
       try {
         await fetch(`/api/chat/delete/${msgId}`, { method: 'DELETE' });
         fetchChat();
@@ -439,12 +463,10 @@
     }
   }
 
-  // ─── ALUR KERJA PREVIEW MEDIA DENGAN TEKS CAPTION (MIRIP WA) ───
+  // FILE PREVIEW MANAGEMENT
   function openMediaPreview(inputElement) {
     if(IS_GUEST || inputElement.files.length === 0) return;
     selectedFileObject = inputElement.files[0];
-
-    // Buat URL lokal buat ditampilin di kotak pratinjau modal
     const localUrl = URL.createObjectURL(selectedFileObject);
     previewZone.innerHTML = '';
 
@@ -453,9 +475,8 @@
     } else {
       previewZone.innerHTML = `<img src="${localUrl}" alt="Preview" />`;
     }
-
-    modalCaption.value = ''; // Kosongkan caption lama
-    mediaModal.style.display = 'flex'; // Nyalakan Modal WA
+    modalCaption.value = '';
+    mediaModal.style.display = 'flex';
   }
 
   function closeMediaPreview() {
@@ -466,7 +487,6 @@
 
   async function submitMediaUpload() {
     if(!selectedFileObject || IS_GUEST) return;
-    
     const submitBtn = document.getElementById('modal-submit-btn');
     submitBtn.disabled = true;
     submitBtn.textContent = "Mengirim...";
@@ -475,21 +495,15 @@
     formData.append('file', selectedFileObject);
 
     try {
-      // 1. Upload filenya dulu ke backend server
       const res = await fetch('/api/chat/upload', { method: 'POST', body: formData });
       const meta = await res.json();
-      
       if(meta.file_url) {
-        // 2. Ambil teks caption yang ditulis user di modal
         const captionText = modalCaption.value.trim() || `Kirim berkas ${meta.type}`;
-        
-        // 3. Post pesan chat gabungan berkas + teks caption
         await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text: captionText, type: meta.type, file_url: meta.file_url })
         });
-        
         fetchChat();
       }
     } catch(e) { console.error(e); }
@@ -499,7 +513,7 @@
     closeMediaPreview();
   }
 
-  // ─── FITUR VOICE NOTE AUDIO ───
+  // VOICE NOTE RECORD ENGINE
   if(vnBtn && !IS_GUEST) {
     vnBtn.addEventListener('click', async () => {
       if (!isRecording) {
@@ -514,7 +528,7 @@
             const formData = new FormData();
             formData.append('file', new File([audioBlob], "vn.webm", { type: 'audio/webm' }));
             
-            vnBtn.style.color = '#fff';
+            vnBtn.style.color = '#a9b1d6';
             vnBtn.textContent = '🎙️';
             
             const res = await fetch('/api/chat/upload', { method: 'POST', body: formData });
@@ -533,7 +547,7 @@
           isRecording = true;
           vnBtn.style.color = '#ff4136';
           vnBtn.textContent = '🛑';
-        } catch(err) { alert("Mic error atau ditolak!"); }
+        } catch(err) { alert("Mic ditolak/tidak aktif!"); }
       } else {
         mediaRecorder.stop();
         isRecording = false;
@@ -541,12 +555,11 @@
     });
   }
 
-  // AUTOCOMPLETE SUGGEST DROPDOWN TAG @ MEMBER
+  // AUTOCOMPLETE TAG @ MEMBER
   if (chatInput && !IS_GUEST) {
     chatInput.addEventListener('input', (e) => {
       const val = e.target.value;
       const atIndex = val.lastIndexOf('@');
-      
       if (atIndex !== -1 && atIndex === val.length - 1) {
         mentionBox.innerHTML = '<div class="mention-item" onclick="insertMention(\'stasai\')">🤖 stasai (Grup AI)</div>';
         REGISTERED_MEMBERS.forEach(m => {
@@ -572,6 +585,7 @@
     chatInput.addEventListener('keydown', e => { if(e.key === 'Enter') sendChat(); });
   }
 
+  // Start Sync Polling
   fetchChat();
   setInterval(fetchChat, 2000);
 </script>
