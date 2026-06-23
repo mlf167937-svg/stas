@@ -5,14 +5,98 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>STAS — Komunitas</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <style>
+    /* Tambahan layout styling khusus perbaikan komonitas */
+    .grid-container {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 1rem;
+      height: calc(100vh - 80px);
+      max-height: 800px;
+    }
+    .chat-layout-clean {
+      display: flex;
+      flex-direction: column;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+      overflow: hidden;
+      height: 100%;
+    }
+    .msg-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .mention-tag {
+      color: #00ffff;
+      font-weight: bold;
+      background: rgba(0, 255, 255, 0.1);
+      padding: 1px 4px;
+      border-radius: 4px;
+    }
+    .reaction-bar {
+      display: flex;
+      gap: 4px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+    .btn-react {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 2px 6px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      color: var(--text-main);
+    }
+    .btn-react:hover { background: rgba(255,255,255,0.15); }
+    .bubble-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .quick-emojis span {
+      cursor: pointer;
+      margin-right: 4px;
+      font-size: 0.85rem;
+      transition: 0.2s;
+    }
+    .quick-emojis span:hover { transform: scale(1.3); }
+    .mention-suggest {
+      position: absolute;
+      bottom: 70px;
+      left: 15px;
+      background: #1a1a1a;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      max-height: 150px;
+      overflow-y: auto;
+      z-index: 999;
+      display: none;
+      width: 200px;
+    }
+    .mention-item {
+      padding: 0.5rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .mention-item:hover { background: rgba(255,255,255,0.1); color: var(--purple-neon); }
+    .media-preview img, .media-preview video {
+      max-width: 250px;
+      border-radius: 8px;
+      margin-top: 5px;
+    }
+  </style>
 </head>
 <body>
 
 <nav class="navbar">
-  <div class="nav-brand">
-    <span class="logo-s">STAS</span>
-    &nbsp;Web
-  </div>
+  <div class="nav-brand"><span class="logo-s">STAS</span> Web</div>
   <div class="nav-links">
     <a href="{{ url_for('index') }}">Beranda</a>
     <a href="{{ url_for('komunitas') }}" class="active">Komunitas</a>
@@ -25,875 +109,300 @@
   </div>
 </nav>
 
-<div class="page-wrapper" style="padding-top:1.25rem; padding-bottom:1.25rem;">
-  <div class="chat-container-grid">
+<div class="page-wrapper" style="padding-top:1rem; padding-bottom:1rem;">
+  <div class="grid-container">
 
-    <div class="chat-layout">
-      <div class="chat-header">
+    <div class="chat-layout-clean">
+      <div class="chat-header" style="position:relative;">
         <div class="dot"></div>
-        <span style="font-weight:600;">💬 Chat Member STAS</span>
-        <span style="font-size:.8rem; color:var(--text-muted); margin-left:auto;" id="online-count">— member online</span>
+        <span style="font-weight:600;">💬 Ruang Obrolan STAS</span>
+        <span style="font-size:.8rem; color:var(--text-muted); margin-left:auto;" id="online-count">1 member online</span>
       </div>
 
-      <div class="chat-messages" id="chat-messages">
-        <div style="text-align:center; padding:2rem; color:var(--text-muted); font-size:.85rem;">
-          ✨ Selamat datang di STAS!<br>
-          <span style="font-size:.78rem;">Pesan tidak tersimpan saat server restart.</span>
-        </div>
-      </div>
+      <div class="msg-list" id="chat-messages"></div>
+
+      <div class="mention-suggest" id="mention-box"></div>
 
       {% if session.is_guest %}
-        <div style="padding: 0.85rem 1rem; background: rgba(255, 65, 54, 0.05); border-top: 1px solid rgba(255, 65, 54, 0.15); text-align: center; color: #ff4136; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.02em;">
-          🔒 Fungsi obrolan dinonaktifkan untuk akun Tamu.
+        <div style="padding: 1rem; background: rgba(255, 65, 54, 0.05); border-top: 1px solid rgba(255, 65, 54, 0.15); text-align: center; color: #ff4136; font-size: 0.85rem;">
+          🔒 Fungsi mengetik, kirim media, & react dinonaktifkan untuk akun Tamu.
         </div>
       {% else %}
-        <div class="chat-input-area">
-          <input
-            type="text" id="chat-input"
-            placeholder="Tulis pesan..."
-            maxlength="500"
-            autocomplete="off"
-          />
+        <div class="chat-input-area" style="position:relative; gap: 8px; padding: 0.75rem;">
+          <button type="button" class="btn-send" style="background:rgba(255,255,255,0.05); padding:0.5rem;" onclick="document.getElementById('file-input').click()">📎</button>
+          <input type="file" id="file-input" style="display:none;" accept="image/*,video/*" onchange="uploadMedia(this)" />
+          
+          <button type="button" id="vn-btn" class="btn-send" style="background:rgba(255,255,255,0.05); padding:0.5rem;">🎙️</button>
+
+          <input type="text" id="chat-input" placeholder="Tulis pesan... gunakan @ untuk tag" maxlength="500" autocomplete="off" style="flex:1;" />
           <button class="btn-send" id="chat-send">Kirim ➤</button>
         </div>
       {% endif %}
     </div>
 
-    <div class="ai-panel-wrapper">
-
-      <div class="chat-layout ai-chat-layout">
-        <div class="chat-header" style="background: rgba(191,95,255,.06);">
-          <span style="color:var(--purple-neon);">🤖</span>
-          <span style="font-weight:600; font-size:.9rem;">STAS-AI Assistant</span>
-        </div>
-        <div class="chat-messages" id="ai-chatbox" style="padding:.85rem;"></div>
-        <div class="chat-input-area">
-          <input type="text" id="ai-input" placeholder="Tanya AI..." maxlength="200" autocomplete="off" />
-          <button class="btn-send" id="ai-send" style="padding:.65rem .8rem;">➤</button>
-        </div>
+    <div class="chat-layout-clean">
+      <div class="chat-header" style="background: rgba(191,95,255,.06);">
+        <span>🤖</span>
+        <span style="font-weight:600; font-size:.9rem;">STAS-AI (Asisten Pribadi)</span>
       </div>
-
-      <div class="system-log-panel">
-        <div style="font-size:.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:.5rem;">
-          ⚙ System Log
-        </div>
-        <div id="ai-log"></div>
+      <div class="msg-list" id="ai-chatbox"></div>
+      <div class="chat-input-area" style="padding: 0.75rem;">
+        <input type="text" id="ai-input" placeholder="Tanya AI Pribadi..." maxlength="200" autocomplete="off" />
+        <button class="btn-send" id="ai-send">➤</button>
       </div>
-
     </div>
+
   </div>
 </div>
 
 <script src="{{ url_for('static', filename='js/ai.js') }}"></script>
 <script>
-  // FIX: Menggunakan logika conditional Jinja yang benar agar ter-render sebagai string JS yang valid
-  const ME = {% if session.fullname %}{{ session.fullname | tojson }}{% else %}{{ session.member | tojson }}{% endif %};
-  
-  // Penanda dari Jinja ke JavaScript untuk mendeteksi status Tamu
+  // Ambil data identitas login dari Flask
+  const ME_NAME = {% if session.fullname %}{{ session.fullname | tojson }}{% else %}{{ session.member | tojson }}{% endif %};
+  const ME_USER = {{ session.member | tojson }};
   const IS_GUEST = {% if session.is_guest %}true{% else %}false{% endif %};
   
-  const messages  = document.getElementById('chat-messages');
-  const chatInput = document.getElementById('chat-input');
-  const chatSend  = document.getElementById('chat-send');
-  let   lastCount = 0;
+  // Data list member terdaftar untuk sistem autocomplete tag @
+  const REGISTERED_MEMBERS = {{ members | tojson }};
 
-  // Fungsi render chat ala WhatsApp (Kanan-Kiri + Nama + Jam Akurat)
-  function renderMsg(msg) {
-    const isOwn = msg.sender === ME;
-    const wrap  = document.createElement('div');
-    
-    // Jika pesan dari kita sendiri, kasih class 'own' biar rata kanan
-    wrap.className = 'chat-msg' + (isOwn ? ' own' : '');
+  const messagesBox = document.getElementById('chat-messages');
+  const chatInput   = document.getElementById('chat-input');
+  const chatSend    = document.getElementById('chat-send');
+  const mentionBox  = document.getElementById('mention-box');
+  const vnBtn       = document.getElementById('vn-btn');
 
-    // Format tampilan chat ala WA (Nama di atas teks, Jam di bawah/samping)
-    wrap.innerHTML = `
-      <div class="chat-bubble-content">
-        <div class="chat-bubble-text">
-          ${!isOwn ? `<div class="chat-bubble-sender-name" style="font-weight: 700; font-size: 0.78rem; color: var(--purple-neon); margin-bottom: 2px;">${msg.sender}</div>` : ''}
-          
-          <div class="chat-text-content" style="font-size: 0.9rem; line-height: 1.4; word-break: break-word;">${escHtml(msg.text)}</div>
-          
-          <div class="chat-bubble-time" style="font-size: 0.68rem; color: var(--text-muted); text-align: right; margin-top: 4px; display: block;">${msg.ts || '00:00'}</div>
-        </div>
-      </div>
-    `;
-    
-    messages.appendChild(wrap);
-    // Auto-scroll ke bawah setiap ada pesan baru
-    messages.scrollTop = messages.scrollHeight;
-  }
+  let mediaRecorder;
+  let audioChunks = [];
+  let isRecording = false;
 
-  // Security check biar gak bisa di-inject HTML (XSS Protection)
+  // ─── PARSING FILTER TEKS (Format tag @ menjadi link berwarna neon) ──────────
+  defFilterText = (text) => {
+    let html = escHtml(text);
+    // Ganti kata @stasai
+    html = html.replace(/@stasai/gi, '<span class="mention-tag">@stasai</span>');
+    // Ganti data nama member .txt yang terdaftar
+    REGISTERED_MEMBERS.forEach(m => {
+      let regex = new RegExp(`@${m.username}`, 'gi');
+      html = html.replace(regex, `<span class="mention-tag">@${m.username}</span>`);
+    });
+    return html;
+  };
+
   function escHtml(str) {
-    return str
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  // Ambil data chat dari Backend Python
-  async function fetchChat() {
-    try {
-      const res  = await fetch('/api/chat');
-      const data = await res.json();
-      if (data.length !== lastCount) {
-        // Ambil pesan yang benar-benar baru aja
-        const newMsgs = data.slice(lastCount);
-        newMsgs.forEach(renderMsg);
-        lastCount = data.length;
-        
-        // Indikator Online internal dummy biar keliatan idup komunitasnya
-        document.getElementById('online-count').textContent =
-          `${Math.max(1, Math.floor(Math.random()*4)+1)} member online`;
+  // ─── RENDER BUBBLE CHAT SYSTEM ──────────────────────────────────────────────
+  function renderMsg(msg) {
+    const isOwn = msg.username === ME_USER;
+    const wrap = document.createElement('div');
+    wrap.className = 'chat-msg' + (isOwn ? ' own' : '');
+    wrap.setAttribute('data-id', msg.id);
+
+    // Hitung tampilan rekap emoji reaksi
+    let reactionHtml = '';
+    for (let emo in msg.reactions) {
+      if (msg.reactions[emo].length > 0) {
+        reactionHtml += `<button class="btn-react" onclick="sendReaction('${msg.id}', '${emo}')">${emo} <sub>${msg.reactions[emo].length}</sub></button>`;
       }
-    } catch(e) { console.error("Gagal mengambil chat:", e); }
-  }
+    }
 
-  // Kirim chat ke database/backend
-  async function sendChat() {
-    // Hadang di sisi JS jika akun tamu mencoba membypass penguncian HTML
-    if (IS_GUEST) return;
+    // Tampilan media jika tipenya bukan teks biasa
+    let mediaHtml = '';
+    if (msg.type === 'image') {
+      mediaHtml = `<div class="media-preview"><img src="${msg.file_url}" alt="Foto" onclick="window.open(this.src)"/></div>`;
+    } else if (msg.type === 'video') {
+      mediaHtml = `<div class="media-preview"><video src="${msg.file_url}" controls></video></div>`;
+    } else if (msg.type === 'audio') {
+      mediaHtml = `<div style="margin-top:5px;"><audio src="${msg.file_url}" controls style="max-width:220px;"></audio></div>`;
+    }
 
-    const text = chatInput.value.trim();
-    if (!text) return;
-    chatInput.value = '';
-    try {
-      await fetch('/api/chat', {
-        method : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body   : JSON.stringify({ text })
-      });
-      await fetchChat(); // Langsung refresh chat setelah kirim
-    } catch(e) { console.error("Gagal mengirim chat:", e); }
-  }
+    // Tombol tong sampah hapus pesan khusus untuk akun admin bernama: rauf
+    let deleteBtnHtml = (ME_USER === 'rauf') ? `<span style="cursor:pointer; color:#ff4136; font-size:0.75rem;" onclick="deleteMessage('${msg.id}')">🗑️ Hapus</span>` : '';
 
-  // Event Listener Tombol & Enter (Hanya diaktifkan jika elemennya ada/bukan tamu)
-  if (chatSend && chatInput) {
-    chatSend.addEventListener('click', sendChat);
-    chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
-  }
-
-  // Jalankan polling realtime tiap 2 detik
-  fetchChat();
-  setInterval(fetchChat, 2000);
-</script>
-</body>
-</html><!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>STAS — Komunitas</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-</head>
-<body>
-
-<nav class="navbar">
-  <div class="nav-brand">
-    <span class="logo-s">STAS</span>
-    &nbsp;Web
-  </div>
-  <div class="nav-links">
-    <a href="{{ url_for('index') }}">Beranda</a>
-    <a href="{{ url_for('komunitas') }}" class="active">Komunitas</a>
-    <a href="{{ url_for('album') }}">Album</a>
-    <a href="{{ url_for('games') }}">Games</a>
-  </div>
-  <div class="nav-user">
-    <span class="greet">Halo, <strong>{{ session.fullname or session.member }}</strong></span>
-    <a href="{{ url_for('logout') }}" class="btn-logout">Keluar</a>
-  </div>
-</nav>
-
-<div class="page-wrapper" style="padding-top:1.25rem; padding-bottom:1.25rem;">
-  <div class="chat-container-grid">
-
-    <div class="chat-layout">
-      <div class="chat-header">
-        <div class="dot"></div>
-        <span style="font-weight:600;">💬 Chat Member STAS</span>
-        <span style="font-size:.8rem; color:var(--text-muted); margin-left:auto;" id="online-count">— member online</span>
-      </div>
-
-      <div class="chat-messages" id="chat-messages">
-        <div style="text-align:center; padding:2rem; color:var(--text-muted); font-size:.85rem;">
-          ✨ Selamat datang di STAS!<br>
-          <span style="font-size:.78rem;">Pesan tidak tersimpan saat server restart.</span>
-        </div>
-      </div>
-
-      {% if session.is_guest %}
-        <div style="padding: 0.85rem 1rem; background: rgba(255, 65, 54, 0.05); border-top: 1px solid rgba(255, 65, 54, 0.15); text-align: center; color: #ff4136; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.02em;">
-          🔒 Fungsi obrolan dinonaktifkan untuk akun Tamu.
-        </div>
-      {% else %}
-        <div class="chat-input-area">
-          <input
-            type="text" id="chat-input"
-            placeholder="Tulis pesan..."
-            maxlength="500"
-            autocomplete="off"
-          />
-          <button class="btn-send" id="chat-send">Kirim ➤</button>
-        </div>
-      {% endif %}
-    </div>
-
-    <div class="ai-panel-wrapper">
-
-      <div class="chat-layout ai-chat-layout">
-        <div class="chat-header" style="background: rgba(191,95,255,.06);">
-          <span style="color:var(--purple-neon);">🤖</span>
-          <span style="font-weight:600; font-size:.9rem;">STAS-AI Assistant</span>
-        </div>
-        <div class="chat-messages" id="ai-chatbox" style="padding:.85rem;"></div>
-        <div class="chat-input-area">
-          <input type="text" id="ai-input" placeholder="Tanya AI..." maxlength="200" autocomplete="off" />
-          <button class="btn-send" id="ai-send" style="padding:.65rem .8rem;">➤</button>
-        </div>
-      </div>
-
-      <div class="system-log-panel">
-        <div style="font-size:.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:.5rem;">
-          ⚙ System Log
-        </div>
-        <div id="ai-log"></div>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<script src="{{ url_for('static', filename='js/ai.js') }}"></script>
-<script>
-  // FIX: Menggunakan logika conditional Jinja yang benar agar ter-render sebagai string JS yang valid
-  const ME = {% if session.fullname %}{{ session.fullname | tojson }}{% else %}{{ session.member | tojson }}{% endif %};
-  
-  // Penanda dari Jinja ke JavaScript untuk mendeteksi status Tamu
-  const IS_GUEST = {% if session.is_guest %}true{% else %}false{% endif %};
-  
-  const messages  = document.getElementById('chat-messages');
-  const chatInput = document.getElementById('chat-input');
-  const chatSend  = document.getElementById('chat-send');
-  let   lastCount = 0;
-
-  // Fungsi render chat ala WhatsApp (Kanan-Kiri + Nama + Jam Akurat)
-  function renderMsg(msg) {
-    const isOwn = msg.sender === ME;
-    const wrap  = document.createElement('div');
-    
-    // Jika pesan dari kita sendiri, kasih class 'own' biar rata kanan
-    wrap.className = 'chat-msg' + (isOwn ? ' own' : '');
-
-    // Format tampilan chat ala WA (Nama di atas teks, Jam di bawah/samping)
     wrap.innerHTML = `
       <div class="chat-bubble-content">
         <div class="chat-bubble-text">
-          ${!isOwn ? `<div class="chat-bubble-sender-name" style="font-weight: 700; font-size: 0.78rem; color: var(--purple-neon); margin-bottom: 2px;">${msg.sender}</div>` : ''}
+          ${!isOwn ? `<div style="font-weight:700; font-size:0.78rem; color:var(--purple-neon); margin-bottom:2px;">${msg.sender}</div>` : ''}
+          <div style="font-size:0.9rem; line-height:1.4; intent: word-break:break-word;">${defFilterText(msg.text)}</div>
+          ${mediaHtml}
           
-          <div class="chat-text-content" style="font-size: 0.9rem; line-height: 1.4; word-break: break-word;">${escHtml(msg.text)}</div>
-          
-          <div class="chat-bubble-time" style="font-size: 0.68rem; color: var(--text-muted); text-align: right; margin-top: 4px; display: block;">${msg.ts || '00:00'}</div>
+          <div class="bubble-actions">
+            <span style="font-size:0.65rem; color:var(--text-muted);">${msg.ts}</span>
+            ${deleteBtnHtml}
+            
+            ${!IS_GUEST ? `
+            <div class="quick-emojis" style="display:inline-block; margin-left:8px; opacity:0.6;">
+              <span onclick="sendReaction('${msg.id}', '👍')">👍</span>
+              <span onclick="sendReaction('${msg.id}', '❤️')">❤️</span>
+              <span onclick="sendReaction('${msg.id}', '😂')">😂</span>
+            </div>
+            ` : ''}
+          </div>
+          <div class="reaction-bar">${reactionHtml}</div>
         </div>
       </div>
     `;
-    
-    messages.appendChild(wrap);
-    // Auto-scroll ke bawah setiap ada pesan baru
-    messages.scrollTop = messages.scrollHeight;
+    messagesBox.appendChild(wrap);
   }
 
-  // Security check biar gak bisa di-inject HTML (XSS Protection)
-  function escHtml(str) {
-    return str
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  // Ambil data chat dari Backend Python
+  // ─── FETCH & ENGINE POLLING REALTIME REAL DATA ──────────────────────────────
   async function fetchChat() {
     try {
-      const res  = await fetch('/api/chat');
-      const data = await res.json();
-      if (data.length !== lastCount) {
-        // Ambil pesan yang benar-benar baru aja
-        const newMsgs = data.slice(lastCount);
-        newMsgs.forEach(renderMsg);
-        lastCount = data.length;
-        
-        // Indikator Online internal dummy biar keliatan idup komunitasnya
-        document.getElementById('online-count').textContent =
-          `${Math.max(1, Math.floor(Math.random()*4)+1)} member online`;
-      }
-    } catch(e) { console.error("Gagal mengambil chat:", e); }
-  }
-
-  // Kirim chat ke database/backend
-  async function sendChat() {
-    // Hadang di sisi JS jika akun tamu mencoba membypass penguncian HTML
-    if (IS_GUEST) return;
-
-    const text = chatInput.value.trim();
-    if (!text) return;
-    chatInput.value = '';
-    try {
-      await fetch('/api/chat', {
-        method : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body   : JSON.stringify({ text })
-      });
-      await fetchChat(); // Langsung refresh chat setelah kirim
-    } catch(e) { console.error("Gagal mengirim chat:", e); }
-  }
-
-  // Event Listener Tombol & Enter (Hanya diaktifkan jika elemennya ada/bukan tamu)
-  if (chatSend && chatInput) {
-    chatSend.addEventListener('click', sendChat);
-    chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
-  }
-
-  // Jalankan polling realtime tiap 2 detik
-  fetchChat();
-  setInterval(fetchChat, 2000);
-</script>
-</body>
-</html><!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>STAS — Komunitas</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-</head>
-<body>
-
-<nav class="navbar">
-  <div class="nav-brand">
-    <span class="logo-s">STAS</span>
-    &nbsp;Web
-  </div>
-  <div class="nav-links">
-    <a href="{{ url_for('index') }}">Beranda</a>
-    <a href="{{ url_for('komunitas') }}" class="active">Komunitas</a>
-    <a href="{{ url_for('album') }}">Album</a>
-    <a href="{{ url_for('games') }}">Games</a>
-  </div>
-  <div class="nav-user">
-    <span class="greet">Halo, <strong>{{ session.fullname or session.member }}</strong></span>
-    <a href="{{ url_for('logout') }}" class="btn-logout">Keluar</a>
-  </div>
-</nav>
-
-<div class="page-wrapper" style="padding-top:1.25rem; padding-bottom:1.25rem;">
-  <div class="chat-container-grid">
-
-    <div class="chat-layout">
-      <div class="chat-header">
-        <div class="dot"></div>
-        <span style="font-weight:600;">💬 Chat Member STAS</span>
-        <span style="font-size:.8rem; color:var(--text-muted); margin-left:auto;" id="online-count">— member online</span>
-      </div>
-
-      <div class="chat-messages" id="chat-messages">
-        <div style="text-align:center; padding:2rem; color:var(--text-muted); font-size:.85rem;">
-          ✨ Selamat datang di STAS!<br>
-          <span style="font-size:.78rem;">Pesan tidak tersimpan saat server restart.</span>
-        </div>
-      </div>
-
-      {% if session.is_guest %}
-        <div style="padding: 0.85rem 1rem; background: rgba(255, 65, 54, 0.05); border-top: 1px solid rgba(255, 65, 54, 0.15); text-align: center; color: #ff4136; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.02em;">
-          🔒 Fungsi obrolan dinonaktifkan untuk akun Tamu.
-        </div>
-      {% else %}
-        <div class="chat-input-area">
-          <input
-            type="text" id="chat-input"
-            placeholder="Tulis pesan..."
-            maxlength="500"
-            autocomplete="off"
-          />
-          <button class="btn-send" id="chat-send">Kirim ➤</button>
-        </div>
-      {% endif %}
-    </div>
-
-    <div class="ai-panel-wrapper">
-
-      <div class="chat-layout ai-chat-layout">
-        <div class="chat-header" style="background: rgba(191,95,255,.06);">
-          <span style="color:var(--purple-neon);">🤖</span>
-          <span style="font-weight:600; font-size:.9rem;">STAS-AI Assistant</span>
-        </div>
-        <div class="chat-messages" id="ai-chatbox" style="padding:.85rem;"></div>
-        <div class="chat-input-area">
-          <input type="text" id="ai-input" placeholder="Tanya AI..." maxlength="200" autocomplete="off" />
-          <button class="btn-send" id="ai-send" style="padding:.65rem .8rem;">➤</button>
-        </div>
-      </div>
-
-      <div class="system-log-panel">
-        <div style="font-size:.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:.5rem;">
-          ⚙ System Log
-        </div>
-        <div id="ai-log"></div>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<script src="{{ url_for('static', filename='js/ai.js') }}"></script>
-<script>
-  // FIX: Menggunakan logika conditional Jinja yang benar agar ter-render sebagai string JS yang valid
-  const ME = {% if session.fullname %}{{ session.fullname | tojson }}{% else %}{{ session.member | tojson }}{% endif %};
-  
-  // Penanda dari Jinja ke JavaScript untuk mendeteksi status Tamu
-  const IS_GUEST = {% if session.is_guest %}true{% else %}false{% endif %};
-  
-  const messages  = document.getElementById('chat-messages');
-  const chatInput = document.getElementById('chat-input');
-  const chatSend  = document.getElementById('chat-send');
-  let   lastCount = 0;
-
-  // Fungsi render chat ala WhatsApp (Kanan-Kiri + Nama + Jam Akurat)
-  function renderMsg(msg) {
-    const isOwn = msg.sender === ME;
-    const wrap  = document.createElement('div');
-    
-    // Jika pesan dari kita sendiri, kasih class 'own' biar rata kanan
-    wrap.className = 'chat-msg' + (isOwn ? ' own' : '');
-
-    // Format tampilan chat ala WA (Nama di atas teks, Jam di bawah/samping)
-    wrap.innerHTML = `
-      <div class="chat-bubble-content">
-        <div class="chat-bubble-text">
-          ${!isOwn ? `<div class="chat-bubble-sender-name" style="font-weight: 700; font-size: 0.78rem; color: var(--purple-neon); margin-bottom: 2px;">${msg.sender}</div>` : ''}
-          
-          <div class="chat-text-content" style="font-size: 0.9rem; line-height: 1.4; word-break: break-word;">${escHtml(msg.text)}</div>
-          
-          <div class="chat-bubble-time" style="font-size: 0.68rem; color: var(--text-muted); text-align: right; margin-top: 4px; display: block;">${msg.ts || '00:00'}</div>
-        </div>
-      </div>
-    `;
-    
-    messages.appendChild(wrap);
-    // Auto-scroll ke bawah setiap ada pesan baru
-    messages.scrollTop = messages.scrollHeight;
-  }
-
-  // Security check biar gak bisa di-inject HTML (XSS Protection)
-  function escHtml(str) {
-    return str
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  // Ambil data chat dari Backend Python
-  async function fetchChat() {
-    try {
-      const res  = await fetch('/api/chat');
-      const data = await res.json();
-      if (data.length !== lastCount) {
-        // Ambil pesan yang benar-benar baru aja
-        const newMsgs = data.slice(lastCount);
-        newMsgs.forEach(renderMsg);
-        lastCount = data.length;
-        
-        // Indikator Online internal dummy biar keliatan idup komunitasnya
-        document.getElementById('online-count').textContent =
-          `${Math.max(1, Math.floor(Math.random()*4)+1)} member online`;
-      }
-    } catch(e) { console.error("Gagal mengambil chat:", e); }
-  }
-
-  // Kirim chat ke database/backend
-  async function sendChat() {
-    // Hadang di sisi JS jika akun tamu mencoba membypass penguncian HTML
-    if (IS_GUEST) return;
-
-    const text = chatInput.value.trim();
-    if (!text) return;
-    chatInput.value = '';
-    try {
-      await fetch('/api/chat', {
-        method : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body   : JSON.stringify({ text })
-      });
-      await fetchChat(); // Langsung refresh chat setelah kirim
-    } catch(e) { console.error("Gagal mengirim chat:", e); }
-  }
-
-  // Event Listener Tombol & Enter (Hanya diaktifkan jika elemennya ada/bukan tamu)
-  if (chatSend && chatInput) {
-    chatSend.addEventListener('click', sendChat);
-    chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
-  }
-
-  // Jalankan polling realtime tiap 2 detik
-  fetchChat();
-  setInterval(fetchChat, 2000);
-</script>
-</body>
-</html><!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>STAS — Komunitas</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-</head>
-<body>
-
-<nav class="navbar">
-  <div class="nav-brand">
-    <span class="logo-s">STAS</span>
-    &nbsp;Web
-  </div>
-  <div class="nav-links">
-    <a href="{{ url_for('index') }}">Beranda</a>
-    <a href="{{ url_for('komunitas') }}" class="active">Komunitas</a>
-    <a href="{{ url_for('album') }}">Album</a>
-    <a href="{{ url_for('games') }}">Games</a>
-  </div>
-  <div class="nav-user">
-    <span class="greet">Halo, <strong>{{ session.fullname or session.member }}</strong></span>
-    <a href="{{ url_for('logout') }}" class="btn-logout">Keluar</a>
-  </div>
-</nav>
-
-<div class="page-wrapper" style="padding-top:1.25rem; padding-bottom:1.25rem;">
-  <div class="chat-container-grid">
-
-    <div class="chat-layout">
-      <div class="chat-header">
-        <div class="dot"></div>
-        <span style="font-weight:600;">💬 Chat Member STAS</span>
-        <span style="font-size:.8rem; color:var(--text-muted); margin-left:auto;" id="online-count">— member online</span>
-      </div>
-
-      <div class="chat-messages" id="chat-messages">
-        <div style="text-align:center; padding:2rem; color:var(--text-muted); font-size:.85rem;">
-          ✨ Selamat datang di STAS!<br>
-          <span style="font-size:.78rem;">Pesan tidak tersimpan saat server restart.</span>
-        </div>
-      </div>
-
-      {% if session.is_guest %}
-        <div style="padding: 0.85rem 1rem; background: rgba(255, 65, 54, 0.05); border-top: 1px solid rgba(255, 65, 54, 0.15); text-align: center; color: #ff4136; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.02em;">
-          🔒 Fungsi obrolan dinonaktifkan untuk akun Tamu.
-        </div>
-      {% else %}
-        <div class="chat-input-area">
-          <input
-            type="text" id="chat-input"
-            placeholder="Tulis pesan..."
-            maxlength="500"
-            autocomplete="off"
-          />
-          <button class="btn-send" id="chat-send">Kirim ➤</button>
-        </div>
-      {% endif %}
-    </div>
-
-    <div class="ai-panel-wrapper">
-
-      <div class="chat-layout ai-chat-layout">
-        <div class="chat-header" style="background: rgba(191,95,255,.06);">
-          <span style="color:var(--purple-neon);">🤖</span>
-          <span style="font-weight:600; font-size:.9rem;">STAS-AI Assistant</span>
-        </div>
-        <div class="chat-messages" id="ai-chatbox" style="padding:.85rem;"></div>
-        <div class="chat-input-area">
-          <input type="text" id="ai-input" placeholder="Tanya AI..." maxlength="200" autocomplete="off" />
-          <button class="btn-send" id="ai-send" style="padding:.65rem .8rem;">➤</button>
-        </div>
-      </div>
-
-      <div class="system-log-panel">
-        <div style="font-size:.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:.5rem;">
-          ⚙ System Log
-        </div>
-        <div id="ai-log"></div>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<script src="{{ url_for('static', filename='js/ai.js') }}"></script>
-<script>
-  // FIX: Menggunakan logika conditional Jinja yang benar agar ter-render sebagai string JS yang valid
-  const ME = {% if session.fullname %}{{ session.fullname | tojson }}{% else %}{{ session.member | tojson }}{% endif %};
-  
-  // Penanda dari Jinja ke JavaScript untuk mendeteksi status Tamu
-  const IS_GUEST = {% if session.is_guest %}true{% else %}false{% endif %};
-  
-  const messages  = document.getElementById('chat-messages');
-  const chatInput = document.getElementById('chat-input');
-  const chatSend  = document.getElementById('chat-send');
-  let   lastCount = 0;
-
-  // Fungsi render chat ala WhatsApp (Kanan-Kiri + Nama + Jam Akurat)
-  function renderMsg(msg) {
-    const isOwn = msg.sender === ME;
-    const wrap  = document.createElement('div');
-    
-    // Jika pesan dari kita sendiri, kasih class 'own' biar rata kanan
-    wrap.className = 'chat-msg' + (isOwn ? ' own' : '');
-
-    // Format tampilan chat ala WA (Nama di atas teks, Jam di bawah/samping)
-    wrap.innerHTML = `
-      <div class="chat-bubble-content">
-        <div class="chat-bubble-text">
-          ${!isOwn ? `<div class="chat-bubble-sender-name" style="font-weight: 700; font-size: 0.78rem; color: var(--purple-neon); margin-bottom: 2px;">${msg.sender}</div>` : ''}
-          
-          <div class="chat-text-content" style="font-size: 0.9rem; line-height: 1.4; word-break: break-word;">${escHtml(msg.text)}</div>
-          
-          <div class="chat-bubble-time" style="font-size: 0.68rem; color: var(--text-muted); text-align: right; margin-top: 4px; display: block;">${msg.ts || '00:00'}</div>
-        </div>
-      </div>
-    `;
-    
-    messages.appendChild(wrap);
-    // Auto-scroll ke bawah setiap ada pesan baru
-    messages.scrollTop = messages.scrollHeight;
-  }
-
-  // Security check biar gak bisa di-inject HTML (XSS Protection)
-  function escHtml(str) {
-    return str
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  // Ambil data chat dari Backend Python
-  async function fetchChat() {
-    try {
-      const res  = await fetch('/api/chat');
-      const data = await res.json();
-      if (data.length !== lastCount) {
-        // Ambil pesan yang benar-benar baru aja
-        const newMsgs = data.slice(lastCount);
-        newMsgs.forEach(renderMsg);
-        lastCount = data.length;
-        
-        // Indikator Online internal dummy biar keliatan idup komunitasnya
-        document.getElementById('online-count').textContent =
-          `${Math.max(1, Math.floor(Math.random()*4)+1)} member online`;
-      }
-    } catch(e) { console.error("Gagal mengambil chat:", e); }
-  }
-
-  // Kirim chat ke database/backend
-  async function sendChat() {
-    // Hadang di sisi JS jika akun tamu mencoba membypass penguncian HTML
-    if (IS_GUEST) return;
-
-    const text = chatInput.value.trim();
-    if (!text) return;
-    chatInput.value = '';
-    try {
-      await fetch('/api/chat', {
-        method : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body   : JSON.stringify({ text })
-      });
-      await fetchChat(); // Langsung refresh chat setelah kirim
-    } catch(e) { console.error("Gagal mengirim chat:", e); }
-  }
-
-  // Event Listener Tombol & Enter (Hanya diaktifkan jika elemennya ada/bukan tamu)
-  if (chatSend && chatInput) {
-    chatSend.addEventListener('click', sendChat);
-    chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
-  }
-
-  // Jalankan polling realtime tiap 2 detik
-  fetchChat();
-  setInterval(fetchChat, 2000);
-</script>
-</body>
-</html><!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>STAS — Komunitas</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-</head>
-<body>
-
-<nav class="navbar">
-  <div class="nav-brand">
-    <span class="logo-s">STAS</span>
-    &nbsp;Web
-  </div>
-  <div class="nav-links">
-    <a href="{{ url_for('index') }}">Beranda</a>
-    <a href="{{ url_for('komunitas') }}" class="active">Komunitas</a>
-    <a href="{{ url_for('album') }}">Album</a>
-    <a href="{{ url_for('games') }}">Games</a>
-  </div>
-  <div class="nav-user">
-    <span class="greet">Halo, <strong>{{ session.fullname or session.member }}</strong></span>
-    <a href="{{ url_for('logout') }}" class="btn-logout">Keluar</a>
-  </div>
-</nav>
-
-<div class="page-wrapper" style="padding-top:1.25rem; padding-bottom:1.25rem;">
-  <div class="chat-container-grid">
-
-    <div class="chat-layout">
-      <div class="chat-header">
-        <div class="dot"></div>
-        <span style="font-weight:600;">💬 Chat Member STAS</span>
-        <span style="font-size:.8rem; color:var(--text-muted); margin-left:auto;" id="online-count">— member online</span>
-      </div>
-
-      <div class="chat-messages" id="chat-messages">
-        <div style="text-align:center; padding:2rem; color:var(--text-muted); font-size:.85rem;">
-          ✨ Selamat datang di STAS!<br>
-          <span style="font-size:.78rem;">Pesan tidak tersimpan saat server restart.</span>
-        </div>
-      </div>
-
-      {% if session.is_guest %}
-        <div style="padding: 0.85rem 1rem; background: rgba(255, 65, 54, 0.05); border-top: 1px solid rgba(255, 65, 54, 0.15); text-align: center; color: #ff4136; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.02em;">
-          🔒 Fungsi obrolan dinonaktifkan untuk akun Tamu.
-        </div>
-      {% else %}
-        <div class="chat-input-area">
-          <input
-            type="text" id="chat-input"
-            placeholder="Tulis pesan..."
-            maxlength="500"
-            autocomplete="off"
-          />
-          <button class="btn-send" id="chat-send">Kirim ➤</button>
-        </div>
-      {% endif %}
-    </div>
-
-    <div class="ai-panel-wrapper">
-
-      <div class="chat-layout ai-chat-layout">
-        <div class="chat-header" style="background: rgba(191,95,255,.06);">
-          <span style="color:var(--purple-neon);">🤖</span>
-          <span style="font-weight:600; font-size:.9rem;">STAS-AI Assistant</span>
-        </div>
-        <div class="chat-messages" id="ai-chatbox" style="padding:.85rem;"></div>
-        <div class="chat-input-area">
-          <input type="text" id="ai-input" placeholder="Tanya AI..." maxlength="200" autocomplete="off" />
-          <button class="btn-send" id="ai-send" style="padding:.65rem .8rem;">➤</button>
-        </div>
-      </div>
-
-      <div class="system-log-panel">
-        <div style="font-size:.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:.5rem;">
-          ⚙ System Log
-        </div>
-        <div id="ai-log"></div>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<script src="{{ url_for('static', filename='js/ai.js') }}"></script>
-<script>
-  // FIX: Menggunakan logika conditional Jinja yang benar agar ter-render sebagai string JS yang valid
-  const ME = {% if session.fullname %}{{ session.fullname | tojson }}{% else %}{{ session.member | tojson }}{% endif %};
-  
-  // Penanda dari Jinja ke JavaScript untuk mendeteksi status Tamu
-  const IS_GUEST = {% if session.is_guest %}true{% else %}false{% endif %};
-  
-  const messages  = document.getElementById('chat-messages');
-  const chatInput = document.getElementById('chat-input');
-  const chatSend  = document.getElementById('chat-send');
-
-  // Fungsi render chat ala WhatsApp (Kanan-Kiri + Nama + Jam Akurat)
-  function renderMsg(msg) {
-    const isOwn = msg.sender === ME;
-    const wrap  = document.createElement('div');
-    
-    // Jika pesan dari kita sendiri, kasih class 'own' biar rata kanan
-    wrap.className = 'chat-msg' + (isOwn ? ' own' : '');
-
-    // Format tampilan chat ala WA (Nama di atas teks, Jam di bawah/samping)
-    wrap.innerHTML = `
-      <div class="chat-bubble-content">
-        <div class="chat-bubble-text">
-          ${!isOwn ? `<div class="chat-bubble-sender-name" style="font-weight: 700; font-size: 0.78rem; color: var(--purple-neon); margin-bottom: 2px;">${msg.sender}</div>` : ''}
-          
-          <div class="chat-text-content" style="font-size: 0.9rem; line-height: 1.4; word-break: break-word;">${escHtml(msg.text)}</div>
-          
-          <div class="chat-bubble-time" style="font-size: 0.68rem; color: var(--text-muted); text-align: right; margin-top: 4px; display: block;">${msg.ts || '00:00'}</div>
-        </div>
-      </div>
-    `;
-    
-    messages.appendChild(wrap);
-  }
-
-  // Security check biar gak bisa di-inject HTML (XSS Protection)
-  function escHtml(str) {
-    return str
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  // Ambil data chat dari Backend Python
-  async function fetchChat() {
-    try {
-      const res  = await fetch('/api/chat');
+      const res = await fetch('/api/chat');
       const data = await res.json();
       
-      // Ambil posisi scroll saat ini sebelum dikosongkan
-      const wasAtBottom = messages.scrollHeight - messages.scrollTop <= messages.clientHeight + 40;
-
-      // HAPUS SEMUA CHAT LAMA BIAR GAK DUPLIKAT/EROR
-      messages.innerHTML = ''; 
-
-      // Render ulang semua pesan dari data terbaru
+      const wasAtBottom = messagesBox.scrollHeight - messagesBox.scrollTop <= messagesBox.clientHeight + 60;
+      messagesBox.innerHTML = ''; // Clear anti duplikasi bug gila gedor data lama
+      
       data.forEach(renderMsg);
-      
-      // Auto-scroll ke bawah hanya jika user tadinya di posisi paling bawah
-      if (wasAtBottom) {
-        messages.scrollTop = messages.scrollHeight;
-      }
-
-      // Indikator Online internal dummy biar keliatan idup komunitasnya
-      document.getElementById('online-count').textContent =
-        `${Math.max(1, Math.floor(Math.random()*4)+1)} member online`;
-
-    } catch(e) { console.error("Gagal mengambil chat:", e); }
+      if (wasAtBottom) { messagesBox.scrollTop = messagesBox.scrollHeight; }
+    } catch(e) { console.error(e); }
   }
 
-  // Kirim chat ke database/backend
+  // SEND CHAT FUNCTION
   async function sendChat() {
-    if (IS_GUEST) return; // Hadang jika akun tamu coba-coba kirim
-
+    if(IS_GUEST) return;
     const text = chatInput.value.trim();
     if (!text) return;
     chatInput.value = '';
+    mentionBox.style.display = 'none';
     try {
       await fetch('/api/chat', {
-        method : 'POST',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body   : JSON.stringify({ text })
+        body: JSON.stringify({ text: text, type: 'text' })
       });
-      await fetchChat(); // Langsung refresh chat setelah kirim
-    } catch(e) { console.error("Gagal mengirim chat:", e); }
+      fetchChat();
+    } catch(e) { console.error(e); }
   }
 
-  // Event Listener Tombol & Enter
-  if (chatSend && chatInput) {
+  // KASIH REAKSI EMOT
+  async function sendReaction(msgId, emoji) {
+    if(IS_GUEST) return;
+    try {
+      await fetch('/api/chat/react', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ msg_id: msgId, emoji: emoji })
+      });
+      fetchChat();
+    } catch(e) { console.error(e); }
+  }
+
+  // ADMIN ACTION: HAPUS PESAN RAUF
+  async function deleteMessage(msgId) {
+    if(confirm("Hapus pesan ini permanen dari obrolan STAS?")) {
+      try {
+        await fetch(`/api/chat/delete/${msgId}`, { method: 'DELETE' });
+        fetchChat();
+      } catch(e) { console.error(e); }
+    }
+  }
+
+  // ─── SYSTEM ACTION: UPLOAD FOTO / VIDEO ─────────────────────────────────────
+  async function uploadMedia(inputElement) {
+    if(IS_GUEST || inputElement.files.length === 0) return;
+    const file = inputElement.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/chat/upload', { method: 'POST', body: formData });
+      const meta = await res.json();
+      
+      if(meta.file_url) {
+        // Post ke chat log setelah file sukses nangkring di database
+        await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: `Kirim berkas ${meta.type}`, type: meta.type, file_url: meta.file_url })
+        });
+        fetchChat();
+      }
+    } catch(e) { console.error("Upload gagal:", e); }
+    inputElement.value = ''; // Reset input
+  }
+
+  // ─── FITUR VOICE NOTE AUDIO MIKROFON ────────────────────────────────────────
+  if(vnBtn && !IS_GUEST) {
+    vnBtn.addEventListener('click', async () => {
+      if (!isRecording) {
+        // Mulai rekam suara mikrofon device
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+          
+          mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+          mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const formData = new FormData();
+            formData.append('file', new File([audioBlob], "vn.webm", { type: 'audio/webm' }));
+            
+            vnBtn.style.background = 'rgba(255,255,255,0.05)';
+            vnBtn.textContent = '🎙️';
+            
+            // Kirim ke backend
+            const res = await fetch('/api/chat/upload', { method: 'POST', body: formData });
+            const meta = await res.json();
+            if(meta.file_url) {
+              await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: "Voice Note 🎙️", type: 'audio', file_url: meta.file_url })
+              });
+              fetchChat();
+            }
+          };
+          
+          mediaRecorder.start();
+          isRecording = true;
+          vnBtn.style.background = '#ff4136';
+          vnBtn.textContent = '🛑';
+        } catch(err) { alert("Akses mic ditolak/gagal!"); }
+      } else {
+        // Matikan rekaman suara & kirim otomatis
+        mediaRecorder.stop();
+        isRecording = false;
+      }
+    });
+  }
+
+  // ─── LOGIKA AUTOCOMPLETE DROPDOWN TAG LISTING @ MEMBER ──────────────────────
+  if (chatInput && !IS_GUEST) {
+    chatInput.addEventListener('input', (e) => {
+      const val = e.target.value;
+      const atIndex = val.lastIndexOf('@');
+      
+      if (atIndex !== -1 && atIndex === val.length - 1) {
+        // Munculkan menu dropdown sugesti
+        mentionBox.innerHTML = '<div class="mention-item" onclick="insertMention(\'stasai\')">🤖 stasai (Group AI)</div>';
+        REGISTERED_MEMBERS.forEach(m => {
+          mentionBox.innerHTML += `<div class="mention-item" onclick="insertMention('${m.username}')">👤 ${m.username}</div>`;
+        });
+        mentionBox.style.display = 'block';
+      } else if (atIndex === -1 || val.endsWith(' ')) {
+        mentionBox.style.display = 'none';
+      }
+    });
+  }
+
+  function insertMention(username) {
+    const val = chatInput.value;
+    const atIndex = val.lastIndexOf('@');
+    chatInput.value = val.substring(0, atIndex) + `@${username} `;
+    mentionBox.style.display = 'none';
+    chatInput.focus();
+  }
+
+  // Event Listener Bind klik kirim normal
+  if(chatSend && chatInput) {
     chatSend.addEventListener('click', sendChat);
-    chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
+    chatInput.addEventListener('keydown', e => { if(e.key === 'Enter') sendChat(); });
   }
 
-  // Jalankan polling realtime tiap 2 detik
+  // Engine detak start loop
   fetchChat();
   setInterval(fetchChat, 2000);
 </script>
