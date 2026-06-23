@@ -189,6 +189,7 @@ def api_member(username):
         return jsonify({'error': 'Member tidak ditemukan'}), 404
     return jsonify({'username': username, 'name': name, 'desk': desk, 'db': db_data})
 
+
 # ─── API CHAT KOMUNITAS (DENGAN PROTEKSI STRUKTUR DATA & ALIAS) ────────────────
 @app.route('/api/chat', methods=['GET'])
 @login_required
