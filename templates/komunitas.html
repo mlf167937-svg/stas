@@ -277,7 +277,10 @@
   </div>
 </div>
 
+<!-- SCRIPTS INTERKONEKSI AI -->
 <script src="{{ url_for('static', filename='js/ai.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ai2.js') }}"></script>
+
 <script>
   const ME_NAME = {% if session.fullname %}{{ session.fullname | tojson }}{% else %}{{ session.member | tojson }}{% endif %};
   const ME_USER = {{ session.member | tojson }};
@@ -321,9 +324,7 @@
       
       const wasAtBottom = messagesBox.scrollHeight - messagesBox.scrollTop <= messagesBox.clientHeight + 90;
       
-      // Ambil semua elemen chat yang ada di layar sekarang
       const existingBubbles = messagesBox.querySelectorAll('.wa-bubble-wrap');
-      const existingIds = Array.from(existingBubbles).map(el => el.getAttribute('id').replace('wrap-', ''));
       const serverIds = data.map(msg => String(msg.id));
 
       // 1. Bersihkan chat yang dihapus admin/rauf di server
@@ -337,7 +338,6 @@
         const msgId = String(msg.id);
         let wrap = document.getElementById(`wrap-${msgId}`);
 
-        // Hitung string html untuk reaksi emoji
         let reactionBadgeHtml = '';
         let totalReact = 0;
         for (let emo in msg.reactions) {
@@ -350,7 +350,7 @@
           reactionBadgeHtml = `<div class="badge-reactions">${reactionBadgeHtml} <sub style="color:rgba(255,255,255,0.5);">${totalReact}</sub></div>`;
         }
 
-        // KONDISI A: Pesan benar-benar baru (Belum ada di layar) -> Kita Inject!
+        // KONDISI A: Pesan benar-benar baru -> Inject!
         if (!wrap) {
           const isOwn = msg.username === ME_USER;
           wrap = document.createElement('div');
@@ -363,7 +363,6 @@
           } else if (msg.type === 'video') {
             mediaHtml = `<div style="margin-bottom:6px;"><video src="${msg.file_url}" controls style="max-width:100%; border-radius:10px; max-height:220px;"></video></div>`;
           } else if (msg.type === 'audio') {
-            // Player VN dibuat di sini sekali, tidak akan ter-refresh paksa lagi!
             mediaHtml = `
               <div class="custom-vn-player">
                 <span style="font-size:1.2rem;">🎙️</span>
@@ -389,7 +388,7 @@
           `;
           messagesBox.appendChild(wrap);
         } 
-        // KONDISI B: Pesan sudah ada di layar -> Cukup sinkronkan reaksi emojinya aja (Gak ganggu AUDIO/VN)
+        // KONDISI B: Pesan sudah ada di layar -> Cukup sinkronkan reaksinya aja
         else {
           const reactBox = wrap.querySelector('.reaction-container');
           if (reactBox && reactBox.innerHTML !== reactionBadgeHtml) {
@@ -585,7 +584,6 @@
     chatInput.addEventListener('keydown', e => { if(e.key === 'Enter') sendChat(); });
   }
 
-  // Start Sync Polling
   fetchChat();
   setInterval(fetchChat, 2000);
 </script>
