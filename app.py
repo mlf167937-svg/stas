@@ -151,7 +151,9 @@ def logout():
 @app.route('/komunitas')
 @login_required
 def komunitas():
-    return render_template('komunitas.html')
+    # Ambil data member dulu dari folder stas/name/ sebelum render HTML
+    members = get_all_members() 
+    return render_template('komunitas.html', members=members)
 
 @app.route('/album')
 @login_required
