@@ -251,37 +251,6 @@ def chat_post():
     
     return jsonify(msg), 201
 
-@app.route('/api/chat', methods=['POST'])
-@login_required
-def chat_post():
-    data = request.get_json(silent=True) or {}
-    text = data.get('text', '').strip()
-    msg_type = data.get('type', 'text')
-    file_url = data.get('file_url', '')
-
-    if not text and not file_url:
-        return jsonify({'error': 'Pesan kosong'}), 400
-    
-    wib_timezone = timezone(timedelta(hours=7))
-    waktu_sekarang = datetime.now(wib_timezone).strftime('%H:%M')
-    
-    msg = {
-        'id': str(uuid.uuid4()),
-        'username': session.get('member'),
-        'sender': session.get('fullname', session.get('member')),
-        'text': text,
-        'type': msg_type,
-        'file_url': file_url,
-        'ts': waktu_sekarang,
-        'reactions': {"👍": [], "❤️": [], "😂": [], "😮": [], "🙏": []}
-    }
-    
-    chat_data = load_chat()
-    chat_data.append(msg)
-    save_chat(chat_data)
-    
-    return jsonify(msg), 201
-
 # 🔗 ALIAS UPLOAD: Mendukung /api/chat/upload maupun /api/upload
 @app.route('/api/chat/upload', methods=['POST'])
 @app.route('/api/upload', methods=['POST'])
