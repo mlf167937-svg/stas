@@ -11,7 +11,6 @@ from flask import (
 )
 
 app = Flask(__name__)
-# Pakai secret key statis sementara biar session gak ke-reset tiap server restart
 app.secret_key = "STAS_SUPER_SECRET_KEY_PERMANENT"
 
 # ─── KONSTANTA PATH & FOLDER ───────────────────────────────────────────────────
@@ -25,7 +24,7 @@ GALERY_DIR = os.path.join(STAS_DIR, 'galery')
 # Database Chat (Persisten)
 CHAT_FILE  = os.path.join(STAS_DIR, 'chat_history.json')
 
-# Bikin folder otomatis kalau belum ada (Mencegah Crash Status 1)
+# Bikin folder otomatis kalau belum ada
 for d in [STAS_DIR, DB_DIR, NAME_DIR, DESK_DIR, GALERY_DIR]:
     os.makedirs(d, exist_ok=True)
 
@@ -34,13 +33,12 @@ if not os.path.exists(CHAT_FILE):
     with open(CHAT_FILE, 'w', encoding='utf-8') as f:
         json.dump([], f)
 
-# Password Admin (Ganti sesuai kebutuhan lu)
+# Password Admin
 ADMIN_PASSWORD = "STAS@ayfuwb71iahy!"
 
 
 # ─── HELPER BACA/TULIS FILE ────────────────────────────────────────────────────
 def read_file(path):
-    """Baca isi file teks, kembalikan string kosong jika tidak ada."""
     try:
         with open(path, 'r', encoding='utf-8') as f:
             return f.read().strip()
@@ -48,7 +46,6 @@ def read_file(path):
         return ''
 
 def get_all_members():
-    """Ambil daftar semua member dari folder name/."""
     members = []
     if not os.path.isdir(NAME_DIR):
         return members
@@ -61,7 +58,6 @@ def get_all_members():
     return members
 
 def get_member_db(username):
-    """Baca isi database member, lalu HAPUS baris PASSWORD sebelum dikembalikan."""
     db_path = os.path.join(DB_DIR, f'{username}.txt')
     content = read_file(db_path)
     if not content:
@@ -70,7 +66,6 @@ def get_member_db(username):
     return '\n'.join(lines)
 
 def verify_member(username, password):
-    """Verifikasi username + password member. Return True/False."""
     db_path = os.path.join(DB_DIR, f'{username}.txt')
     content = read_file(db_path)
     if not content:
@@ -82,12 +77,10 @@ def verify_member(username, password):
     return False
 
 def generate_captcha(length=6):
-    """Buat string acak untuk CAPTCHA admin login."""
     chars = string.ascii_letters + string.digits
     return ''.join(random.choices(chars, k=length))
 
 def load_chat():
-    """Load chat dari file JSON."""
     try:
         with open(CHAT_FILE, 'r', encoding='utf-8') as f:
             return json.load(f)
@@ -95,7 +88,6 @@ def load_chat():
         return []
 
 def save_chat(data):
-    """Simpan chat ke file JSON."""
     with open(CHAT_FILE, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=4)
 
@@ -164,7 +156,6 @@ def komunitas():
 @app.route('/album')
 @login_required
 def album():
-    # Kumpulkan file dari galery/
     files = []
     if os.path.isdir(GALERY_DIR):
         for fname in sorted(os.listdir(GALERY_DIR)):
@@ -184,7 +175,6 @@ def games():
 @app.route('/stas/galery/<path:filename>')
 @login_required
 def custom_gallery_route(filename):
-    """Mengizinkan Flask membaca file di luar folder static."""
     return send_from_directory(GALERY_DIR, filename)
 
 @app.route('/api/member/<username>')
@@ -198,12 +188,25 @@ def api_member(username):
     return jsonify({'username': username, 'name': name, 'desk': desk, 'db': db_data})
 
 
-# ─── API CHAT KOMUNITAS (JSON FILE) ────────────────────────────────────────────
+# ─── API CHAT KOMUNITAS (DENGAN PROTEKSI STRUKTUR DATA & ALIAS) ────────────────
 @app.route('/api/chat', methods=['GET'])
 @login_required
 def chat_get():
     chat_data = load_chat()
-    # Mengembalikan 50 pesan terakhir
+    
+    # 🛡️ AUTO-NORMALIZATION: Mencegah JS crash akibat data teks lama yang kosongan
+    for msg in chat_data:
+        if 'id' not in msg:
+            msg['id'] = str(uuid.uuid4())
+        if 'username' not in msg:
+            msg['username'] = msg.get('sender', 'unknown').lower()
+        if 'type' not in msg:
+            msg['type'] = 'text'
+        if 'file_url' not in msg:
+            msg['file_url'] = ''
+        if 'reactions' not in msg or not isinstance(msg['reactions'], dict):
+            msg['reactions'] = {"👍": [], "❤️": [], "😂": [], "😮": [], "🙏": []}
+            
     return jsonify(chat_data[-50:])
 
 @app.route('/api/chat', methods=['POST'])
@@ -237,7 +240,9 @@ def chat_post():
     
     return jsonify(msg), 201
 
+# 🔗 ALIAS UPLOAD: Mendukung /api/chat/upload maupun /api/upload
 @app.route('/api/chat/upload', methods=['POST'])
+@app.route('/api/upload', methods=['POST'])
 @login_required
 def chat_upload():
     if session.get('is_guest'):
@@ -262,13 +267,16 @@ def chat_upload():
 
     return jsonify({"file_url": f"/stas/galery/{filename}", "type": file_type})
 
+# 🔗 ALIAS REAKSI EMOJI: Mendukung /api/chat/react, /api/chat/reaction, maupun /api/react
 @app.route('/api/chat/react', methods=['POST'])
+@app.route('/api/chat/reaction', methods=['POST'])
+@app.route('/api/react', methods=['POST'])
 @login_required
 def chat_react():
     if session.get('is_guest'):
         return jsonify({"error": "Tamu tidak bisa react"}), 403
 
-    data = request.json
+    data = request.json or {}
     msg_id = data.get('msg_id')
     emoji = data.get('emoji')
     username = session.get('member')
@@ -276,19 +284,26 @@ def chat_react():
     chat_data = load_chat()
     for msg in chat_data:
         if msg.get('id') == msg_id:
-            if username in msg['reactions'][emoji]:
-                msg['reactions'][emoji].remove(username)
-            else:
-                for emo in msg['reactions']:
-                    if username in msg['reactions'][emo]:
-                        msg['reactions'][emo].remove(username)
-                msg['reactions'][emoji].append(username)
+            # Pastikan key reactions aman terinisialisasi
+            if 'reactions' not in msg or not isinstance(msg['reactions'], dict):
+                msg['reactions'] = {"👍": [], "❤️": [], "😂": [], "😮": [], "🙏": []}
+                
+            if emoji in msg['reactions']:
+                if username in msg['reactions'][emoji]:
+                    msg['reactions'][emoji].remove(username)
+                else:
+                    for emo in msg['reactions']:
+                        if username in msg['reactions'][emo]:
+                            msg['reactions'][emo].remove(username)
+                    msg['reactions'][emoji].append(username)
             break
             
     save_chat(chat_data)
     return jsonify({"status": "success"})
 
+# 🔗 ALIAS HAPUS CHAT: Mendukung /api/chat/delete/... maupun /api/delete/...
 @app.route('/api/chat/delete/<msg_id>', methods=['DELETE'])
+@app.route('/api/delete/<msg_id>', methods=['DELETE'])
 @login_required
 def chat_delete(msg_id):
     chat_data = load_chat()
@@ -308,8 +323,6 @@ def chat_delete(msg_id):
 @app.route('/api/ai', methods=['POST'])
 @login_required
 def api_ai_assistant():
-    data = request.get_json(silent=True) or {}
-    prompt = data.get('prompt', '').strip().lower()
     return jsonify({'reply': "Pesan diterima backend STAS, mencari jawaban terbaik..."}), 200
 
 
@@ -387,10 +400,8 @@ def admin_logout():
 
 # ─── RUN SERVER ────────────────────────────────────────────────────────────────
 if __name__ == '__main__':
-    # Menggunakan port dari environment jika ada, jika tidak default 5000
     try:
         port = int(os.environ.get("PORT", 5000))
         app.run(debug=True, host='0.0.0.0', port=port)
     except Exception as e:
-        print(f"Server gagal jalan di port {port}. Mencoba tanpa port spesifik...")
         app.run(debug=True, host='0.0.0.0')
