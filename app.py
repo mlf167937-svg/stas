@@ -15,8 +15,8 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # ─── KONFIGURASI API KEY AI ───
-gemini.configure(api_key=os.environ.get("GEMINI_API_KEY", "KUNCI_GEMINI_LU"))
-openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", "KUNCI_OPENAI_LU"))
+gemini.configure(api_key="AQ.Ab8RN6LMdyBv4_f-6EEgsAniMBK8Z9J97pF9TPdd6n5ERtTzKA")
+openai_client = OpenAI(api_key="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")
 
 # Mock Database untuk simulasi (Ganti pakai database asli lu kalau ada)
 DATABASE_CHAT = []
