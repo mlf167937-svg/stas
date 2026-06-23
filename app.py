@@ -4,12 +4,12 @@ from datetime import datetime
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 
 app = Flask(__name__)
-app.secret_key = "STAS_SUPER_SECRET_KEY"
+app.secret_key = "STAS_SUPER_SECRET_KEY" # Ganti bebas
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Database Chat Sementara di Memori RAM
+# ─── DATABASE SEMENTARA (RAM) ───
 DATABASE_CHAT = []
 MEMBERS_LIST = [
     {"username": "rauf"},
@@ -17,15 +17,42 @@ MEMBERS_LIST = [
     {"username": "stasai"}
 ]
 
+# ─── ROUTE HALAMAN WEB (Wajib ada biar gak eror Navbar) ───
+@app.route('/')
+def index():
+    # Halaman beranda pura-pura (sesuaikan sama file asli lu)
+    return "Ini Halaman Beranda. <a href='/komunitas'>Masuk Komunitas</a>"
+
+@app.route('/login')
+def login():
+    # Dummy session buat ngetes kalau lu belum pasang sistem login DB
+    session['member'] = 'rauf'
+    session['fullname'] = 'Rauf Admin'
+    session['is_guest'] = False
+    return redirect(url_for('komunitas'))
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+@app.route('/album')
+def album():
+    return "Ini Halaman Album. <a href='/komunitas'>Kembali</a>"
+
+@app.route('/games')
+def games():
+    return "Ini Halaman Games. <a href='/komunitas'>Kembali</a>"
+
 @app.route('/komunitas')
 def komunitas():
+    # Cek login, kalau belum login lempar ke route /login
     if 'member' not in session:
-        # Dummy session kalau belum login buat testing, hapus baris bawah ini kalau sistem login lu udah ada
-        session['member'] = 'rauf'
-        session['fullname'] = 'Rauf Admin'
+        return redirect(url_for('login'))
     return render_template('komunitas.html', members=MEMBERS_LIST)
 
-# API Get & Post Chat Utama
+
+# ─── API CHAT KOMUNITAS & MEDIA ───
 @app.route('/api/chat', methods=['GET', 'POST'])
 def handle_chat():
     global DATABASE_CHAT
@@ -35,13 +62,20 @@ def handle_chat():
     if request.method == 'POST':
         data = request.json
         text = data.get('text', '')
-        msg_type = data.get('type', 'text') # text, image, video, audio
+        msg_type = data.get('type', 'text')
         file_url = data.get('file_url', '')
+
+        # Deteksi siapa yang ngirim, kalau bot (stasai), ganti namanya
+        sender_username = data.get('username', session.get('member'))
+        if sender_username == 'stasai':
+            sender_fullname = "🤖 STAS-AI (Grup)"
+        else:
+            sender_fullname = session.get('fullname') or sender_username
 
         new_msg = {
             "id": str(uuid.uuid4()),
-            "username": session.get('member'),
-            "sender": session.get('fullname') or session.get('member'),
+            "username": sender_username,
+            "sender": sender_fullname,
             "text": text,
             "type": msg_type,
             "file_url": file_url,
@@ -51,7 +85,6 @@ def handle_chat():
         DATABASE_CHAT.append(new_msg)
         return jsonify({"status": "success", "msg": new_msg})
 
-# API Upload Media (Foto, Video, VN)
 @app.route('/api/chat/upload', methods=['POST'])
 def handle_upload():
     if 'file' not in request.files:
@@ -73,7 +106,6 @@ def handle_upload():
 
     return jsonify({"file_url": f"/static/uploads/{filename}", "type": file_type})
 
-# API Reaksi Emoji
 @app.route('/api/chat/react', methods=['POST'])
 def handle_react():
     data = request.json
@@ -93,7 +125,6 @@ def handle_react():
             break
     return jsonify({"status": "success"})
 
-# API Hapus Pesan
 @app.route('/api/chat/delete/<msg_id>', methods=['DELETE'])
 def delete_message(msg_id):
     global DATABASE_CHAT
