@@ -1,38 +1,54 @@
-// ai2.js - AI Interseptor Grup (Kotak Atas)
-const chatInputBar = document.getElementById('chat-input');
-const chatSendBtn = document.getElementById('chat-send');
-
-// Kumpulan respon acak AI Grup
-const jawabanGrup = [
-  "Oit cuks! Ada apa manggil-manggil gua di grup? 😎",
-  "Gua denger ada yang lagi ngomongin gua ya? Haha.",
-  "Ampun sepuh, jangan di-tag mulu, gua lagi sibuk nge-render nyawa.",
-  "Ada masalah apa di komunitas STAS? Sini cerita sama bot paling tampan.",
-  "Gas mabar lah, malah nge-tag bot mending push rank!"
-];
-
-chatSendBtn.addEventListener('click', () => {
-  const text = chatInputBar.value.trim();
+document.addEventListener("DOMContentLoaded", () => {
+  const chatInputBar = document.getElementById('chat-input');
+  const chatSendBtn = document.getElementById('chat-send');
   
-  // Cek kalau ada tag @stasai
-  if (text.toLowerCase().includes('@stasai')) {
+  if (!chatInputBar || !chatSendBtn) return;
+
+  // Variabel buat nyimpen teks biar gak ilang pas tombol send diklik
+  let capturedText = "";
+
+  chatInputBar.addEventListener('input', (e) => {
+    capturedText = e.target.value;
+  });
+
+  const jawabanGrup = [
+    "Oit cuks! Ada apa nih manggil-manggil gua di grup? 😎",
+    "Hadir komandan! Gua lagi mantau grup nih.",
+    "Ampun sepuh, jangan di-tag mulu, mending push rank!",
+    "Ada masalah apa di komunitas STAS? Sini cerita sama STAS-AI.",
+    "Gua sih setuju-setuju aja sama pendapat lu, haha."
+  ];
+
+  function cekTagBot() {
+    const text = capturedText.trim();
+    capturedText = ""; // Reset setelah diklik biar gak dobel
     
-    // Kasih delay 2 detik seolah-olah bot-nya lagi ngetik di grup
-    setTimeout(async () => {
-      const randomReply = jawabanGrup[Math.floor(Math.random() * jawabanGrup.length)];
+    // Cek apakah ada tulisan @stasai
+    if (text.toLowerCase().includes('@stasai')) {
       
-      // Kirim jawaban bot langsung ke database chat utama grup
-      await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          text: randomReply, 
-          type: 'text' 
-        })
-      });
-      
-      // Kejutkan tampilan biar chat-nya langsung ke-refresh
-      if (typeof fetchChat === "function") fetchChat();
-    }, 2000);
+      // Kasih delay 1.5 detik seolah bot lagi ngetik
+      setTimeout(async () => {
+        const randomReply = jawabanGrup[Math.floor(Math.random() * jawabanGrup.length)];
+        
+        // Tembak API chat grup tapi pake username 'stasai'
+        await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            text: randomReply, 
+            type: 'text',
+            username: 'stasai' // Ini yang nentuin namanya jadi 🤖 STAS-AI (Grup)
+          })
+        });
+        
+        // Paksa refresh chat layar lu
+        if (typeof fetchChat === "function") fetchChat();
+      }, 1500);
+    }
   }
+
+  chatSendBtn.addEventListener('click', cekTagBot);
+  chatInputBar.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') cekTagBot();
+  });
 });
