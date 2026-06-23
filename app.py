@@ -191,25 +191,45 @@ def api_member(username):
 
 
 # ─── API CHAT KOMUNITAS (DENGAN PROTEKSI STRUKTUR DATA & ALIAS) ────────────────
-@app.route('/api/chat', methods=['GET'])
+@app.route('/api/chat', methods=['POST'])
 @login_required
-def chat_get():
-    chat_data = load_chat()
+def chat_post():
+    data = request.get_json(silent=True) or {}
+    text = data.get('text', '').strip()
+    msg_type = data.get('type', 'text')
+    file_url = data.get('file_url', '')
+
+    if not text and not file_url:
+        return jsonify({'error': 'Pesan kosong'}), 400
     
-    # 🛡️ AUTO-NORMALIZATION: Mencegah JS crash akibat data teks lama yang kosongan
-    for msg in chat_data:
-        if 'id' not in msg:
-            msg['id'] = str(uuid.uuid4())
-        if 'username' not in msg:
-            msg['username'] = msg.get('sender', 'unknown').lower()
-        if 'type' not in msg:
-            msg['type'] = 'text'
-        if 'file_url' not in msg:
-            msg['file_url'] = ''
-        if 'reactions' not in msg or not isinstance(msg['reactions'], dict):
-            msg['reactions'] = {"👍": [], "❤️": [], "😂": [], "😮": [], "🙏": []}
-            
-    return jsonify(chat_data[-50:])
+    wib_timezone = timezone(timedelta(hours=7))
+    waktu_sekarang = datetime.now(wib_timezone).strftime('%H:%M')
+    
+    # 🤖 KONDISI SPESIAL: Cek apakah request ini datang dari trigger bot STAS-AI
+    if data.get('username') == 'stasai':
+        username = 'stasai'
+        sender = '🤖 STASAI'
+    else:
+        # Jika pesan biasa dari member, gunakan data session asli
+        username = session.get('member')
+        sender = session.get('fullname', session.get('member'))
+    
+    msg = {
+        'id': str(uuid.uuid4()),
+        'username': username,
+        'sender': sender,
+        'text': text,
+        'type': msg_type,
+        'file_url': file_url,
+        'ts': waktu_sekarang,
+        'reactions': {"👍": [], "❤️": [], "😂": [], "😮": [], "🙏": []}
+    }
+    
+    chat_data = load_chat()
+    chat_data.append(msg)
+    save_chat(chat_data)
+    
+    return jsonify(msg), 201
 
 @app.route('/api/chat', methods=['POST'])
 @login_required
