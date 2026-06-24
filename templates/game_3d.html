@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STAS — 3D Experiment</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #canvas-3d { width: 100vw; height: 80vh; background: #000; display: block; border-radius: 12px; margin-top: 1rem;}
+  </style>
+</head>
+<body>
+<div class="page-wrapper" style="padding: 1rem;">
+  <a href="{{ url_for('games') }}" style="color:var(--text-muted); text-decoration:none;">← Kembali ke Menu</a>
+  <h2>🚀 STAS 3D Sandbox</h2>
+  <p>Area eksperimen rendering graphics 3D menggunakan Javascript.</p>
+  
+  <canvas id="canvas-3d"></canvas>
+</div>
+
+<script>
+  console.log("Wadah Game 3D Siap Dikembangkan!");
+</script>
+</body>
+</html>
