@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>STAS — Block Blast</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <style>
+    .block-blast-layout { display: flex; flex-direction: column; align-items: center; gap: 1rem; touch-action: none; }
+    #block-canvas { background: #11111b; border: 3px solid #313244; border-radius: 8px; cursor: grab; max-width: 100%; }
+    #block-canvas:active { cursor: grabbing; }
+    .block-instructions { font-size: 0.8rem; color: var(--text-muted); text-align: center; }
+  </style>
+</head>
+<body>
+
+<div class="page-wrapper" style="margin-top: 2rem;">
+  <a href="{{ url_for('games') }}" style="color:var(--text-muted); text-decoration:none;">← Kembali ke Menu</a>
+  <h2 style="text-align:center; margin-bottom:1rem;">🧱 Block Blast Mini</h2>
+  
+  <div class="game-container active" id="blockblast-container">
+    <div class="block-blast-layout">
+      <div class="game-score-display" id="block-score" style="font-size: 1.2rem; font-weight: bold;">Skor: 0</div>
+      <canvas id="block-canvas" width="280" height="420"></canvas>
+      <div class="block-instructions" id="block-msg">Tarik dan geser balok ke atas papan (Suara Aktif)</div>
+      <button class="btn-game-action" id="btn-block-reset" style="background:var(--bg-surface); border:1px solid var(--border); color:var(--text-muted);">↺ Reset Game</button>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/block_blast.js') }}"></script>
+</body>
+</html>
