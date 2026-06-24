@@ -2,25 +2,66 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>STAS — 3D Experiment</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>STAS 3D — Battleground Mini</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <style>
-    body { margin: 0; overflow: hidden; }
-    #canvas-3d { width: 100vw; height: 80vh; background: #000; display: block; border-radius: 12px; margin-top: 1rem;}
+    body { margin: 0; padding: 0; overflow: hidden; background: #000; font-family: sans-serif; user-select: none; }
+    #game-canvas { width: 100vw; height: 100vh; display: block; }
+    
+    /* UI Overlay */
+    .game-ui { position: absolute; top: 10px; left: 10px; z-index: 10; color: #fff; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; pointer-events: none;}
+    .lobby-panel { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1e1e2e; padding: 2rem; border-radius: 12px; border: 2px solid #cba6f7; z-index: 100; text-align: center; color: #fff; }
+    
+    /* Senjata & Gloo Wall Indicator */
+    .weapon-hud { position: absolute; bottom: 20px; right: 20px; z-index: 10; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 8px; border: 1px solid #89b4fa; color: white; display: flex; gap: 10px; }
+    .weapon-slot { padding: 5px 10px; background: #313244; border-radius: 4px; cursor: pointer; pointer-events: auto; }
+    .weapon-slot.active { background: #cba6f7; color: #111; font-weight: bold; }
+
+    /* Touch Controls Mobile */
+    .touch-btn { position: absolute; width: 60px; height: 60px; background: rgba(255,255,255,0.2); border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; z-index: 20; touch-action: none; }
+    #btn-shoot { right: 30px; bottom: 120px; background: rgba(243, 139, 168, 0.4); }
+    #btn-gloo { right: 110px; bottom: 40px; background: rgba(137, 180, 250, 0.4); }
+    #btn-jump { right: 30px; bottom: 40px; }
+    #dpad { left: 40px; bottom: 40px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); }
   </style>
+  <!-- Load Three.js & Socket.io -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 <body>
-<div class="page-wrapper" style="padding: 1rem;">
-  <a href="{{ url_for('games') }}" style="color:var(--text-muted); text-decoration:none;">← Kembali ke Menu</a>
-  <h2>🚀 STAS 3D Sandbox</h2>
-  <p>Area eksperimen rendering graphics 3D menggunakan Javascript.</p>
-  
-  <canvas id="canvas-3d"></canvas>
-</div>
 
-<script>
-  console.log("Wadah Game 3D Siap Dikembangkan!");
-</script>
+  <!-- Panel Membuat / Join Room -->
+  <div id="lobby" class="lobby-panel">
+    <h3>🚀 STAS 3D ROOM LOBBY</h3>
+    <p>Masukkan Kode Room untuk Mabar (Maks 2 Player)</p>
+    <input type="text" id="room-id" placeholder="Contoh: STAS77" style="padding: 10px; border-radius: 4px; border: none; outline: none; text-align: center;"><br><br>
+    <button class="btn-game-action" id="btn-join" style="width: 100%;">Masuk Room</button>
+  </div>
+
+  <!-- UI Game -->
+  <div class="game-ui">
+    <div>Room: <span id="ui-room-text">-</span></div>
+    <div>Status: <span id="ui-status">Di Lobby</span></div>
+    <div style="margin-top: 5px; font-size: 0.8rem; color: #a6adc8;">WASD=Jalan | Shift=Lari | Space=Lompat | E=Gloo Wall | Klik=Tembak</div>
+  </div>
+
+  <!-- HUD Senjata -->
+  <div class="weapon-hud" id="hud-senjata" style="display: none;">
+    <div class="weapon-slot active" id="slot-sg2" onclick="gantiSenjata('SG2')">SG2</div>
+    <div class="weapon-slot" id="slot-mp40" onclick="gantiSenjata('MP40')">MP40</div>
+    <div style="border-left: 1px solid #585b70; margin: 0 5px;"></div>
+    <div style="color: #89b4fa; font-weight:bold;">Gloo Wall [E]</div>
+  </div>
+
+  <!-- Tombol Touch Screen (Hanya muncul/berfungsi saat disentuh di HP) -->
+  <div class="touch-btn" id="btn-shoot" style="display: none;">💥</div>
+  <div class="touch-btn" id="btn-gloo" style="display: none;">🛡️</div>
+  <div class="touch-btn" id="btn-jump" style="display: none;">🦘</div>
+  <div id="dpad" class="touch-btn" style="display: none; border-radius: 10px;">🕹️</div>
+
+  <canvas id="game-canvas"></canvas>
+
+  <script src="{{ url_for('static', filename='js/game_3d.js') }}"></script>
 </body>
 </html>
