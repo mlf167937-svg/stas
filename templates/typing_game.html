@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>STAS — Speed Typing</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <style>
+    .typing-word-display {
+      background: var(--bg-surface, #1e1e2e); border: 1px solid var(--border, #313244);
+      padding: 1rem; border-radius: 8px; font-size: 1.15rem; line-height: 1.6;
+      margin-bottom: 1rem; text-align: left; letter-spacing: 0.5px; user-select: none;
+      min-height: 80px; display: flex; align-items: center; justify-content: flex-start;
+      flex-wrap: wrap; white-space: pre-wrap; word-break: break-word;
+    }
+    .typing-word-display span { transition: color 0.1s ease; }
+    .char-correct { color: #a6e3a1 !important; background: rgba(166, 227, 161, 0.1); }
+    .char-incorrect { color: #f38ba8 !important; background: rgba(243, 139, 168, 0.2); border-bottom: 2px solid #f38ba8; }
+    .char-current { background: rgba(203, 166, 247, 0.3); border-left: 2px solid #cba6f7; }
+    .typing-input {
+      width: 100%; background: var(--bg-body, #11111b); border: 2px solid var(--border, #313244);
+      color: var(--text-main, #cdd6f4); padding: 0.75rem; border-radius: 6px; font-size: 1rem; outline: none; transition: border-color 0.2s;
+    }
+    .typing-input:focus { border-color: #cba6f7; }
+    .typing-input:disabled { opacity: 0.6; cursor: not-allowed; }
+    .stats-container { display: flex; gap: 1rem; justify-content: space-around; margin-top: 1rem; background: rgba(255,255,255,0.03); padding: 0.5rem; border-radius: 6px; }
+    .stat-box { text-align: center; }
+    .stat-val { font-size: 1.4rem; font-weight: bold; color: #cba6f7; }
+    .stat-lbl { font-size: 0.75rem; color: var(--text-muted, #a6adc8); }
+  </style>
+</head>
+<body>
+
+<div class="page-wrapper" style="margin-top: 2rem;">
+  <a href="{{ url_for('games') }}" style="color:var(--text-muted); text-decoration:none;">← Kembali ke Menu</a>
+  <h2 style="margin-top:1rem;">⌨️ STAS Speed Typing</h2>
+  <div class="game-container active" id="typing-container">
+    <div class="typing-word-display" id="text-target" style="justify-content: center;">Klik 'Mulai Tes' untuk bersiap...</div>
+    <input type="text" class="typing-input" id="text-input" placeholder="Area ketik akan aktif otomatis..." disabled autocomplete="off"/>
+    <div class="stats-container">
+      <div class="stat-box"><div class="stat-val" id="stat-wps">0.00</div><div class="stat-lbl">WPS</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-wpm">0</div><div class="stat-lbl">WPM</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-acc">100%</div><div class="stat-lbl">Akurasi</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-time" style="color: #f9e2af;">60s</div><div class="stat-lbl">Waktu</div></div>
+    </div>
+    <div style="display:flex; gap:.5rem; justify-content:center; margin-top:1rem;">
+      <button class="btn-game-action" id="btn-typing-start">▶ Mulai Tes</button>
+      <button class="btn-game-action" id="btn-typing-reset" style="background:var(--bg-surface); border:1px solid var(--border); color:var(--text-muted);">↺ Reset</button>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/typing_game.js') }}"></script>
+</body>
+</html>
