@@ -18,6 +18,7 @@ function init3DWorld() {
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('game-canvas'), antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
 
     // Pencahayaan
     const light = new THREE.AmbientLight(0xffffff, 0.6); scene.add(light);
@@ -46,8 +47,11 @@ function init3DWorld() {
     window.addEventListener('keyup', (e) => handleKeyboard(e, false));
     window.addEventListener('click', tembakSenjata);
 
+    // Responsive Screen (Biar gak gepeng pas rotasi HP / Resize Browser)
+    window.addEventListener('resize', onWindowResize, false);
+
     // Deteksi jika HP, munculkan tombol touch
-    if ('ontouchstart' in window) {
+    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
         document.getElementById('btn-shoot').style.display = 'flex';
         document.getElementById('btn-gloo').style.display = 'flex';
         document.getElementById('btn-jump').style.display = 'flex';
@@ -56,6 +60,13 @@ function init3DWorld() {
     }
 
     animate();
+}
+
+// Handler untuk resize layar otomatis
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
 // Logika Gerakan & Input
@@ -78,6 +89,8 @@ function gantiSenjata(nama) {
 }
 
 function pasangGlooWall() {
+    if (!playerLocal) return;
+    
     // Membuat Dinding Penghalang 3D di Depan Player
     const wallGeo = new THREE.BoxGeometry(3, 2, 0.3);
     const wallMat = new THREE.MeshStandardMaterial({ color: 0x89b4fa, transparent: true, opacity: 0.8 });
@@ -95,10 +108,12 @@ function pasangGlooWall() {
 }
 
 function tembakSenjata() {
+    if (!playerLocal) return;
+
     // Logika visual tembakan kilat (efek laser sederhana)
     const laserGeo = new THREE.BufferGeometry().setFromPoints([
-        playerLocal.position,
-        new THREE.Vector3(playerLocal.position.x, playerLocal.position.y, playerLocal.position.z - 15)
+        new THREE.Vector3(playerLocal.position.x, playerLocal.position.y + 0.5, playerLocal.position.z),
+        new THREE.Vector3(playerLocal.position.x, playerLocal.position.y + 0.5, playerLocal.position.z - 15)
     ]);
     const laserMat = new THREE.LineBasicMaterial({ color: senjataSekarang === "SG2" ? 0xff5555 : 0xf1fa8c });
     const laser = new THREE.Line(laserGeo, laserMat);
@@ -110,9 +125,10 @@ function tembakSenjata() {
 
 // Mobile Touch Control Setup Helper
 function setupTouchControls() {
-    document.getElementById('btn-shoot').addEventListener('touchstart', tembakSenjata);
-    document.getElementById('btn-gloo').addEventListener('touchstart', pasangGlooWall);
-    document.getElementById('btn-jump').addEventListener('touchstart', () => {
+    document.getElementById('btn-shoot').addEventListener('touchstart', (e) => { e.preventDefault(); tembakSenjata(); });
+    document.getElementById('btn-gloo').addEventListener('touchstart', (e) => { e.preventDefault(); pasangGlooWall(); });
+    document.getElementById('btn-jump').addEventListener('touchstart', (e) => {
+        e.preventDefault();
         if(isGrounded) { loncatVelocity = 0.2; isGrounded = false; }
     });
 }
@@ -120,6 +136,8 @@ function setupTouchControls() {
 // Loop Animasi Konstan
 function animate() {
     requestAnimationFrame(animate);
+
+    if (!playerLocal) return;
 
     // Atur Kecepatan (Lari vs Jalan)
     playerKecepatan = keys.Shift ? 0.2 : 0.08;
@@ -145,8 +163,8 @@ function animate() {
     camera.position.x = playerLocal.position.x;
     camera.position.z = playerLocal.position.z + 6;
 
-    // Kirim koordinat posisi kita ke server biar musuh bisa melihat gerakan kita
-    if(roomCode !== "") {
+    // FIX: Hanya kirim data jika roomCode aktif DAN objek socket sudah siap digunakan
+    if(roomCode !== "" && socket && socket.connected) {
         kirimDataKeMusuh({
             aksi: 'gerak',
             x: playerLocal.position.x,
@@ -180,7 +198,7 @@ function hubungkanJaringan() {
     });
 
     socket.on('player_updated', (data) => {
-        if (!musuhRemote) {
+        if (!musuhRemote && scene) {
             const mGeo = new THREE.BoxGeometry(1, 2, 1);
             const mMat = new THREE.MeshStandardMaterial({ color: 0xff5555 });
             musuhRemote = new THREE.Mesh(mGeo, mMat);
@@ -188,9 +206,9 @@ function hubungkanJaringan() {
         }
 
         // Terapkan aksi atau pergerakan yang dikirim oleh musuh
-        if (data.aksi === 'gerak') {
+        if (data.aksi === 'gerak' && musuhRemote) {
             musuhRemote.position.set(data.x, data.y, data.z);
-        } else if (data.aksi === 'gloo') {
+        } else if (data.aksi === 'gloo' && scene) {
             const wallGeo = new THREE.BoxGeometry(3, 2, 0.3);
             const wallMat = new THREE.MeshStandardMaterial({ color: 0x89b4fa, transparent:true, opacity:0.5 });
             const enemyWall = new THREE.Mesh(wallGeo, wallMat);
@@ -198,13 +216,15 @@ function hubungkanJaringan() {
             scene.add(enemyWall);
             setTimeout(() => scene.remove(enemyWall), 7000);
         } else if (data.aksi === 'tembak') {
-            // Muncul efek tembakan musuh ke arah kita
             console.log("Musuh menembak menggunakan: " + data.jenis);
         }
     });
 }
 
 function kirimDataKeMusuh(payload) {
+    // FIX PENGAMAN: Jika socket belum siap/terhubung, abaikan pengiriman data agar tidak crash
+    if (!socket || !socket.connected) return;
+    
     payload.room = roomCode;
     payload.id = myId;
     socket.emit('update_player', payload);
@@ -219,9 +239,9 @@ document.getElementById('btn-join').addEventListener('click', () => {
         document.getElementById('lobby').style.display = 'none';
         document.getElementById('hud-senjata').style.display = 'flex';
         
-        // Mulai Game & Koneksi Jaringan
-        init3DWorld();
+        // FIX URUTAN: Hubungkan ke socket dulu, baru nyalakan dunia 3D biar gak balapan!
         hubungkanJaringan();
+        init3DWorld();
     } else {
         alert("Masukkan kode room terlebih dahulu!");
     }
