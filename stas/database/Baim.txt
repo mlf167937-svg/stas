@@ -1,0 +1,11 @@
+PASSWORD: baim
+===========================================
+STAS INTERNAL MEMBER DATA BASE
+===========================================
+ID ANGGOTA        : STAS-2026-6
+STATUS UTAMA   : 
+DIVISI                    : 
+TANGGAL LAHIR  : **-**-****
+UMUR                     : 
+REGIONAL             : 
+========================

@@ -1,0 +1,11 @@
+PASSWORD: dani
+===========================================
+STAS INTERNAL MEMBER DATA BASE
+===========================================
+ID ANGGOTA        : STAS-2026-7
+STATUS UTAMA   : 
+DIVISI                    : 
+TANGGAL LAHIR  : **-**-****
+UMUR                     : 
+REGIONAL             : 
+========================

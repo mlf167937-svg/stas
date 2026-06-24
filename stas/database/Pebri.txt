@@ -1,0 +1,11 @@
+PASSWORD: pebri
+===========================================
+STAS INTERNAL MEMBER DATA BASE
+===========================================
+ID ANGGOTA        : STAS-2026-8
+STATUS UTAMA   : 
+DIVISI                    : 
+TANGGAL LAHIR  : **-**-****
+UMUR                     : 
+REGIONAL             : 
+========================

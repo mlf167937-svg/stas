@@ -1,0 +1,11 @@
+PASSWORD: asrof
+===========================================
+STAS INTERNAL MEMBER DATA BASE
+===========================================
+ID ANGGOTA        : STAS-2026-11
+STATUS UTAMA   : 
+DIVISI                    : 
+TANGGAL LAHIR  : **-**-****
+UMUR                     : 
+REGIONAL             : 
+========================
