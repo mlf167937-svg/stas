@@ -9,14 +9,14 @@ from flask import (
     Flask, render_template, request, redirect,
     url_for, session, jsonify, flash, send_from_directory
 )
-# Tambahkan import untuk Socket.IO multiplayer game 3D
+# Perbaikan Import: Pastikan emit dan join_room dipanggil dengan benar
 from flask_socketio import SocketIO, emit, join_room, leave_room
 
 app = Flask(__name__)
 app.secret_key = "STAS_SUPER_SECRET_KEY_PERMANENT"
 
-# Inisialisasi SocketIO untuk aplikasi Flask
-socketio = SocketIO(app, cors_allowed_origins="*")
+# Inisialisasi SocketIO agar kompatibel penuh dengan mode async/eventlet di Render
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
 # ─── KONSTANTA PATH & FOLDER ───────────────────────────────────────────────────
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
@@ -176,20 +176,21 @@ def game_blockblast():
 def game_3d():
     return render_template('game_3d.html')
 
-# --- LOGIKA MULTIPLAYER SOCKET.IO ---
+
+# ─── LOGIKA MULTIPLAYER SOCKET.IO (FIXED) ──────────────────────────────────────
 @socketio.on('join_game')
 def on_join(data):
     room = data['room']
     username = session.get('fullname') or session.get('member') or data['username']
     join_room(room)
-    # Beritahu player lain di room tersebut bahwa ada player baru masuk
     emit('player_joined', {'username': username, 'id': data['id']}, to=room, include_self=False)
 
 @socketio.on('update_player')
 def on_update(data):
-    # Menyebarkan data posisi, animasi, tembakan, dan gloo wall ke player lain di room yang sama
     emit('player_updated', data, to=data['room'], include_self=False)
 
+
+# ─── AUTHENTICATION ROUTES ─────────────────────────────────────────────────────
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if 'member' in session:
@@ -200,7 +201,6 @@ def login():
         password = request.form.get('password', '').strip()
         
         if verify_member(username_input, password):
-            # Cari kecocokan nama asli file (misal input 'isan' -> dapet 'Isan')
             session_username = username_input
             if os.path.isdir(NAME_DIR):
                 for fname in os.listdir(NAME_DIR):
@@ -209,8 +209,6 @@ def login():
                         break
                         
             session['member']   = session_username
-            
-            # Membaca file nama menggunakan case asli yang ditemukan
             name_path = os.path.join(NAME_DIR, f'{session_username}.txt')
             session['fullname'] = read_file(name_path) if os.path.exists(name_path) else session_username
             session['is_guest'] = False
@@ -262,7 +260,6 @@ def custom_gallery_route(filename):
 @app.route('/api/member/<username>')
 @login_required
 def api_member(username):
-    # Penanganan pencarian file name & desk secara case-insensitive
     real_username = username
     if os.path.isdir(NAME_DIR):
         for fname in os.listdir(NAME_DIR):
@@ -272,7 +269,6 @@ def api_member(username):
 
     name = read_file(os.path.join(NAME_DIR, f'{real_username}.txt'))
     
-    # Cari file deskripsi
     desk_filename = f'{real_username}.txt'
     if os.path.isdir(DESK_DIR):
         for fname in os.listdir(DESK_DIR):
@@ -288,13 +284,12 @@ def api_member(username):
     return jsonify({'username': real_username, 'name': name, 'desk': desk, 'db': db_data})
 
 
-# ─── API CHAT KOMUNITAS (DENGAN PROTEKSI STRUKTUR DATA & ALIAS) ────────────────
+# ─── API CHAT KOMUNITAS ────────────────────────────────────────────────────────
 @app.route('/api/chat', methods=['GET'])
 @login_required
 def chat_get():
     chat_data = load_chat()
     
-    # 🛡️ AUTO-NORMALIZATION
     for msg in chat_data:
         if 'id' not in msg:
             msg['id'] = str(uuid.uuid4())
@@ -348,7 +343,7 @@ def chat_post():
     return jsonify(msg), 201
 
 
-# 🔗 ALIAS UPLOAD
+# ─── CHAT ACTIONS (UPLOAD, REACT, DELETE) ──────────────────────────────────────
 @app.route('/api/chat/upload', methods=['POST'])
 @app.route('/api/upload', methods=['POST'])
 @login_required
@@ -375,8 +370,6 @@ def chat_upload():
 
     return jsonify({"file_url": f"/stas/galery/{filename}", "type": file_type})
 
-
-# 🔗 ALIAS REAKSI EMOJI
 @app.route('/api/chat/react', methods=['POST'])
 @app.route('/api/chat/reaction', methods=['POST'])
 @app.route('/api/react', methods=['POST'])
@@ -409,8 +402,6 @@ def chat_react():
     save_chat(chat_data)
     return jsonify({"status": "success"})
 
-
-# 🔗 ALIAS HAPUS CHAT
 @app.route('/api/chat/delete/<msg_id>', methods=['DELETE'])
 @app.route('/api/delete/<msg_id>', methods=['DELETE'])
 @login_required
