@@ -234,11 +234,6 @@ def album():
                 files.append({'name': fname, 'type': ftype, 'url': f'/stas/galery/{fname}'})
     return render_template('album.html', files=files)
 
-@app.route('/games')
-@login_required
-def games():
-    return render_template('games.html')
-
 
 # ─── ROUTE KHUSUS FILE & MEMBER ────────────────────────────────────────────────
 @app.route('/stas/galery/<path:filename>')
