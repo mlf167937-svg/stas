@@ -9,9 +9,14 @@ from flask import (
     Flask, render_template, request, redirect,
     url_for, session, jsonify, flash, send_from_directory
 )
+# Tambahkan import untuk Socket.IO multiplayer game 3D
+from flask_socketio import SocketIO, emit, join_room, leave_room
 
 app = Flask(__name__)
 app.secret_key = "STAS_SUPER_SECRET_KEY_PERMANENT"
+
+# Inisialisasi SocketIO untuk aplikasi Flask
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 # ─── KONSTANTA PATH & FOLDER ───────────────────────────────────────────────────
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
@@ -503,5 +508,5 @@ def admin_logout():
 
 
 # ─── RUN SERVER ────────────────────────────────────────────────────────────────
- if __name__ == '__main__':
-     socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+if __name__ == '__main__':
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
