@@ -168,9 +168,22 @@ def game_blockblast():
     return render_template('block_blast.html')
 
 @app.route('/games/3d')
-@login_required
 def game_3d():
     return render_template('game_3d.html')
+
+# --- LOGIKA MULTIPLAYER SOCKET.IO ---
+@socketio.on('join_game')
+def on_join(data):
+    room = data['room']
+    username = session.get('fullname') or session.get('member') or data['username']
+    join_room(room)
+    # Beritahu player lain di room tersebut bahwa ada player baru masuk
+    emit('player_joined', {'username': username, 'id': data['id']}, to=room, include_self=False)
+
+@socketio.on('update_player')
+def on_update(data):
+    # Menyebarkan data posisi, animasi, tembakan, dan gloo wall ke player lain di room yang sama
+    emit('player_updated', data, to=data['room'], include_self=False)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -490,9 +503,5 @@ def admin_logout():
 
 
 # ─── RUN SERVER ────────────────────────────────────────────────────────────────
-if __name__ == '__main__':
-    try:
-        port = int(os.environ.get("PORT", 5000))
-        app.run(debug=True, host='0.0.0.0', port=port)
-    except Exception as e:
-        app.run(debug=True, host='0.0.0.0')
+ if __name__ == '__main__':
+     socketio.run(app, host='0.0.0.0', port=5000, debug=True)
