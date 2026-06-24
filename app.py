@@ -53,12 +53,33 @@ def get_all_members():
         if filename.endswith('.txt'):
             username = filename[:-4]
             name     = read_file(os.path.join(NAME_DIR, filename))
-            desk     = read_file(os.path.join(DESK_DIR, f'{username}.txt'))
-            members.append({'username': username, 'name': name, 'desk': desk})
+            
+            # Cari file deskripsi secara case-insensitive
+            desk_content = ''
+            if os.path.isdir(DESK_DIR):
+                for d_fname in os.listdir(DESK_DIR):
+                    if d_fname.lower() == f'{username}.txt'.lower():
+                        desk_content = read_file(os.path.join(DESK_DIR, d_fname))
+                        break
+                        
+            members.append({'username': username, 'name': name, 'desk': desk_content})
     return members
 
 def get_member_db(username):
-    db_path = os.path.join(DB_DIR, f'{username}.txt')
+    target_file = f"{username}.txt"
+    real_filename = None
+    
+    # Mencari file di folder database secara case-insensitive
+    if os.path.isdir(DB_DIR):
+        for fname in os.listdir(DB_DIR):
+            if fname.lower() == target_file.lower():
+                real_filename = fname
+                break
+                
+    if not real_filename:
+        return None
+        
+    db_path = os.path.join(DB_DIR, real_filename)
     content = read_file(db_path)
     if not content:
         return None
@@ -66,10 +87,24 @@ def get_member_db(username):
     return '\n'.join(lines)
 
 def verify_member(username, password):
-    db_path = os.path.join(DB_DIR, f'{username}.txt')
+    target_file = f"{username}.txt"
+    real_filename = None
+    
+    # Mencari file di folder database secara case-insensitive
+    if os.path.isdir(DB_DIR):
+        for fname in os.listdir(DB_DIR):
+            if fname.lower() == target_file.lower():
+                real_filename = fname
+                break
+                
+    if not real_filename:
+        return False
+        
+    db_path = os.path.join(DB_DIR, real_filename)
     content = read_file(db_path)
     if not content:
         return False
+        
     for line in content.splitlines():
         if line.upper().startswith('PASSWORD'):
             stored_pass = line.split(':', 1)[-1].strip()
@@ -123,13 +158,26 @@ def login():
         return redirect(url_for('index'))
     error = None
     if request.method == 'POST':
-        username = request.form.get('username', '').strip().lower()
+        username_input = request.form.get('username', '').strip()
         password = request.form.get('password', '').strip()
-        if verify_member(username, password):
-            session['member']   = username
-            session['fullname'] = read_file(os.path.join(NAME_DIR, f'{username}.txt'))
+        
+        if verify_member(username_input, password):
+            # Cari kecocokan nama asli file (misal input 'isan' -> dapet 'Isan')
+            session_username = username_input
+            if os.path.isdir(NAME_DIR):
+                for fname in os.listdir(NAME_DIR):
+                    if fname.lower() == f"{username_input}.txt".lower():
+                        session_username = fname[:-4]
+                        break
+                        
+            session['member']   = session_username
+            
+            # Membaca file nama menggunakan case asli yang ditemukan
+            name_path = os.path.join(NAME_DIR, f'{session_username}.txt')
+            session['fullname'] = read_file(name_path) if os.path.exists(name_path) else session_username
             session['is_guest'] = False
             return redirect(url_for('index'))
+            
         error = 'Username atau password salah.'
     return render_template('login.html', error=error)
 
@@ -151,7 +199,6 @@ def logout():
 @app.route('/komunitas')
 @login_required
 def komunitas():
-    # Ambil data member dulu dari folder stas/name/ sebelum render HTML
     members = get_all_members() 
     return render_template('komunitas.html', members=members)
 
@@ -182,12 +229,30 @@ def custom_gallery_route(filename):
 @app.route('/api/member/<username>')
 @login_required
 def api_member(username):
-    name    = read_file(os.path.join(NAME_DIR,  f'{username}.txt'))
-    desk    = read_file(os.path.join(DESK_DIR,  f'{username}.txt'))
-    db_data = get_member_db(username)
+    # Penanganan pencarian file name & desk secara case-insensitive
+    real_username = username
+    if os.path.isdir(NAME_DIR):
+        for fname in os.listdir(NAME_DIR):
+            if fname.lower() == f"{username}.txt".lower():
+                real_username = fname[:-4]
+                break
+
+    name = read_file(os.path.join(NAME_DIR, f'{real_username}.txt'))
+    
+    # Cari file deskripsi
+    desk_filename = f'{real_username}.txt'
+    if os.path.isdir(DESK_DIR):
+        for fname in os.listdir(DESK_DIR):
+            if fname.lower() == f"{real_username}.txt".lower():
+                desk_filename = fname
+                break
+                
+    desk = read_file(os.path.join(DESK_DIR, desk_filename))
+    db_data = get_member_db(real_username)
+    
     if db_data is None:
         return jsonify({'error': 'Member tidak ditemukan'}), 404
-    return jsonify({'username': username, 'name': name, 'desk': desk, 'db': db_data})
+    return jsonify({'username': real_username, 'name': name, 'desk': desk, 'db': db_data})
 
 
 # ─── API CHAT KOMUNITAS (DENGAN PROTEKSI STRUKTUR DATA & ALIAS) ────────────────
@@ -196,7 +261,7 @@ def api_member(username):
 def chat_get():
     chat_data = load_chat()
     
-    # 🛡️ AUTO-NORMALIZATION: Mencegah JS crash akibat data teks lama yang kosongan
+    # 🛡️ AUTO-NORMALIZATION
     for msg in chat_data:
         if 'id' not in msg:
             msg['id'] = str(uuid.uuid4())
@@ -225,12 +290,10 @@ def chat_post():
     wib_timezone = timezone(timedelta(hours=7))
     waktu_sekarang = datetime.now(wib_timezone).strftime('%H:%M')
     
-    # 🤖 KONDISI SPESIAL: Cek apakah request ini datang dari trigger bot STAS-AI
     if data.get('username') == 'stasai':
         username = 'stasai'
         sender = '🤖 STASAI'
     else:
-        # Jika pesan biasa dari member, gunakan data session asli
         username = session.get('member')
         sender = session.get('fullname', session.get('member'))
     
@@ -251,7 +314,8 @@ def chat_post():
     
     return jsonify(msg), 201
 
-# 🔗 ALIAS UPLOAD: Mendukung /api/chat/upload maupun /api/upload
+
+# 🔗 ALIAS UPLOAD
 @app.route('/api/chat/upload', methods=['POST'])
 @app.route('/api/upload', methods=['POST'])
 @login_required
@@ -278,7 +342,8 @@ def chat_upload():
 
     return jsonify({"file_url": f"/stas/galery/{filename}", "type": file_type})
 
-# 🔗 ALIAS REAKSI EMOJI: Mendukung /api/chat/react, /api/chat/reaction, maupun /api/react
+
+# 🔗 ALIAS REAKSI EMOJI
 @app.route('/api/chat/react', methods=['POST'])
 @app.route('/api/chat/reaction', methods=['POST'])
 @app.route('/api/react', methods=['POST'])
@@ -295,7 +360,6 @@ def chat_react():
     chat_data = load_chat()
     for msg in chat_data:
         if msg.get('id') == msg_id:
-            # Pastikan key reactions aman terinisialisasi
             if 'reactions' not in msg or not isinstance(msg['reactions'], dict):
                 msg['reactions'] = {"👍": [], "❤️": [], "😂": [], "😮": [], "🙏": []}
                 
@@ -312,7 +376,8 @@ def chat_react():
     save_chat(chat_data)
     return jsonify({"status": "success"})
 
-# 🔗 ALIAS HAPUS CHAT: Mendukung /api/chat/delete/... maupun /api/delete/...
+
+# 🔗 ALIAS HAPUS CHAT
 @app.route('/api/chat/delete/<msg_id>', methods=['DELETE'])
 @app.route('/api/delete/<msg_id>', methods=['DELETE'])
 @login_required
@@ -326,7 +391,7 @@ def chat_delete(msg_id):
             save_chat(chat_data)
             return jsonify({"status": "success"})
         else:
-            return jsonify({"status": "error", "message": "Gak ada akses bos!"}), 403
+            return jsonify({"status": "error", "message": "Akses ditolak"}), 403
     return jsonify({"status": "error", "message": "Pesan tidak ditemukan"}), 404
 
 
