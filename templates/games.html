@@ -21,20 +21,16 @@
       min-height: 80px;
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       flex-wrap: wrap;
-    }
-    .typing-word-display.countdown {
-      font-size: 2rem;
-      font-weight: bold;
-      color: #f9e2af;
-      text-align: center;
+      white-space: pre-wrap; /* Memastikan spasi dirender dengan benar */
+      word-break: break-word;
     }
     .typing-word-display span {
       transition: color 0.1s ease;
     }
     .char-correct { color: #a6e3a1 !important; background: rgba(166, 227, 161, 0.1); }
-    .char-incorrect { color: #f38ba8 !important; background: rgba(243, 139, 168, 0.1); border-bottom: 2px solid #f38ba8; }
+    .char-incorrect { color: #f38ba8 !important; background: rgba(243, 139, 168, 0.2); border-bottom: 2px solid #f38ba8; }
     .char-current { background: rgba(203, 166, 247, 0.3); border-left: 2px solid #cba6f7; }
     
     .typing-input {
@@ -49,7 +45,7 @@
       transition: border-color 0.2s;
     }
     .typing-input:focus { border-color: #cba6f7; }
-    .typing-input:disabled { opacity: 0.5; cursor: not-allowed; }
+    .typing-input:disabled { opacity: 0.6; cursor: not-allowed; }
     
     .stats-container {
       display: flex;
@@ -70,7 +66,7 @@
       flex-direction: column;
       align-items: center;
       gap: 1rem;
-      touch-action: none; /* Mencegah layar ikut ke-scroll pas main di HP */
+      touch-action: none;
     }
     #block-canvas {
       background: #11111b;
@@ -119,10 +115,10 @@
 
     <div class="game-card">
       <h3>⌨️ STAS Speed Typing</h3>
-      <p>Uji kecepatan jarimu! Teks akan muncul setelah hitungan mundur. Kamu punya waktu <strong>1 menit</strong> untuk meraih skor WPS tertinggi.</p>
+      <p>Uji kecepatan mengetik Anda. Teks akan ditampilkan selama 3 detik sebelum Anda mulai mengetik. Anda memiliki waktu <strong>1 menit</strong> untuk meraih skor terbaik.</p>
       
       <div class="game-container active" id="typing-container">
-        <div class="typing-word-display" id="text-target">Klik 'Mulai Tes' untuk bersiap...</div>
+        <div class="typing-word-display" id="text-target" style="justify-content: center;">Klik 'Mulai Tes' untuk bersiap...</div>
         
         <input type="text" class="typing-input" id="text-input" placeholder="Area ketik akan aktif otomatis..." disabled autocomplete="off"/>
         
@@ -154,13 +150,13 @@
 
     <div class="game-card">
       <h3>🧱 Block Blast Mini</h3>
-      <p>Tahan (Drag) balok dari bawah dan geser (Drop) ke papan atas. Penuhi baris atau kolom untuk meledakkannya dan mencetak poin!</p>
+      <p>Tahan balok dari bagian bawah dan geser ke papan atas. Penuhi baris atau kolom untuk membersihkannya dan mencetak poin.</p>
       
       <div class="game-container active" id="blockblast-container">
         <div class="block-blast-layout">
           <div class="game-score-display" id="block-score" style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.2rem;">Skor: 0</div>
           <canvas id="block-canvas" width="280" height="420"></canvas>
-          <div class="block-instructions" id="block-msg">Tarik dan geser balok ke atas papan (Suara Aktif!)</div>
+          <div class="block-instructions" id="block-msg">Tarik dan geser balok ke atas papan (Suara Aktif)</div>
           <button class="btn-game-action" id="btn-block-reset" style="background:var(--bg-surface); border:1px solid var(--border); color:var(--text-muted);">↺ Reset Game</button>
         </div>
       </div>
@@ -172,14 +168,15 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // =========================================================================
-    // 🔤 ENGINE GAME 1: SPEED TYPING TEST (WPS) DENGAN COUNTDOWN & 60 DETIK
+    // 🔤 ENGINE GAME 1: SPEED TYPING TEST (WPS)
     // =========================================================================
     const KUMPULAN_TEKS = [
         "struktur data json sangat berguna untuk menyimpan informasi dan database sistem",
-        "belajar coding di komunitas stas membuat kita berkembang menjadi programmer jagoan",
+        "belajar coding di komunitas stas membuat kita berkembang menjadi programmer andal",
         "pastikan tidak ada sintaksis yang eror sebelum melakukan deploy ke server produksi",
-        "kecepatan mengetik sepuluh jari adalah keahlian penting bagi seorang developer sejati",
-        "jangan lupa meminum kopi hangat saat sedang ngoding aplikasi di malam hari bray",
+        "belajar mengetik dapat membantu pekerjaan anda sehari hari",
+        "kecepatan mengetik sepuluh jari adalah keahlian penting bagi seorang developer",
+        "jangan lupa untuk selalu menjaga postur tubuh saat sedang memprogram aplikasi",
         "fungsi decorator pada flask digunakan untuk memproteksi rute halaman website kita",
         "javascript dan python adalah dua bahasa pemrograman paling populer di dunia saat ini",
         "kreativitas tanpa batas digabungkan dengan logika algoritma akan menghasilkan karya hebat",
@@ -188,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let timerInterval = null;
     let countdownInterval = null;
-    let waktuMaksimal = 60; // Diubah jadi 1 menit (60 detik)
+    let waktuMaksimal = 60; 
     let waktuSisa = waktuMaksimal;
     let gameTypingBerjalan = false;
     let isCountingDown = false;
@@ -206,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function acakTeks() {
         const index = Math.floor(Math.random() * KUMPULAN_TEKS.length);
         teksTargetSekarang = KUMPULAN_TEKS[index];
-        elTarget.className = "typing-word-display";
+        elTarget.style.justifyContent = "flex-start"; // Kembalikan ke format paragraf normal
         elTarget.innerHTML = teksTargetSekarang.split('').map((char, i) => {
             if(i === 0) return `<span class="char-current">${char}</span>`;
             return `<span>${char}</span>`;
@@ -217,23 +214,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (gameTypingBerjalan || isCountingDown) return;
         isCountingDown = true;
         btnTypingStart.disabled = true;
+        
+        // Tampilkan teks langsung agar pengguna dapat membacanya selama jeda
+        acakTeks();
+        
         elInput.disabled = true;
         elInput.value = "";
         
         let hitungMundur = 3;
-        elTarget.className = "typing-word-display countdown";
-        elTarget.innerHTML = `Mulai dalam ${hitungMundur}...<br><span style="font-size:1rem;font-weight:normal;color:#a6adc8;margin-top:10px;">Bersiaplah membaca teks!</span>`;
-        
-        // Memilih teks di awal agar user bisa membaca bocoran teksnya (opsional, tp kita sembunyikan dlu biar fokus ke hitungan)
+        elInput.placeholder = `Bersiap... Anda dapat mengetik dalam ${hitungMundur} detik`;
         
         countdownInterval = setInterval(() => {
             hitungMundur--;
             if (hitungMundur > 0) {
-                elTarget.innerHTML = `Mulai dalam ${hitungMundur}...<br><span style="font-size:1rem;font-weight:normal;color:#a6adc8;margin-top:10px;">Bersiaplah membaca teks!</span>`;
+                elInput.placeholder = `Bersiap... Anda dapat mengetik dalam ${hitungMundur} detik`;
             } else {
                 clearInterval(countdownInterval);
                 isCountingDown = false;
-                startTypingGame(); // Jalankan game utamanya
+                elInput.placeholder = "Mulai mengetik di sini...";
+                startTypingGame(); 
             }
         }, 1000);
     }
@@ -245,8 +244,6 @@ document.addEventListener('DOMContentLoaded', () => {
         elInput.focus();
         btnTypingStart.disabled = false;
         
-        acakTeks(); // Munculkan teks aslinya
-        
         elWps.innerText = "0.00";
         elWpm.innerText = "0";
         elAcc.innerText = "100%";
@@ -257,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
             waktuSisa--;
             elTime.innerText = waktuSisa + "s";
             if (waktuSisa <= 10) {
-                elTime.style.color = "#f38ba8"; // Merah pas mau habis
+                elTime.style.color = "#f38ba8"; 
             }
             
             hitungSkorTyping();
@@ -303,10 +300,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let akurasi = totalKetik > 0 ? Math.round((benarKetik / totalKetik) * 100) : 100;
         elAcc.innerText = akurasi + "%";
 
-        // Auto-next text kalau selesai sebelum waktu habis biar bisa dapat skor tinggi
         if (teksKetik.length >= teksTargetSekarang.length && akurasi >= 90) {
             elInput.value = "";
-            acakTeks(); // Lanjut ke teks berikutnya untuk nambah poin terus
+            acakTeks(); // Ganti teks jika sudah selesai sebelum waktu habis
         }
     }
 
@@ -315,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gameTypingBerjalan = false;
         elInput.disabled = true;
         btnTypingStart.disabled = false;
-        alert(`⏰ WAKTU HABIS! Skor Akhir Kamu:\nKecepatan: ${elWps.innerText} WPS (${elWpm.innerText} WPM)\nAkurasi: ${elAcc.innerText}`);
+        alert(`Waktu Habis!\n\nStatistik Anda:\nKecepatan: ${elWps.innerText} WPS (${elWpm.innerText} WPM)\nAkurasi: ${elAcc.innerText}`);
     }
 
     elInput.addEventListener('input', () => {
@@ -338,16 +334,16 @@ document.addEventListener('DOMContentLoaded', () => {
         elAcc.innerText = "100%";
         elTime.innerText = waktuMaksimal + "s";
         elTime.style.color = "#f9e2af";
-        elTarget.className = "typing-word-display";
+        elTarget.style.justifyContent = "center";
         elTarget.innerHTML = "Klik 'Mulai Tes' untuk bersiap...";
+        elInput.placeholder = "Area ketik akan aktif otomatis...";
     });
 
 
     // =========================================================================
-    // 🧱 ENGINE GAME 2: BLOCK BLAST MINI (DENGAN DRAG & DROP & SOUND)
+    // 🧱 ENGINE GAME 2: BLOCK BLAST MINI
     // =========================================================================
     
-    // --- AUDIO SYSTEM (Web Audio API Synthesizer) ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     
     function playSound(type) {
@@ -360,7 +356,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const now = audioCtx.currentTime;
         
         if (type === 'place') {
-            // Suara klik ringan saat taruh balok
             osc.type = 'sine';
             osc.frequency.setValueAtTime(400, now);
             osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
@@ -369,7 +364,6 @@ document.addEventListener('DOMContentLoaded', () => {
             osc.start(now);
             osc.stop(now + 0.1);
         } else if (type === 'clear') {
-            // Suara ledakan bass saat baris hancur
             osc.type = 'square';
             osc.frequency.setValueAtTime(150, now);
             osc.frequency.exponentialRampToValueAtTime(40, now + 0.3);
@@ -378,7 +372,6 @@ document.addEventListener('DOMContentLoaded', () => {
             osc.start(now);
             osc.stop(now + 0.3);
         } else if (type === 'error') {
-            // Suara buzz saat gagal ditaruh
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(100, now);
             gainNode.gain.setValueAtTime(0.2, now);
@@ -388,7 +381,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- GAME LOGIC ---
     const canvas = document.getElementById('block-canvas');
     const ctx = canvas.getContext('2d');
     const elBlockScore = document.getElementById('block-score');
@@ -404,20 +396,19 @@ document.addEventListener('DOMContentLoaded', () => {
     let skorBlock = 0;
     let balokPilihan = []; 
 
-    // Lebih banyak variasi blok
     const SHAPES = [
-        { color: '#ff6080', matrix: [[1]] },                                      // 1x1
-        { color: '#ffb86c', matrix: [[1, 1]] },                                   // 1x2 Horizontal
-        { color: '#8be9fd', matrix: [[1], [1]] },                                 // 2x1 Vertikal
-        { color: '#50fa7b', matrix: [[1, 1], [1, 1]] },                           // 2x2 Kubus
-        { color: '#bd93f9', matrix: [[1, 1, 1]] },                                // 1x3 Horizontal
-        { color: '#bd93f9', matrix: [[1], [1], [1]] },                            // 3x1 Vertikal
-        { color: '#ff79c6', matrix: [[1, 1], [1, 0]] },                           // L Kecil
-        { color: '#f1fa8c', matrix: [[1, 1, 1, 1]] },                             // 1x4 Panjang
-        { color: '#8be9fd', matrix: [[1, 0, 0], [1, 0, 0], [1, 1, 1]] },          // L Besar
-        { color: '#ff5555', matrix: [[1, 1, 1], [0, 1, 0]] },                     // Huruf T
-        { color: '#f8f8f2', matrix: [[1, 1, 1], [1, 1, 1], [1, 1, 1]] },          // 3x3 Kubus Besar
-        { color: '#ffb86c', matrix: [[1, 1, 0], [0, 1, 1]] }                      // Z shape
+        { color: '#ff6080', matrix: [[1]] },                                      
+        { color: '#ffb86c', matrix: [[1, 1]] },                                   
+        { color: '#8be9fd', matrix: [[1], [1]] },                                 
+        { color: '#50fa7b', matrix: [[1, 1], [1, 1]] },                           
+        { color: '#bd93f9', matrix: [[1, 1, 1]] },                                
+        { color: '#bd93f9', matrix: [[1], [1], [1]] },                            
+        { color: '#ff79c6', matrix: [[1, 1], [1, 0]] },                           
+        { color: '#f1fa8c', matrix: [[1, 1, 1, 1]] },                             
+        { color: '#8be9fd', matrix: [[1, 0, 0], [1, 0, 0], [1, 1, 1]] },          
+        { color: '#ff5555', matrix: [[1, 1, 1], [0, 1, 0]] },                     
+        { color: '#f8f8f2', matrix: [[1, 1, 1], [1, 1, 1], [1, 1, 1]] },          
+        { color: '#ffb86c', matrix: [[1, 1, 0], [0, 1, 1]] }                      
     ];
 
     function acakBalokBaru() {
@@ -439,7 +430,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function gambarPapan() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Gambar Grid
         for (let r = 0; r < BARIS; r++) {
             for (let c = 0; c < KOLOM; c++) {
                 ctx.fillStyle = papan[r][c] ? papan[r][c] : '#212230';
@@ -447,7 +437,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Garis pemisah area bawah
         ctx.strokeStyle = '#313244';
         ctx.lineWidth = 1;
         ctx.beginPath();
@@ -455,16 +444,13 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.lineTo(canvas.width, 280);
         ctx.stroke();
 
-        // Gambar Balok (Yang tidak di-drag digambar duluan)
         balokPilihan.forEach((block) => {
             if (block.used || block.isDragging) return;
-            gambarSebuahBalok(block, block.x, block.y, 16); // Ukuran kecil 16px di tray bawah
+            gambarSebuahBalok(block, block.x, block.y, 16);
         });
 
-        // Gambar Balok yang sedang di-drag terakhir biar posisinya paling atas
         balokPilihan.forEach((block) => {
             if (block.isDragging) {
-                // Gambar shadow prediksi jika berada di atas papan
                 let bayanganDigambar = false;
                 if (block.y < 280) {
                     const snapCol = Math.floor((block.x - OFFSET_X + (UKURAN_KOTAK/2)) / UKURAN_KOTAK);
@@ -472,7 +458,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     if (snapRow >= 0 && snapRow < BARIS && snapCol >= 0 && snapCol < KOLOM) {
                         if (bisaTaruhBalok(snapRow, snapCol, block.matrix)) {
-                            // Gambar shadow transparan
                             ctx.globalAlpha = 0.3;
                             const shadowB = { ...block, color: '#ffffff' };
                             gambarSebuahBalok(shadowB, OFFSET_X + snapCol * UKURAN_KOTAK, OFFSET_Y + snapRow * UKURAN_KOTAK, UKURAN_KOTAK);
@@ -481,7 +466,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 }
-                // Gambar balok asli membesar jadi ukuran grid 32px
                 gambarSebuahBalok(block, block.x, block.y, UKURAN_KOTAK);
             }
         });
@@ -498,14 +482,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- DRAG AND DROP HANDLERS ---
     let dragBlockIndex = null;
     let dragOffsetX = 0;
     let dragOffsetY = 0;
 
     function getMousePos(evt) {
         const rect = canvas.getBoundingClientRect();
-        // Support for Touch Events and Mouse Events
         const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
         const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
         return {
@@ -515,7 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function onPointerDown(e) {
-        if (e.cancelable) e.preventDefault(); // cegah scroll layar HP pas drag
+        if (e.cancelable) e.preventDefault(); 
         if (audioCtx.state === 'suspended') audioCtx.resume();
 
         const pos = getMousePos(e);
@@ -524,7 +506,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const b = balokPilihan[i];
             if (b.used) continue;
             
-            // Hitung lebar & tinggi area bounding box balok di tray (ukuran 16px)
             const bWidth = b.matrix[0].length * 16;
             const bHeight = b.matrix.length * 16;
 
@@ -534,7 +515,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 dragBlockIndex = i;
                 b.isDragging = true;
                 
-                // Set titik tengah drag
                 dragOffsetX = (b.matrix[0].length * UKURAN_KOTAK) / 2;
                 dragOffsetY = (b.matrix.length * UKURAN_KOTAK) / 2;
                 
@@ -565,8 +545,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const b = balokPilihan[dragBlockIndex];
             b.isDragging = false;
             
-            // Konversi posisi drag saat dilepas ke grid Papan
-            // Kita offset dikit buat dapetin koordinat snap-nya
             const snapCol = Math.floor((b.x - OFFSET_X + (UKURAN_KOTAK/2)) / UKURAN_KOTAK);
             const snapRow = Math.floor((b.y - OFFSET_Y + (UKURAN_KOTAK/2)) / UKURAN_KOTAK);
 
@@ -582,12 +560,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     cekKondisiKalah();
                 } else {
-                    // Balikin ke tray karena posisi nabrak
                     playSound('error');
                     kembalikanKeTray(b);
                 }
             } else {
-                // Balikin ke tray karena dilepas di luar papan atas
                 kembalikanKeTray(b);
             }
 
@@ -601,17 +577,14 @@ document.addEventListener('DOMContentLoaded', () => {
         b.y = b.yAsli;
     }
 
-    // Daftarkan Mouse Event
     canvas.addEventListener('mousedown', onPointerDown);
     canvas.addEventListener('mousemove', onPointerMove);
-    window.addEventListener('mouseup', onPointerUp); // Gunakan window biar gk nyangkut klo lepas di luar canvas
+    window.addEventListener('mouseup', onPointerUp);
 
-    // Daftarkan Touch Event (HP)
     canvas.addEventListener('touchstart', onPointerDown, {passive: false});
     canvas.addEventListener('touchmove', onPointerMove, {passive: false});
     window.addEventListener('touchend', onPointerUp);
 
-    // --- LOGIKA MESIN PAPAN ---
     function bisaTaruhBalok(startRow, startCol, matrix) {
         for (let r = 0; r < matrix.length; r++) {
             for (let c = 0; c < matrix[r].length; c++) {
@@ -656,7 +629,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (barisHancur.length > 0 || kolomHancur.length > 0) {
-            playSound('clear'); // Suara meledak!
+            playSound('clear');
         }
 
         barisHancur.forEach(r => {
@@ -691,7 +664,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!masihBisaMain) {
             setTimeout(() => {
                 playSound('error');
-                alert("Game Over, Bosku! Tidak ada ruang tersisa di papan.\nSkor Akhir: " + skorBlock);
+                alert("Permainan Selesai!\nTidak ada ruang tersisa di papan.\nSkor Akhir: " + skorBlock);
                 resetBlockBlast();
             }, 300);
         }
@@ -707,7 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnBlockReset.addEventListener('click', resetBlockBlast);
 
-    // Init awal
+    // Inisialisasi awal
     acakBalokBaru();
     gambarPapan();
 });
