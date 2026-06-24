@@ -9,14 +9,14 @@ from flask import (
     Flask, render_template, request, redirect,
     url_for, session, jsonify, flash, send_from_directory
 )
-# Perbaikan Import: Pastikan emit dan join_room dipanggil dengan benar
+# Import Flask-SocketIO
 from flask_socketio import SocketIO, emit, join_room, leave_room
 
 app = Flask(__name__)
 app.secret_key = "STAS_SUPER_SECRET_KEY_PERMANENT"
 
-# Inisialisasi SocketIO agar kompatibel penuh dengan mode async/eventlet di Render
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+# FIX: Menggunakan async_mode='gevent' agar kompatibel penuh dengan Python 3.14 Render
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
 
 # ─── KONSTANTA PATH & FOLDER ───────────────────────────────────────────────────
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
@@ -177,7 +177,7 @@ def game_3d():
     return render_template('game_3d.html')
 
 
-# ─── LOGIKA MULTIPLAYER SOCKET.IO (FIXED) ──────────────────────────────────────
+# ─── LOGIKA MULTIPLAYER SOCKET.IO ──────────────────────────────────────
 @socketio.on('join_game')
 def on_join(data):
     room = data['room']
