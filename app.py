@@ -152,6 +152,26 @@ def index():
     members = get_all_members()
     return render_template('index.html', members=members)
 
+@app.route('/games')
+@login_required
+def games():
+    return render_template('games.html')
+
+@app.route('/games/typing')
+@login_required
+def game_typing():
+    return render_template('typing_game.html')
+
+@app.route('/games/blockblast')
+@login_required
+def game_blockblast():
+    return render_template('block_blast.html')
+
+@app.route('/games/3d')
+@login_required
+def game_3d():
+    return render_template('game_3d.html')
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if 'member' in session:
