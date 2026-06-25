@@ -173,21 +173,95 @@ def game_blockblast():
     return render_template('block_blast.html')
 
 @app.route('/games/3d')
+@login_required
 def game_3d():
     return render_template('game_3d.html')
 
 
-# ─── LOGIKA MULTIPLAYER SOCKET.IO ──────────────────────────────────────
+# ─── MULTIPLAYER ROOM STATE MANAGEMENT ────────────────────────────────────────
+# Menyimpan data realtime posisi Gloo Wall dan Player aktif di setiap Room
+ROOM_STATES = {}
+
+# ─── LOGIKA MULTIPLAYER SOCKET.IO ─────────────────────────────────────────────
 @socketio.on('join_game')
 def on_join(data):
     room = data['room']
+    player_id = data['id']
     username = session.get('fullname') or session.get('member') or data['username']
+    
     join_room(room)
-    emit('player_joined', {'username': username, 'id': data['id']}, to=room, include_self=False)
+    
+    # Inisialisasi state room jika room tersebut baru dibuat
+    if room not in ROOM_STATES:
+        ROOM_STATES[room] = {
+            'players': {},
+            'gloo_walls': {}
+        }
+    
+    # Daftarkan session socket ID (request.sid) ke dalam data player room
+    ROOM_STATES[room]['players'][request.sid] = {
+        'id': player_id,
+        'username': username
+    }
+    
+    # 1. Beritahu player lain di room bahwa ada player baru yang bergabung
+    emit('player_joined', {'username': username, 'id': player_id}, to=room, include_self=False)
+    
+    # 2. Sinkronisasi Gloo Wall: Kirim semua dinding yang sudah ada di memori room ke player baru
+    for wall_id, wall_data in ROOM_STATES[room]['gloo_walls'].items():
+        emit('player_updated', {
+            'aksi': 'gloo',
+            'idWall': wall_id,
+            'x': wall_data['x'],
+            'z': wall_data['z'],
+            'rotY': wall_data['rotY']
+        }, to=request.sid)
 
 @socketio.on('update_player')
 def on_update(data):
-    emit('player_updated', data, to=data['room'], include_self=False)
+    room = data.get('room')
+    if not room or room not in ROOM_STATES:
+        return
+
+    aksi = data.get('aksi')
+    
+    # Sinkronisasi Manajemen Taktis Gloo Wall
+    if aksi == 'gloo':
+        # Simpan struktur koordinat dinding baru ke memori server
+        ROOM_STATES[room]['gloo_walls'][data['idWall']] = {
+            'x': data['x'],
+            'z': data['z'],
+            'rotY': data['rotY'],
+            'hp': 300
+        }
+    elif aksi == 'gloo_hit':
+        # Kurangi HP dinding saat tertembak. Jika hancur, hapus dari database realtime
+        wall_id = data.get('idWall')
+        if wall_id in ROOM_STATES[room]['gloo_walls']:
+            ROOM_STATES[room]['gloo_walls'][wall_id]['hp'] -= data.get('dmg', 0)
+            if ROOM_STATES[room]['gloo_walls'][wall_id]['hp'] <= 0:
+                ROOM_STATES[room]['gloo_walls'].pop(wall_id, None)
+
+    # Teruskan data pergerakan/aksi ke player lain di room yang sama
+    emit('player_updated', data, to=room, include_self=False)
+
+@socketio.on('disconnect')
+def on_disconnect():
+    # Deteksi room tempat client terputus menggunakan session ID mereka
+    for room, state in list(ROOM_STATES.items()):
+        if request.sid in state['players']:
+            leaver = state['players'].pop(request.sid)
+            
+            # Perintahkan semua client di room tersebut untuk menghapus model leaver dari map
+            emit('player_updated', {
+                'aksi': 'mati_total',
+                'id': leaver['id']
+            }, to=room, include_self=False)
+            
+            # Jika room sudah benar-benar kosong, hapus total room dari RAM server
+            if not state['players']:
+                ROOM_STATES.pop(room, None)
+            break
 
 
 # ─── AUTHENTICATION ROUTES ─────────────────────────────────────────────────────
