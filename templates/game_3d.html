@@ -3,62 +3,137 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>STAS 3D — Battleground Mini</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <title>STAS Fire — Battleground Pro</title>
   <style>
-    body { margin: 0; padding: 0; overflow: hidden; background: #000; font-family: sans-serif; user-select: none; }
-    #game-canvas { width: 100vw; height: 100vh; display: block; }
+    /* Paksa Layar Landscape & Reset */
+    * { box-sizing: border-box; }
+    body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #0b0b14; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
     
-    /* UI Overlay */
-    .game-ui { position: absolute; top: 10px; left: 10px; z-index: 10; color: #fff; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; pointer-events: none;}
-    .lobby-panel { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1e1e2e; padding: 2rem; border-radius: 12px; border: 2px solid #cba6f7; z-index: 100; text-align: center; color: #fff; }
-    
-    /* Senjata & Gloo Wall Indicator */
-    .weapon-hud { position: absolute; bottom: 20px; right: 20px; z-index: 10; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 8px; border: 1px solid #89b4fa; color: white; display: flex; gap: 10px; }
-    .weapon-slot { padding: 5px 10px; background: #313244; border-radius: 4px; cursor: pointer; pointer-events: auto; }
-    .weapon-slot.active { background: #cba6f7; color: #111; font-weight: bold; }
+    /* Deteksi Jika User Buka di HP Tapi Masih Portrait */
+    @media screen and (orientation: portrait) {
+      #rotate-warning { display: flex !important; }
+    }
+    #rotate-warning { position: fixed; top:0; left:0; width:100vw; height:100vh; background:#111; color:white; z-index:9999; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px; }
 
-    /* Touch Controls Mobile */
-    .touch-btn { position: absolute; width: 60px; height: 60px; background: rgba(255,255,255,0.2); border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; z-index: 20; touch-action: none; }
-    #btn-shoot { right: 30px; bottom: 120px; background: rgba(243, 139, 168, 0.4); }
-    #btn-gloo { right: 110px; bottom: 40px; background: rgba(137, 180, 250, 0.4); }
-    #btn-jump { right: 30px; bottom: 40px; }
-    #dpad { left: 40px; bottom: 40px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); }
+    #game-canvas { width: 100%; height: 100%; display: block; }
+
+    /* ─── STYLE MENU LOBBY UTAMA ──────────────────────────────── */
+    #lobby-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; display: flex; background: linear-gradient(135deg, #11111b 0%, #1e1e2e 100%); color: #cdd6f4; padding: 20px; gap: 20px; }
+    .lobby-panel { background: rgba(30, 30, 46, 0.7); border: 2px solid #45475a; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; backdrop-filter: blur(10px); }
+    
+    /* Bagian Kiri: Profil & Senjata */
+    #panel-kiri { flex: 1; gap: 15px; }
+    .profile-box { border-bottom: 2px solid #45475a; padding-bottom: 10px; display: flex; align-items: center; gap: 15px; }
+    .avatar { width: 50px; height: 50px; background: #cba6f7; border-radius: 50%; border: 2px solid #fff; }
+    
+    /* Galeri Senjata */
+    .weapon-gallery { flex: 1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; overflow-y: auto; }
+    .weapon-card { background: #313244; border: 1px solid #585b70; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: 0.2s; }
+    .weapon-card:hover, .weapon-card.selected { border-color: #f38ba8; background: #45475a; }
+    .weapon-preview-mesh { height: 40px; background: rgba(0,0,0,0.2); margin-top: 5px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #a6adc8; }
+
+    /* Bagian Kanan: Tombol Start / Room */
+    #panel-kanan { width: 300px; justify-content: space-between; align-items: center; text-align: center; }
+    .btn-start { width: 100%; height: 80px; background: #f38ba8; color: #11111b; font-size: 24px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 0 15px rgba(243, 139, 168, 0.4); }
+    .btn-start:hover { background: #f5c2e7; }
+
+    /* Pop-up Cari Room (Modal) */
+    .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); z-index: 200; display: none; align-items: center; justify-content: center; }
+    .modal-content { background: #1e1e2e; border: 2px solid #cba6f7; padding: 25px; border-radius: 12px; text-align: center; width: 350px; }
+    .room-input { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #45475a; background: #313244; color: white; text-align: center; font-size: 16px; margin-bottom: 15px; }
+
+    /* ─── KONTROL MOBILE IN-GAME ONSCREEN UI ───────────────────── */
+    #mobile-hud { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; display: none; pointer-events: none; }
+    .touch-area { position: absolute; pointer-events: auto; }
+    
+    /* Analog Kiri */
+    #joystick-container { left: 40px; bottom: 40px; width: 120px; height: 120px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    #joystick-knob { width: 50px; height: 50px; background: rgba(255,255,255,0.4); border-radius: 50%; }
+    
+    /* Tombol Gloowall Kiri Tengah */
+    #btn-gloo-mobile { left: 40px; bottom: 180px; width: 65px; height: 65px; background: rgba(137, 180, 250, 0.4); border: 2px solid #89b4fa; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; }
+
+    /* Tombol Tembak Kanan & Aksi */
+    #btn-shoot-mobile { right: 50px; bottom: 80px; width: 90px; height: 90px; background: rgba(243, 139, 168, 0.4); border: 3px solid #f38ba8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+    #btn-jump-mobile { right: 160px; bottom: 40px; width: 55px; height: 55px; background: rgba(255,255,255,0.15); border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+    #btn-crouch-mobile { right: 160px; bottom: 110px; width: 55px; height: 55px; background: rgba(255,255,255,0.15); border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+
+    /* HUD Info Atas */
+    #top-hud { position: absolute; top: 15px; left: 15px; color: white; z-index: 60; background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 6px; font-size: 14px; pointer-events: none; display: none; }
   </style>
-  <!-- Load Three.js & Socket.io -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 <body>
 
-  <!-- Panel Membuat / Join Room -->
-  <div id="lobby" class="lobby-panel">
-    <h3>🚀 STAS 3D ROOM LOBBY</h3>
-    <p>Masukkan Kode Room untuk Mabar (Maks 2 Player)</p>
-    <input type="text" id="room-id" placeholder="Contoh: STAS77" style="padding: 10px; border-radius: 4px; border: none; outline: none; text-align: center;"><br><br>
-    <button class="btn-game-action" id="btn-join" style="width: 100%;">Masuk Room</button>
+  <div id="rotate-warning">
+    <h2>🔄 SILAKAN PUTAR HP ANDA</h2>
+    <p>Game ini wajib dimainkan dalam mode Landscape (Miring) agar kontrol analog & tombol nyaman digunakan.</p>
   </div>
 
-  <!-- UI Game -->
-  <div class="game-ui">
-    <div>Room: <span id="ui-room-text">-</span></div>
-    <div>Status: <span id="ui-status">Di Lobby</span></div>
-    <div style="margin-top: 5px; font-size: 0.8rem; color: #a6adc8;">WASD=Jalan | Shift=Lari | Space=Lompat | E=Gloo Wall | Klik=Tembak</div>
+  <div id="lobby-container">
+    <div id="panel-kiri" class="lobby-panel">
+      <div class="profile-box">
+        <div class="avatar"></div>
+        <div>
+          <h2 style="margin:0; color:#f38ba8;">STAS_PLAYER</h2>
+          <small style="color:#a6adc8;">ID: <span id="player-uid">000000</span></small>
+        </div>
+      </div>
+      
+      <h4 style="margin: 5px 0;">🎯 PILIHAN SENJATA (STATS BERBEDA)</h4>
+      <div class="weapon-gallery">
+        <div class="weapon-card selected" onclick="selectLobbyWeapon('SG2')">
+          <strong>SG2</strong><br><small style="color:#f38ba8;">Dmg: 100 | Clip: 2</small>
+          <div class="weapon-preview-mesh">[🟥🟥 Shotgun]</div>
+        </div>
+        <div class="weapon-card" onclick="selectLobbyWeapon('MP40')">
+          <strong>MP40</strong><br><small style="color:#a6adc8;">Dmg: 35 | Clip: 28</small>
+          <div class="weapon-preview-mesh">[🟨🟨 SMG]</div>
+        </div>
+        <div class="weapon-card" onclick="selectLobbyWeapon('MP5')">
+          <strong>MP5</strong><br><small style="color:#a6adc8;">Dmg: 40 | Clip: 30</small>
+          <div class="weapon-preview-mesh">[🟩🟩 SMG Pro]</div>
+        </div>
+        <div class="weapon-card" onclick="selectLobbyWeapon('PISTOL')">
+          <strong>USP PISTOL</strong><br><small style="color:#a6adc8;">Dmg: 15 | Clip: 7</small>
+          <div class="weapon-preview-mesh">[🟦 Pistol]</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="panel-kanan" class="lobby-panel">
+      <div>
+        <h3>🏆 STAS FIRE MULTIPLAYER</h3>
+        <p style="font-size: 13px; color:#a6adc8;">Siapkan mental, atur senjata andalanmu, lalu cari room untuk mulai berduel satu lawan satu.</p>
+      </div>
+      <button class="btn-start" id="btn-open-match">Mulai Match</button>
+    </div>
   </div>
 
-  <!-- HUD Senjata -->
-  <div class="weapon-hud" id="hud-senjata" style="display: none;">
-    <div class="weapon-slot active" id="slot-sg2" onclick="gantiSenjata('SG2')">SG2</div>
-    <div class="weapon-slot" id="slot-mp40" onclick="gantiSenjata('MP40')">MP40</div>
-    <div style="border-left: 1px solid #585b70; margin: 0 5px;"></div>
-    <div style="color: #89b4fa; font-weight:bold;">Gloo Wall [E]</div>
+  <div id="room-modal" class="modal-overlay">
+    <div class="modal-content">
+      <h3>🚀 JOIN / BUAT ROOM</h3>
+      <p style="font-size:13px; color:#a6adc8;">Masukkan kode room mabar yang sama dengan temanmu</p>
+      <input type="text" id="room-input-code" class="room-input" placeholder="Contoh: STAS77" />
+      <div style="display: flex; gap: 10px;">
+        <button id="btn-cancel-room" style="flex:1; padding:10px; background:#313244; color:white; border:none; border-radius:6px; cursor:pointer;">Batal</button>
+        <button id="btn-confirm-start" style="flex:1; padding:10px; background:#cba6f7; color:#11111b; font-weight:bold; border:none; border-radius:6px; cursor:pointer;">Masuk & Main</button>
+      </div>
+    </div>
   </div>
 
-  <!-- Tombol Touch Screen (Hanya muncul/berfungsi saat disentuh di HP) -->
-  <div class="touch-btn" id="btn-shoot" style="display: none;">💥</div>
-  <div class="touch-btn" id="btn-gloo" style="display: none;">🛡️</div>
-  <div class="touch-btn" id="btn-jump" style="display: none;">🦘</div>
-  <div id="dpad" class="touch-btn" style="display: none; border-radius: 10px;">🕹️</div>
+  <div id="top-hud">
+    Room: <span id="ui-room-text">-</span> | Status: <span id="ui-status">Di Arena</span>
+  </div>
+
+  <div id="mobile-hud">
+    <div class="touch-area" id="joystick-container"><div id="joystick-knob"></div></div>
+    <div class="touch-area" id="btn-gloo-mobile">🛡️ WALL</div>
+    <div class="touch-area" id="btn-shoot-mobile">💥</div>
+    <div class="touch-area" id="btn-jump-mobile">🦘</div>
+    <div class="touch-area" id="btn-crouch-mobile">🧱</div>
+  </div>
 
   <canvas id="game-canvas"></canvas>
 
