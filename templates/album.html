@@ -83,47 +83,118 @@
 
 <script>
   const allMedia = [];
-  
-  // Ambil semua item galeri setelah DOM siap dimuat
+
   document.querySelectorAll('.gallery-item').forEach(item => {
-      allMedia.push({ src: item.dataset.src, type: item.dataset.type });
+    allMedia.push({
+      src: item.dataset.src,
+      type: item.dataset.type
+    });
   });
+
+  let observer = null;
 
   function openTikTok(el) {
     const clickedSrc = el.dataset.src;
     const feed = document.getElementById('tt-feed');
-    feed.innerHTML = ''; 
+
+    feed.innerHTML = '';
 
     allMedia.forEach(media => {
-        const section = document.createElement('div');
-        section.className = 'tt-item';
+      const section = document.createElement('div');
+      section.className = 'tt-item';
 
-        if (media.type === 'video') {
-            section.innerHTML = `<video src="${media.src}" controls controlsList="nodownload" autoplay loop style="width:100%; max-height:100dvh;"></video>`;
-        } else {
-            section.innerHTML = `<img src="${media.src}" alt="STAS Gallery">`;
-        }
-        feed.appendChild(section);
+      if (media.type === 'video') {
+        section.innerHTML = `
+          <video
+            src="${media.src}"
+            controls
+            controlsList="nodownload"
+            loop
+            playsinline
+            preload="metadata"
+            style="width:100%; max-height:100dvh;"
+          ></video>
+        `;
+      } else {
+        section.innerHTML = `
+          <img
+            src="${media.src}"
+            alt="STAS Gallery"
+          >
+        `;
+      }
 
-        if (media.src === clickedSrc) {
-            setTimeout(() => section.scrollIntoView({ behavior: 'auto' }), 50);
-        }
+      feed.appendChild(section);
+
+      if (media.src === clickedSrc) {
+        setTimeout(() => {
+          section.scrollIntoView({
+            behavior: 'auto',
+            block: 'start'
+          });
+        }, 50);
+      }
     });
 
     document.getElementById('tt-lightbox').style.display = 'block';
-    document.body.style.overflow = 'hidden'; 
+    document.body.style.overflow = 'hidden';
+
+    setupVideoObserver();
+  }
+
+  function setupVideoObserver() {
+    if (observer) {
+      observer.disconnect();
+    }
+
+    observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        const video = entry.target.querySelector('video');
+
+        if (!video) return;
+
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.7) {
+          document
+            .querySelectorAll('#tt-feed video')
+            .forEach(v => {
+              if (v !== video) {
+                v.pause();
+              }
+            });
+
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      });
+    }, {
+      threshold: [0.7]
+    });
+
+    document.querySelectorAll('.tt-item').forEach(item => {
+      observer.observe(item);
+    });
   }
 
   function closeTikTok() {
     document.getElementById('tt-lightbox').style.display = 'none';
     document.body.style.overflow = '';
-    
-    // Pause seluruh video yang aktif di dalam feed tiktok ketika ditutup
-    document.querySelectorAll('#tt-feed video').forEach(v => v.pause());
+
+    document.querySelectorAll('#tt-feed video').forEach(v => {
+      v.pause();
+      v.currentTime = 0;
+    });
+
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
   }
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeTikTok();
+    if (e.key === 'Escape') {
+      closeTikTok();
+    }
   });
 </script>
 </body>
