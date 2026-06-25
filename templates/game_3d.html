@@ -17,48 +17,47 @@
 
     #game-canvas { width: 100%; height: 100%; display: block; }
 
-    /* ─── STYLE MENU LOBBY UTAMA ──────────────────────────────── */
+    /* ─── KEKERAN (CROSSHAIR) DI TENGAH LAYAR ─── */
+    #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 24px; height: 24px; border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 50%; pointer-events: none; z-index: 400; display: none; }
+    #crosshair::before, #crosshair::after { content: ''; position: absolute; background-color: rgba(255, 255, 255, 0.8); }
+    #crosshair::before { width: 2px; height: 6px; top: -10px; left: 50%; transform: translateX(-50%); }
+    #crosshair::after { width: 6px; height: 2px; left: -10px; top: 50%; transform: translateY(-50%); }
+
+    /* ─── STYLE MENU LOBBY UTAMA ─── */
     #lobby-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; display: flex; background: linear-gradient(135deg, #11111b 0%, #1e1e2e 100%); color: #cdd6f4; padding: 20px; gap: 20px; }
     .lobby-panel { background: rgba(30, 30, 46, 0.7); border: 2px solid #45475a; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; backdrop-filter: blur(10px); }
     
-    /* Bagian Kiri: Profil & Senjata */
     #panel-kiri { flex: 1; gap: 15px; }
     .profile-box { border-bottom: 2px solid #45475a; padding-bottom: 10px; display: flex; align-items: center; gap: 15px; }
     .avatar { width: 50px; height: 50px; background: #cba6f7; border-radius: 50%; border: 2px solid #fff; }
     
-    /* Galeri Senjata */
-    .weapon-gallery { flex: 1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; overflow-y: auto; }
-    .weapon-card { background: #313244; border: 1px solid #585b70; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: 0.2s; }
-    .weapon-card:hover, .weapon-card.selected { border-color: #f38ba8; background: #45475a; }
-    .weapon-preview-mesh { height: 40px; background: rgba(0,0,0,0.2); margin-top: 5px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #a6adc8; }
+    /* Galeri 10 Senjata */
+    .weapon-gallery { flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; overflow-y: auto; padding-right: 5px; }
+    .weapon-card { background: #313244; border: 1px solid #585b70; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; justify-content: center;}
+    .weapon-card:hover, .weapon-card.selected { border-color: #f38ba8; background: #45475a; box-shadow: 0 0 10px rgba(243, 139, 168, 0.3);}
+    .weapon-preview-mesh { height: 35px; background: rgba(0,0,0,0.2); margin-top: 5px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #a6adc8; }
 
-    /* Bagian Kanan: Tombol Start / Room */
     #panel-kanan { width: 300px; justify-content: space-between; align-items: center; text-align: center; }
     .btn-start { width: 100%; height: 80px; background: #f38ba8; color: #11111b; font-size: 24px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 0 15px rgba(243, 139, 168, 0.4); }
     .btn-start:hover { background: #f5c2e7; }
 
-    /* Pop-up Cari Room (Modal) */
     .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); z-index: 200; display: none; align-items: center; justify-content: center; }
     .modal-content { background: #1e1e2e; border: 2px solid #cba6f7; padding: 25px; border-radius: 12px; text-align: center; width: 350px; }
-    .room-input { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #45475a; background: #313244; color: white; text-align: center; font-size: 16px; margin-bottom: 15px; }
+    .room-input { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #45475a; background: #313244; color: white; text-align: center; font-size: 16px; margin-bottom: 15px; outline: none;}
 
-    /* ─── KONTROL MOBILE IN-GAME ONSCREEN UI ───────────────────── */
+    /* ─── KONTROL MOBILE IN-GAME ONSCREEN UI ─── */
     #mobile-hud { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; display: none; pointer-events: none; }
     .touch-area { position: absolute; pointer-events: auto; }
     
-    /* Analog Kiri */
     #joystick-container { left: 40px; bottom: 40px; width: 120px; height: 120px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
     #joystick-knob { width: 50px; height: 50px; background: rgba(255,255,255,0.4); border-radius: 50%; }
     
-    /* Tombol Gloowall Kiri Tengah */
     #btn-gloo-mobile { left: 40px; bottom: 180px; width: 65px; height: 65px; background: rgba(137, 180, 250, 0.4); border: 2px solid #89b4fa; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; }
-
-    /* Tombol Tembak Kanan & Aksi */
     #btn-shoot-mobile { right: 50px; bottom: 80px; width: 90px; height: 90px; background: rgba(243, 139, 168, 0.4); border: 3px solid #f38ba8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; }
     #btn-jump-mobile { right: 160px; bottom: 40px; width: 55px; height: 55px; background: rgba(255,255,255,0.15); border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
     #btn-crouch-mobile { right: 160px; bottom: 110px; width: 55px; height: 55px; background: rgba(255,255,255,0.15); border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+    #btn-heal-mobile { right: 230px; bottom: 40px; width: 55px; height: 55px; background: rgba(166, 227, 161, 0.4); border: 2px solid #a6e3a1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
 
-    /* HUD Info Atas */
     #top-hud { position: absolute; top: 15px; left: 15px; color: white; z-index: 60; background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 6px; font-size: 14px; pointer-events: none; display: none; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -68,7 +67,7 @@
 
   <div id="rotate-warning">
     <h2>🔄 SILAKAN PUTAR HP ANDA</h2>
-    <p>Game ini wajib dimainkan dalam mode Landscape (Miring) agar kontrol analog & tombol nyaman digunakan.</p>
+    <p>Game ini wajib dimainkan dalam mode Landscape (Miring).</p>
   </div>
 
   <div id="lobby-container">
@@ -81,31 +80,25 @@
         </div>
       </div>
       
-      <h4 style="margin: 5px 0;">🎯 PILIHAN SENJATA (STATS BERBEDA)</h4>
+      <h4 style="margin: 5px 0;">🎯 PILIHAN SENJATA TACTICAL</h4>
       <div class="weapon-gallery">
-        <div class="weapon-card selected" onclick="selectLobbyWeapon('SG2')">
-          <strong>SG2</strong><br><small style="color:#f38ba8;">Dmg: 100 | Clip: 2</small>
-          <div class="weapon-preview-mesh">[🟥🟥 Shotgun]</div>
-        </div>
-        <div class="weapon-card" onclick="selectLobbyWeapon('MP40')">
-          <strong>MP40</strong><br><small style="color:#a6adc8;">Dmg: 35 | Clip: 28</small>
-          <div class="weapon-preview-mesh">[🟨🟨 SMG]</div>
-        </div>
-        <div class="weapon-card" onclick="selectLobbyWeapon('MP5')">
-          <strong>MP5</strong><br><small style="color:#a6adc8;">Dmg: 40 | Clip: 30</small>
-          <div class="weapon-preview-mesh">[🟩🟩 SMG Pro]</div>
-        </div>
-        <div class="weapon-card" onclick="selectLobbyWeapon('PISTOL')">
-          <strong>USP PISTOL</strong><br><small style="color:#a6adc8;">Dmg: 15 | Clip: 7</small>
-          <div class="weapon-preview-mesh">[🟦 Pistol]</div>
-        </div>
+        <div class="weapon-card selected" onclick="selectLobbyWeapon('M1887')"><strong>M1887</strong><br><small style="color:#f38ba8;">Dmg: 120 | Clip: 2</small><div class="weapon-preview-mesh">[🟥 SG Ganda]</div></div>
+        <div class="weapon-card" onclick="selectLobbyWeapon('SPAS12')"><strong>SPAS12</strong><br><small style="color:#f38ba8;">Dmg: 85 | Clip: 6</small><div class="weapon-preview-mesh">[🟥 SG Auto]</div></div>
+        <div class="weapon-card" onclick="selectLobbyWeapon('M1014')"><strong>M1014</strong><br><small style="color:#f38ba8;">Dmg: 90 | Clip: 6</small><div class="weapon-preview-mesh">[🟥 SG Pump]</div></div>
+        <div class="weapon-card" onclick="selectLobbyWeapon('MP40')"><strong>MP40</strong><br><small style="color:#f9e2af;">Dmg: 28 | Clip: 32</small><div class="weapon-preview-mesh">[🟨 SMG Fast]</div></div>
+        <div class="weapon-card" onclick="selectLobbyWeapon('UMP')"><strong>UMP</strong><br><small style="color:#f9e2af;">Dmg: 32 | Clip: 30</small><div class="weapon-preview-mesh">[🟨 SMG Tactic]</div></div>
+        <div class="weapon-card" onclick="selectLobbyWeapon('AK47')"><strong>AK47</strong><br><small style="color:#a6e3a1;">Dmg: 42 | Clip: 30</small><div class="weapon-preview-mesh">[🟩 AR Heavy]</div></div>
+        <div class="weapon-card" onclick="selectLobbyWeapon('SCAR')"><strong>SCAR</strong><br><small style="color:#a6e3a1;">Dmg: 35 | Clip: 30</small><div class="weapon-preview-mesh">[🟩 AR Stable]</div></div>
+        <div class="weapon-card" onclick="selectLobbyWeapon('AWM')"><strong>AWM</strong><br><small style="color:#cba6f7;">Dmg: 200 | Clip: 5</small><div class="weapon-preview-mesh">[🟪 Sniper]</div></div>
+        <div class="weapon-card" onclick="selectLobbyWeapon('DESERT_EAGLE')"><strong>DEAGLE</strong><br><small style="color:#89b4fa;">Dmg: 55 | Clip: 7</small><div class="weapon-preview-mesh">[🟦 Pistol Berat]</div></div>
+        <div class="weapon-card" onclick="selectLobbyWeapon('USP')"><strong>USP</strong><br><small style="color:#89b4fa;">Dmg: 15 | Clip: 12</small><div class="weapon-preview-mesh">[🟦 Pistol Ringan]</div></div>
       </div>
     </div>
 
     <div id="panel-kanan" class="lobby-panel">
       <div>
-        <h3>🏆 STAS FIRE MULTIPLAYER</h3>
-        <p style="font-size: 13px; color:#a6adc8;">Siapkan mental, atur senjata andalanmu, lalu cari room untuk mulai berduel satu lawan satu.</p>
+        <h3>🏆 STAS FIRE DUEL</h3>
+        <p style="font-size: 13px; color:#a6adc8;">Pilih senjata andalanmu dan cari room untuk berduel 1v1.</p>
       </div>
       <button class="btn-start" id="btn-open-match">Mulai Match</button>
     </div>
@@ -123,20 +116,21 @@
     </div>
   </div>
 
-  <div id="top-hud">
-    Room: <span id="ui-room-text">-</span> | Status: <span id="ui-status">Di Arena</span>
-  </div>
+  <div id="top-hud">Room: <span id="ui-room-text">-</span> | Status: <span id="ui-status">Di Arena</span></div>
 
   <div id="mobile-hud">
     <div class="touch-area" id="joystick-container"><div id="joystick-knob"></div></div>
-    <div class="touch-area" id="btn-gloo-mobile">🛡️ WALL</div>
+    <div class="touch-area" id="btn-gloo-mobile">🛡️</div>
     <div class="touch-area" id="btn-shoot-mobile">💥</div>
     <div class="touch-area" id="btn-jump-mobile">🦘</div>
     <div class="touch-area" id="btn-crouch-mobile">🧱</div>
+    <div class="touch-area" id="btn-heal-mobile">💉</div>
   </div>
 
+  <div id="crosshair"></div>
   <canvas id="game-canvas"></canvas>
 
+  <script>document.getElementById('player-uid').innerText = Math.floor(100000 + Math.random() * 900000);</script>
   <script src="{{ url_for('static', filename='js/game_3d.js') }}"></script>
 </body>
 </html>
