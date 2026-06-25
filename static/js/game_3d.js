@@ -3,157 +3,250 @@ let roomCode = "";
 let myId = Math.random().toString(36).substring(7);
 let playerLocal, musuhRemote;
 
-// ─── LOGIKA GAMEPLAY & STATS (ALA FF) ─────────────────────────────────────────
+// ─── LOGIKA GAMEPLAY & STATS UTAMA ───────────────────────────────────────────
 let myHp = 200;
 const maxHp = 200;
 let jumlahMedkit = 3;
 let isHealing = false;
 let isReloading = false;
 let isDead = false;
+let isCrouching = false;
 
-// Spesifikasi Senjata Sesuai Request
+// Spesifikasi 4 Senjata Sesuai Request Terbaru
 const statsSenjata = {
-    SG2:  { damage: 100, maxAmmo: 2,  currentAmmo: 2,  reloadTime: 1500, range: 15,  warna: 0xff3333 },
-    MP40: { damage: 35,  maxAmmo: 28, currentAmmo: 28, reloadTime: 2000, range: 30,  warna: 0xffff33 }
+    SG2:    { damage: 100, maxAmmo: 2,  currentAmmo: 2,  reloadTime: 1500, range: 18, warna: 0xff3333, audioType: 'shotgun' },
+    MP40:   { damage: 35,  maxAmmo: 28, currentAmmo: 28, reloadTime: 2000, range: 32, warna: 0xffff33, audioType: 'smg' },
+    MP5:    { damage: 40,  maxAmmo: 30, currentAmmo: 30, reloadTime: 1800, range: 38, warna: 0x33ff33, audioType: 'smg_heavy' },
+    PISTOL: { damage: 15,  maxAmmo: 7,  currentAmmo: 7,  reloadTime: 1000, range: 22, warna: 0x3333ff, audioType: 'pistol' }
 };
 let senjataSekarang = "SG2";
 
-// Kontrol & Pergerakan Kamera FPS
+// Kontrol & Pergerakan Kamera FPS 3D (Atas, Bawah, Samping)
 let keys = { w: false, a: false, s: false, d: false, Shift: false, space: false };
-let sudutPandangY = 0; // Untuk rotasi hadap kiri/kanan
-let mouseX = 0;
+let sudutPandangY = 0; // Rotasi Horizontal (Kanan/Kiri)
+let sudutPandangX = 0; // Rotasi Vertical (Atas/Bawah)
 let playerKecepatan = 0.08;
 let loncatVelocity = 0;
 let isGrounded = true;
 
-// Penampung Objek Dunia untuk Fitur Tembak-Menembak (Raycasting)
-let daftarGlooWall = []; // Menyimpan semua objek dinding yang aktif
-let targetMusuhHitbox = null; 
+// Variabel Input Joystick Mobile
+let joystickActive = false;
+let joystickStartPos = { x: 0, y: 0 };
+let joystickMoveVector = { x: 0, y: 0 };
 
-// ─── PROSEDURAL TEKSTUR RUMPUT (100% AMAN TANPA LINK LUAR) ────────────────────
-function buatTeksturRumput() {
+// Penampung Objek Kolisi Dunia (Raycasting Tembakan & Perlindungan)
+let daftarGlooWall = []; 
+let targetMusuhHitbox = null; 
+let daftarBangunanRintangan = [];
+
+// Konteks Audio Sintetis (Bikin Suara Tanpa File MP3 Eksternal)
+let audioCtx = null;
+
+// ─── ENGINE SYNTHESIZER AUDIO CUSTOM ─────────────────────────────────────────
+function putarSuaraCustom(tipe) {
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        const skrg = audioCtx.currentTime;
+
+        if (tipe === 'shotgun') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(100, skrg);
+            osc.frequency.exponentialRampToValueAtTime(30, skrg + 0.3);
+            gainNode.gain.setValueAtTime(0.6, skrg);
+            gainNode.gain.linearRampToValueAtTime(0.01, skrg + 0.3);
+            osc.start(skrg); osc.stop(skrg + 0.3);
+        } else if (tipe === 'smg') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(350, skrg);
+            gainNode.gain.setValueAtTime(0.3, skrg);
+            gainNode.gain.linearRampToValueAtTime(0.01, skrg + 0.08);
+            osc.start(skrg); osc.stop(skrg + 0.08);
+        } else if (tipe === 'smg_heavy') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(220, skrg);
+            gainNode.gain.setValueAtTime(0.4, skrg);
+            gainNode.gain.linearRampToValueAtTime(0.01, skrg + 0.1);
+            osc.start(skrg); osc.stop(skrg + 0.1);
+        } else if (tipe === 'pistol') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(450, skrg);
+            gainNode.gain.setValueAtTime(0.2, skrg);
+            gainNode.gain.linearRampToValueAtTime(0.01, skrg + 0.07);
+            osc.start(skrg); osc.stop(skrg + 0.07);
+        } else if (tipe === 'gloo') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(140, skrg);
+            osc.frequency.exponentialRampToValueAtTime(320, skrg + 0.25);
+            gainNode.gain.setValueAtTime(0.5, skrg);
+            gainNode.gain.linearRampToValueAtTime(0.01, skrg + 0.25);
+            osc.start(skrg); osc.stop(skrg + 0.25);
+        }
+    } catch (e) { console.log("Audio blm diijinkan browser"); }
+}
+
+// ─── PROSEDURAL MAP GENERATOR (RUMPUT MODIS, AWAN & PERUMAHAN) ────────────────
+function buatTeksturRumputHijau() {
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 256;
+    canvas.width = 512; canvas.height = 512;
     const ctx = canvas.getContext('2d');
     
-    // Warna dasar hijau rumput lapangan
-    ctx.fillStyle = '#284d22';
-    ctx.fillRect(0, 0, 256, 256);
+    // Dasar Hijau Polos Fresh
+    ctx.fillStyle = '#348c31';
+    ctx.fillRect(0, 0, 512, 512);
     
-    // Bikin efek serat-serat rumput acak
-    for (let i = 0; i < 5000; i++) {
-        ctx.fillStyle = Math.random() > 0.5 ? '#33662c' : '#1e3819';
-        ctx.fillRect(Math.random() * 256, Math.random() * 256, 2, 6);
+    // Grid Halus & Variasi Daun Halus Biar Gak Terlalu Polos
+    ctx.strokeStyle = '#2d7a2a';
+    ctx.lineWidth = 2;
+    for(let x=0; x<=512; x+=64) {
+        ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,512); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0,x); ctx.lineTo(512,x); ctx.stroke();
     }
-    
+    for (let i = 0; i < 1500; i++) {
+        ctx.fillStyle = Math.random() > 0.5 ? '#40a33c' : '#296e27';
+        ctx.fillRect(Math.random() * 512, Math.random() * 512, 4, 4);
+    }
     const texture = new THREE.CanvasTexture(canvas);
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(20, 20); // Mengulang tekstur agar map terlihat luas
+    texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(25, 25);
     return texture;
 }
 
-// ─── MODEL KARAKTER HUMAN / STICKMAN 3D ──────────────────────────────────────
+function bangunKompleksPerumahan() {
+    // Array titik koordinat lokasi rumah buatan untuk tempat sembunyi taktikal
+    const lokasiRumah = [
+        {x: 10, z: -15, w: 6, h: 4, d: 8, col: 0xbf616a},
+        {x: -18, z: -10, w: 8, h: 5, d: 6, col: 0xd08770},
+        {x: 15, z: 20, w: 7, h: 4, d: 7, col: 0xebcb8b},
+        {x: -12, z: 25, w: 6, h: 4, d: 6, col: 0xa3be8c}
+    ];
+
+    lokasiRumah.forEach(r => {
+        const houseGeo = new THREE.BoxGeometry(r.w, r.h, r.d);
+        const houseMat = new THREE.MeshStandardMaterial({ color: r.col, roughness: 0.6 });
+        const rumah = new THREE.Mesh(houseGeo, houseMat);
+        rumah.position.set(r.x, r.h / 2, r.z);
+        rumah.userData = { tipe: 'bangunan' };
+        scene.add(rumah);
+        daftarBangunanRintangan.push(rumah);
+    });
+}
+
+function buatGugusanAwanLangit() {
+    for (let i = 0; i < 20; i++) {
+        const cloudGroup = new THREE.Group();
+        const jmlGumpalan = 3 + Math.floor(Math.random() * 4);
+        
+        for(let j=0; j<jmlGumpalan; j++) {
+            const cloudGeo = new THREE.SphereGeometry(2 + Math.random()*2, 8, 8);
+            const cloudMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 });
+            const gumpalan = new THREE.Mesh(cloudGeo, cloudMat);
+            gumpalan.position.set(j * 2, Math.random() * 1, Math.random() * 2);
+            cloudGroup.add(gumpalan);
+        }
+        cloudGroup.position.set(
+            (Math.random() - 0.5) * 160,
+            25 + Math.random() * 10,
+            (Math.random() - 0.5) * 160
+        );
+        scene.add(cloudGroup);
+    }
+}
+
+// ─── MODEL KARAKTER STICKMAN 3D ──────────────────────────────────────────────
 function buatModelStickman(warnaKulit) {
     const grupKarakter = new THREE.Group();
-    
-    // Kepala (Sphere)
-    const kepalaGeo = new THREE.SphereGeometry(0.25, 16, 16);
     const matKarakter = new THREE.MeshStandardMaterial({ color: warnaKulit, roughness: 0.7 });
-    const kepala = new THREE.Mesh(kepalaGeo, matKarakter);
-    kepala.position.y = 1.7;
-    grupKarakter.add(kepala);
     
-    // Badan/Torso (Cylinder)
-    const badanGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.8, 8);
-    const badan = new THREE.Mesh(badanGeo, matKarakter);
-    badan.position.y = 1.1;
-    grupKarakter.add(badan);
+    const kepala = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), matKarakter);
+    kepala.position.y = 1.7; grupKarakter.add(kepala);
     
-    // Kaki Kiri & Kanan
-    const kakiGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.7, 8);
-    const kakiKiri = new THREE.Mesh(kakiGeo, matKarakter);
+    const badan = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.8, 8), matKarakter);
+    badan.position.y = 1.1; grupKarakter.add(badan);
+    
+    const kakiKiri = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.7, 8), matKarakter);
     kakiKiri.position.set(-0.15, 0.35, 0);
-    const kakiKanan = kakiKiri.clone();
-    kakiKanan.position.x = 0.15;
+    const kakiKanan = kakiKiri.clone(); kakiKanan.position.x = 0.15;
     grupKarakter.add(kakiKiri, kakiKanan);
     
-    // Tangan Kiri & Kanan
-    const tanganGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.6, 8);
-    const tanganKiri = new THREE.Mesh(tanganGeo, matKarakter);
-    tanganKiri.position.set(-0.25, 1.1, 0);
-    tanganKiri.rotation.z = Math.PI / 12;
-    const tanganKanan = tanganKiri.clone();
-    tanganKanan.position.x = 0.25;
-    tanganKanan.rotation.z = -Math.PI / 12;
+    const tanganKiri = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.6, 8), matKarakter);
+    tanganKiri.position.set(-0.25, 1.1, 0); tanganKiri.rotation.z = Math.PI / 12;
+    const tanganKanan = tanganKiri.clone(); tanganKanan.position.x = 0.25; tanganKanan.rotation.z = -Math.PI / 12;
     grupKarakter.add(tanganKiri, tanganKanan);
     
     return grupKarakter;
 }
 
-// ─── INISIALISASI DUNIA 3D & INPUT ───────────────────────────────────────────
+// ─── INISIALISASI UNIVERSE & LOGIKA KAMETA ───────────────────────────────────
 function init3DWorld() {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x73a1c9); // Warna langit cerah
-    scene.fog = new THREE.FogExp2(0x73a1c9, 0.015);
+    scene.background = new THREE.Color(0xaaccff); // Langit Biru Cerah Sesuai Request
+    scene.fog = new THREE.FogExp2(0xaaccff, 0.01);
 
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('game-canvas'), antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
 
-    // Pencahayaan Luar Ruangan
-    const light = new THREE.AmbientLight(0xffffff, 0.7); scene.add(light);
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8); dirLight.position.set(20, 50, 20); scene.add(dirLight);
+    // Light Setup
+    scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.7); dirLight.position.set(30, 60, 30); scene.add(dirLight);
 
-    // Tanah dengan Tekstur Rumput Lapangan Sesuai Request
-    const groundGeo = new THREE.PlaneGeometry(200, 200);
-    const groundMat = new THREE.MeshStandardMaterial({ map: buatTeksturRumput(), roughness: 0.9 });
-    const ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.rotation.x = -Math.PI / 2;
-    scene.add(ground);
+    // Ground Arena
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(250, 250), new THREE.MeshStandardMaterial({ map: buatTeksturRumputHijau(), roughness: 0.9 }));
+    ground.rotation.x = -Math.PI / 2; scene.add(ground);
 
-    // Karakter Kita (Local) — Diposisikan tak terlihat oleh kamera diri sendiri
+    // Bangun Infrastruktur Map Serius
+    bangunKompleksPerumahan();
+    buatGugusanAwanLangit();
+
+    // Local FPS Setup Object
     playerLocal = new THREE.Group();
-    playerLocal.position.set(0, 0, 0);
+    playerLocal.position.set(0, 0, 4);
     scene.add(playerLocal);
 
-    // TAMPILAN POV PAS DI MATA (FPS STYLE)
-    camera.position.set(0, 1.6, 0); // Tinggi mata manusia rata-rata 1.6 unit
+    // Ketinggian Pandangan Kamera Pas Di Mata (FPS)
+    camera.position.set(0, 1.6, 0);
     playerLocal.add(camera);
 
-    // Event Kontrol Mouse & Keyboard
+    // Event Input Desktop PC
     window.addEventListener('keydown', (e) => handleKeyboard(e, true));
     window.addEventListener('keyup', (e) => handleKeyboard(e, false));
-    window.addEventListener('click', () => { if(!isDead) tembakSenjata(); });
     window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('resize', onWindowResize, false);
+    window.addEventListener('resize', onWindowResize);
+    
+    // Bind klik layar nembak khusus area non-hud desktop
+    window.addEventListener('click', (e) => {
+        if (!isDead && e.target.tagName === "CANVAS") {
+            tembakSenjata();
+        }
+    });
 
-    // Pasang UI Darah dan Peluru Tambahan Otomatis
-    buatSistemUIDinamis();
-
-    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-        aktifkanTombolMobile();
-    }
+    // Nyalakan Sistem Kendali Sentuh Mobile Smartphone
+    siapkanSistemJoystickMobile();
 
     animate();
 }
 
-// Mengatur rotasi kamera FPS menggunakan pergerakan mouse kiri-kanan
 function handleMouseMove(e) {
     if (isDead) return;
-    // Jika klik layar (atau pointer lock), kamera akan berputar bebas ke samping
-    if (document.pointerProcessed || e.buttons === 1 || 'ontouchstart' in window) {
-        sudutPandangY -= e.movementX * 0.003;
-        playerLocal.rotation.y = sudutPandangY;
-    }
-}
+    // Deteksi jika kursor terkunci (Pointer lock desktop) atau menekan layar game
+    if (document.pointerLockElement === document.body || e.buttons === 1) {
+        sudutPandangY -= e.movementX * 0.0025; // Sensitivitas Horizontal
+        sudutPandangX -= e.movementY * 0.0025; // Sensitivitas Vertikal
 
-function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+        // Limitasi sudut pandang ke atas & ke bawah agar tidak jungkir balik (Maks 85 derajat)
+        sudutPandangX = Math.max(-Math.PI / 2.1, Math.min(Math.PI / 2.1, sudutPandangX));
+
+        playerLocal.rotation.y = sudutPandangY;
+        camera.rotation.x = sudutPandangX;
+    }
 }
 
 function handleKeyboard(e, isDown) {
@@ -163,84 +256,96 @@ function handleKeyboard(e, isDown) {
     if (e.key === 's' || e.key === 'S') keys.s = isDown;
     if (e.key === 'd' || e.key === 'D') keys.d = isDown;
     if (e.key === 'Shift') keys.Shift = isDown;
-    if (e.key === ' ') { 
-        if(isDown && isGrounded) { loncatVelocity = 0.18; isGrounded = false; }
+    if (e.key === ' ') {
+        if (isDown && isGrounded && !isCrouching) { loncatVelocity = 0.17; isGrounded = false; }
     }
-    if (e.key === 'e' || e.key === 'E') { if(isDown) pasangGlooWall(); }
-    if (e.key === 'r' || e.key === 'R') { if(isDown) reloadSenjata(); }
+    if (e.key === 'e' || e.key === 'E') { if (isDown) pasangGlooWall(); }
+    if (e.key === 'r' || e.key === 'R') { if (isDown) reloadSenjata(); }
+    if (e.key === 'c' || e.key === 'C') { if (isDown) toggleJongkok(); }
 }
 
-function gantiSenjata(nama) {
+function toggleJongkok() {
+    isCrouching = !isCrouching;
+    if (isCrouching) {
+        camera.position.y = 0.9; // Turunkan pandangan mata ke bawah pas jongkok
+        playerKecepatan = 0.03;  // Jalannya melambat
+    } else {
+        camera.position.y = 1.6; // Kembalikan ke posisi mata normal berdiri
+        playerKecepatan = 0.07;
+    }
+}
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+// ─── MEKANISME SELEKSI HUD SENJATA LOBBY ──────────────────────────────────────
+window.selectLobbyWeapon = function(nama) {
     if (isDead || isReloading) return;
     senjataSekarang = nama;
-    document.getElementById('slot-sg2').classList.toggle('active', nama === 'SG2');
-    document.getElementById('slot-mp40').classList.toggle('active', nama === 'MP40');
-    updateTeksUI();
-}
+    putarSuaraCustom('pistol'); // Efek suara klik ganti senjata
+    
+    // Reset status kelas aktif di UI HTML
+    document.querySelectorAll('.weapon-card').forEach(el => el.classList.remove('selected'));
+    // Cari elemen pembungkus dan jadikan aktif visual
+    const cards = document.querySelectorAll('.weapon-card');
+    cards.forEach(card => {
+        if (card.innerHTML.includes(nama)) card.classList.add('selected');
+    });
+};
 
 // ─── LOGIKA PASANG GLOO WALL & SYSTEM HP NYA ─────────────────────────────────
 function pasangGlooWall() {
     if (isDead) return;
-    
-    // Hitung posisi koordinat tepat di depan pandangan FPS player
-    const jarakDinding = 2.5;
+    putarSuaraCustom('gloo');
+
+    const jarakDinding = 2.6;
     const depanX = playerLocal.position.x - Math.sin(sudutPandangY) * jarakDinding;
     const depanZ = playerLocal.position.z - Math.cos(sudutPandangY) * jarakDinding;
 
     const wallId = Math.random().toString(36).substring(5);
-    const wallGeo = new THREE.BoxGeometry(3.5, 2, 0.3);
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x89b4fa, transparent: true, opacity: 0.85, roughness: 0.3 });
+    const wallGeo = new THREE.BoxGeometry(3.8, 2.2, 0.35);
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x89b4fa, transparent: true, opacity: 0.8, roughness: 0.2 });
     const glooWall = new THREE.Mesh(wallGeo, wallMat);
     
-    glooWall.position.set(depanX, 1, depanZ);
+    glooWall.position.set(depanX, 1.1, depanZ);
     glooWall.rotation.y = sudutPandangY;
-    
-    // Custom properties logic HP Glowal biar bisa hancur saat ditembak
     glooWall.userData = { id: wallId, hp: 300, tipe: 'gloo' }; 
     
     scene.add(glooWall);
     daftarGlooWall.push(glooWall);
 
     kirimDataKeMusuh({ 
-        aksi: 'gloo', 
-        idWall: wallId, 
-        x: glooWall.position.x, 
-        z: glooWall.position.z, 
-        rotY: glooWall.rotation.y 
+        aksi: 'gloo', idWall: wallId, x: glooWall.position.x, z: glooWall.position.z, rotY: glooWall.rotation.y 
     });
 }
 
-// ─── LOGIKA TEMBAK SENJATA & CALC DAMAGE (RAYCASTER) ─────────────────────────
+// ─── LOGIKA TEMBAK SENJATA & CALCULATE DAMAGE RAYCASTER ──────────────────────
 function tembakSenjata() {
     const senjata = statsSenjata[senjataSekarang];
-    if (senjata.currentAmmo <= 0) {
-        reloadSenjata();
-        return;
-    }
+    if (senjata.currentAmmo <= 0) { reloadSenjata(); return; }
 
     senjata.currentAmmo--;
+    putarSuaraCustom(senjata.audioType);
     updateTeksUI();
 
-    // Visual Efek Garis Tembakan Laser FPS
     const arahTembakan = new THREE.Vector3();
     camera.getWorldDirection(arahTembakan);
-
     const posisiMata = new THREE.Vector3();
     camera.getWorldPosition(posisiMata);
 
     const titikAkhirLaser = new THREE.Vector3().copy(posisiMata).addScaledVector(arahTembakan, senjata.range);
-
     const laserGeo = new THREE.BufferGeometry().setFromPoints([posisiMata, titikAkhirLaser]);
     const laserMat = new THREE.LineBasicMaterial({ color: senjata.warna, linewidth: 3 });
     const laser = new THREE.Line(laserGeo, laserMat);
     scene.add(laser);
-    setTimeout(() => scene.remove(laser), 60);
+    setTimeout(() => scene.remove(laser), 50);
 
-    // PROSES MENCARI TARGET YANG TERKENA DAMAGE (RAYCASTING)
+    // Deteksi Tembakan Raycast
     const raycaster = new THREE.Raycaster(posisiMata, arahTembakan, 0, senjata.range);
-    
-    // Kumpulkan objek target (Gloo Wall + Hitbox Musuh)
-    let targetDaftar = [...daftarGlooWall];
+    let targetDaftar = [...daftarGlooWall, ...daftarBangunanRintangan];
     if (targetMusuhHitbox) targetDaftar.push(targetMusuhHitbox);
 
     const hasilSenggolan = raycaster.intersectObjects(targetDaftar);
@@ -248,16 +353,11 @@ function tembakSenjata() {
     if (hasilSenggolan.length > 0) {
         const targetKena = hasilSenggolan[0].object;
 
-        // 1. Jika peluru menghantam Gloo Wall
         if (targetKena.userData && targetKena.userData.tipe === 'gloo') {
             targetKena.userData.hp -= senjata.damage;
             kirimDataKeMusuh({ aksi: 'gloo_hit', idWall: targetKena.userData.id, dmg: senjata.damage });
-            
-            if (targetKena.userData.hp <= 0) {
-                hancurkanGlooWall(targetKena.userData.id);
-            }
+            if (targetKena.userData.hp <= 0) hancurkanGlooWall(targetKena.userData.id);
         }
-        // 2. Jika peluru telak menghantam tubuh Musuh
         else if (targetKena.name === "hitbox_musuh") {
             kirimDataKeMusuh({ aksi: 'berikan_damage', besarDamage: senjata.damage });
             buatEfekHitmarker();
@@ -271,7 +371,6 @@ function reloadSenjata() {
 
     isReloading = true;
     document.getElementById('ui-ammo-display').innerText = "RELOADING...";
-    
     setTimeout(() => {
         senjata.currentAmmo = senjata.maxAmmo;
         isReloading = false;
@@ -279,36 +378,6 @@ function reloadSenjata() {
     }, senjata.reloadTime);
 }
 
-// ─── LOGIKA MEDKIT 5 DETIK DELAY ─────────────────────────────────────────────
-function gunakanMedkit() {
-    if (isDead || isHealing || jumlahMedkit <= 0 || myHp >= maxHp) return;
-
-    isHealing = true;
-    let sisaWaktu = 5;
-    const btn = document.getElementById('btn-medkit-ui');
-    btn.innerText = `💉 Memakai (${sisaWaktu}s)`;
-
-    const hitungMundur = setInterval(() => {
-        sisaWaktu--;
-        if (sisaWaktu > 0) {
-            btn.innerText = `💉 Memakai (${sisaWaktu}s)`;
-        } else {
-            clearInterval(hitungMundur);
-            
-            // Tambahkan Darah +100
-            myHp = Math.min(maxHp, myHp + 100);
-            jumlahMedkit--;
-            isHealing = false;
-            
-            btn.innerText = `💉 MEDKIT (${jumlahMedkit})`;
-            updateTeksUI();
-            
-            kirimDataKeMusuh({ aksi: 'sync_hp', hpTerbaru: myHp });
-        }
-    }, 1000);
-}
-
-// ─── UTILITY PENGURUS GLOO WALL & DAMAGE HANCUR ──────────────────────────────
 function hancurkanGlooWall(id) {
     const indeks = daftarGlooWall.findIndex(w => w.userData.id === id);
     if (indeks !== -1) {
@@ -324,105 +393,146 @@ function terimaDamagePenyakit(besarDamage) {
 
     if (myHp <= 0) {
         isDead = true;
-        document.getElementById('ui-status').innerText = "🔴 KAMU ELIMINASI (0 HP)";
-        alert("Kamu Mati! Refresh halaman untuk hidup kembali.");
+        document.getElementById('ui-status').innerText = "🔴 TERELIMINASI";
+        alert("Kamu Kalah Duel! Refresh browser untuk balas dendam.");
         kirimDataKeMusuh({ aksi: 'mati_total' });
     }
 }
 
-// ─── ENGINE LOOP ANIMASI GAMEPLAY FPS ────────────────────────────────────────
+// ─── SYSTEM VIRTUAL ANALOG JOYSTICK TOUCH SCREEN MOBILE ──────────────────────
+function siapkanSistemJoystickMobile() {
+    const container = document.getElementById('joystick-container');
+    const knob = document.getElementById('joystick-knob');
+
+    if(!container) return;
+
+    container.addEventListener('touchstart', (e) => {
+        joystickActive = true;
+        const touch = e.touches[0];
+        const rect = container.getBoundingClientRect();
+        joystickStartPos = { x: rect.left + rect.width/2, y: rect.top + rect.height/2 };
+    }, {passive: true});
+
+    window.addEventListener('touchmove', (e) => {
+        if (!joystickActive) return;
+        const touch = e.touches[0];
+        
+        let sX = touch.clientX - joystickStartPos.x;
+        let sY = touch.clientY - joystickStartPos.y;
+        const jarak = Math.sqrt(sX*sX + sY*sY);
+        const batasMax = 45; // Batas radius gerak knob analog
+
+        if (jarak > batasMax) {
+            sX = (sX / jarak) * batasMax;
+            sY = (sY / jarak) * batasMax;
+        }
+
+        knob.style.transform = `translate(${sX}px, ${sY}px)`;
+        
+        // Normalisasi kalkulasi arah vector gerak (-1 sampai 1)
+        joystickMoveVector.x = sX / batasMax;
+        joystickMoveVector.y = sY / batasMax;
+    }, {passive: true});
+
+    window.addEventListener('touchend', () => {
+        if (!joystickActive) return;
+        joystickActive = false;
+        knob.style.transform = `translate(0px, 0px)`;
+        joystickMoveVector = { x: 0, y: 0 };
+    });
+
+    // Pemicu aksi tombol taktil kanan mobile touchscreen
+    document.getElementById('btn-shoot-mobile').addEventListener('touchstart', (e) => { e.preventDefault(); if(!isDead) tembakSenjata(); });
+    document.getElementById('btn-gloo-mobile').addEventListener('touchstart', (e) => { e.preventDefault(); if(!isDead) pasangGlooWall(); });
+    document.getElementById('btn-jump-mobile').addEventListener('touchstart', (e) => { e.preventDefault(); if(isGrounded && !isCrouching) { loncatVelocity=0.17; isGrounded=false; } });
+    document.getElementById('btn-crouch-mobile').addEventListener('touchstart', (e) => { e.preventDefault(); toggleJongkok(); });
+}
+
+// ─── TICK ENGINE LOOP REALTIME ───────────────────────────────────────────────
 function animate() {
     requestAnimationFrame(animate);
-
     if (!playerLocal || isDead) return;
 
-    // Kecepatan Bergerak Maju/Mundur/Kiri/Kanan
-    playerKecepatan = keys.Shift ? 0.14 : 0.07;
-
-    // Kalkulasi arah gerak relatif berdasarkan hadapan kamera sudut pandang FPS
-    const lintasanMaju = Math.sin(sudutPandangY) * playerKecepatan;
-    const lintasanSamping = Math.cos(sudutPandangY) * playerKecepatan;
+    // Kalkulasi kalkulasi kecepatan gerak kombinasi shift sprint
+    let speed = keys.Shift ? 0.13 : (isCrouching ? 0.035 : 0.075);
+    
+    // 1. Gerakan Input dari Keyboard PC
+    const lintasanMaju = Math.sin(sudutPandangY) * speed;
+    const lintasanSamping = Math.cos(sudutPandangY) * speed;
 
     if (keys.w) { playerLocal.position.z -= lintasanSamping; playerLocal.position.x -= lintasanMaju; }
     if (keys.s) { playerLocal.position.z += lintasanSamping; playerLocal.position.x += lintasanMaju; }
     if (keys.a) { playerLocal.position.x -= lintasanSamping; playerLocal.position.z += lintasanMaju; }
     if (keys.d) { playerLocal.position.x += lintasanSamping; playerLocal.position.z -= lintasanMaju; }
 
-    // Sistem Fisika Gravitasi Lompat Sederhana
+    // 2. Integrasi Gerakan Input dari Virtual Analog Mobile HP
+    if (joystickActive) {
+        const fX = Math.sin(sudutPandangY) * speed;
+        const fZ = Math.cos(sudutPandangY) * speed;
+        const rX = Math.sin(sudutPandangY + Math.PI/2) * speed;
+        const rZ = Math.cos(sudutPandangY + Math.PI/2) * speed;
+
+        // Gerak maju mundur analog
+        playerLocal.position.x -= fX * (-joystickMoveVector.y);
+        playerLocal.position.z -= fZ * (-joystickMoveVector.y);
+        // Geser kanan kiri analog
+        playerLocal.position.x += rX * (joystickMoveVector.x);
+        playerLocal.position.z += rZ * (joystickMoveVector.x);
+    }
+
+    // Fisika Gravitasi Lompat Sederhana
     if (!isGrounded) {
         playerLocal.position.y += loncatVelocity;
         loncatVelocity -= 0.01;
-        if (playerLocal.position.y <= 0) {
-            playerLocal.position.y = 0;
-            isGrounded = true;
-            loncatVelocity = 0;
-        }
+        if (playerLocal.position.y <= 0) { playerLocal.position.y = 0; isGrounded = true; loncatVelocity = 0; }
     }
 
-    // Kirim Koordinat Sinkronisasi Jaringan Realtime ke Musuh
+    // Sinkronisasi Multiplayer Jaringan Realtime
     if(roomCode !== "" && socket && socket.connected) {
         kirimDataKeMusuh({
-            aksi: 'gerak',
-            x: playerLocal.position.x,
-            y: playerLocal.position.y,
-            z: playerLocal.position.z,
-            rotY: sudutPandangY
+            aksi: 'gerak', x: playerLocal.position.x, y: playerLocal.position.y, z: playerLocal.position.z, rotY: sudutPandangY
         });
     }
 
     renderer.render(scene, camera);
 }
 
-// ─── LOGIKA JARINGAN MULTIPLAYER NETWORKING ──────────────────────────────────
+// ─── LOGIKA MULTIPLAYER NETWORKING & SYNC ────────────────────────────────────
 function hubungkanJaringan() {
     socket = io();
 
     socket.on('connect', () => {
         socket.emit('join_game', { room: roomCode, id: myId, username: "Player STAS" });
-        document.getElementById('ui-status').innerText = "Mencari Lawan Duel...";
+        document.getElementById('ui-status').innerText = "Mencari Musuh...";
     });
 
     socket.on('player_joined', (data) => {
-        document.getElementById('ui-status').innerText = "Musuh Ditemukan! Selamat Bertarung.";
+        document.getElementById('ui-status').innerText = "Bertarung Dimulai!";
         buatKarakterMusuh();
     });
 
     socket.on('player_updated', (data) => {
-        // 1. Sinkronisasi Posisi Gerak & Rotasi Hadap Musuh (Stickman)
         if (data.aksi === 'gerak') {
             if (!musuhRemote) buatKarakterMusuh();
-            if (musuhRemote) {
-                musuhRemote.position.set(data.x, data.y, data.z);
-                musuhRemote.rotation.y = data.rotY;
-            }
+            if (musuhRemote) { musuhRemote.position.set(data.x, data.y, data.z); musuhRemote.rotation.y = data.rotY; }
         } 
-        // 2. Sinkronisasi Musuh Pasang Gloo Wall
         else if (data.aksi === 'gloo') {
-            const wallGeo = new THREE.BoxGeometry(3.5, 2, 0.3);
-            const wallMat = new THREE.MeshStandardMaterial({ color: 0xf38ba8, transparent: true, opacity: 0.6 });
+            const wallGeo = new THREE.BoxGeometry(3.8, 2.2, 0.35);
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0xf38ba8, transparent: true, opacity: 0.65 });
             const enemyWall = new THREE.Mesh(wallGeo, wallMat);
-            enemyWall.position.set(data.x, 1, data.z);
-            enemyWall.rotation.y = data.rotY;
+            enemyWall.position.set(data.x, 1.1, data.z); enemyWall.rotation.y = data.rotY;
             enemyWall.userData = { id: data.idWall, hp: 300, tipe: 'gloo' };
-            
-            scene.add(enemyWall);
-            daftarGlooWall.push(enemyWall);
+            scene.add(enemyWall); daftarGlooWall.push(enemyWall);
         } 
-        // 3. Sinkronisasi Saat Dinding Dihujani Tembakan Peluru
         else if (data.aksi === 'gloo_hit') {
-            const targetWall = daftarGlooWall.find(w => w.userData.id === data.idWall);
-            if (targetWall) {
-                targetWall.userData.hp -= data.dmg;
-                if (targetWall.userData.hp <= 0) hancurkanGlooWall(data.idWall);
-            }
+            const tw = daftarGlooWall.find(w => w.userData.id === data.idWall);
+            if (tw) { tw.userData.hp -= data.dmg; if (tw.userData.hp <= 0) hancurkanGlooWall(data.idWall); }
         } 
-        // 4. Menerima Damage dari Tembakan Musuh yang Akurat
         else if (data.aksi === 'berikan_damage') {
             terimaDamagePenyakit(data.besarDamage);
         } 
-        // 5. Musuh Mati Total
         else if (data.aksi === 'mati_total') {
-            document.getElementById('ui-status').innerText = "👑 BOOYAH! Kamu Menang Duel!";
+            document.getElementById('ui-status').innerText = "👑 BOOYAH!";
             if (musuhRemote) scene.remove(musuhRemote);
         }
     });
@@ -430,16 +540,13 @@ function hubungkanJaringan() {
 
 function buatKarakterMusuh() {
     if (musuhRemote) return;
-    // Bikin bentuk model orang / stickman warna merah untuk musuh kita
     musuhRemote = buatModelStickman(0xff5555);
-    musuhRemote.position.set(0, 0, -8);
+    musuhRemote.position.set(0, 0, -10);
     
-    // Pasang invisible hitbox silinder berukuran manusia untuk kebutuhan deteksi tembakan peluru
-    const hitboxGeo = new THREE.CylinderGeometry(0.4, 0.4, 2, 8);
-    const hitboxMat = new THREE.MeshBasicMaterial({ visible: false }); // Gak kelihatan, murni deteksi raycast
-    targetMusuhHitbox = new THREE.Mesh(hitboxGeo, hitboxMat);
+    const hitboxGeo = new THREE.CylinderGeometry(0.45, 0.45, 2.1, 8);
+    targetMusuhHitbox = new THREE.Mesh(hitboxGeo, new THREE.MeshBasicMaterial({ visible: false }));
     targetMusuhHitbox.name = "hitbox_musuh";
-    targetMusuhHitbox.position.y = 1; // Center pas di badan stickman
+    targetMusuhHitbox.position.y = 1.05;
     
     musuhRemote.add(targetMusuhHitbox);
     scene.add(musuhRemote);
@@ -447,93 +554,49 @@ function buatKarakterMusuh() {
 
 function kirimDataKeMusuh(payload) {
     if (!socket || !socket.connected) return;
-    payload.room = roomCode;
-    payload.id = myId;
+    payload.room = roomCode; payload.id = myId;
     socket.emit('update_player', payload);
 }
 
 // ─── OTOMATISASI DAN IMPLEMENTASI COMPONENT UI DINAMIS ───────────────────────
 function buatSistemUIDinamis() {
-    // Container UI Overlay utama
     const wadahUI = document.createElement('div');
-    wadahUI.style.position = 'absolute';
-    wadahUI.style.bottom = '20px';
-    wadahUI.style.left = '50%';
-    wadahUI.style.transform = 'translateX(-50%)';
-    wadahUI.style.zIndex = '999';
-    wadahUI.style.textAlign = 'center';
-    wadahUI.style.fontFamily = 'monospace';
+    wadahUI.style.position = 'absolute'; wadahUI.style.bottom = '15px'; wadahUI.style.left = '50%';
+    wadahUI.style.transform = 'translateX(-50%)'; wadahUI.style.zIndex = '999'; wadahUI.style.textAlign = 'center';
+    wadahUI.style.fontFamily = 'monospace'; wadahUI.style.pointerEvents = 'auto';
 
-    // 1. Tampilan Bar Darah (Max 200) Sesuai Request
     const barDarahContainer = document.createElement('div');
-    barDarahContainer.style.width = '250px';
-    barDarahContainer.style.height = '20px';
-    barDarahContainer.style.backgroundColor = '#444';
-    barDarahContainer.style.border = '2px solid white';
-    barDarahContainer.style.borderRadius = '5px';
-    barDarahContainer.style.overflow = 'hidden';
-    barDarahContainer.style.marginBottom = '8px';
+    barDarahContainer.style.width = '240px'; barDarahContainer.style.height = '18px'; barDarahContainer.style.backgroundColor = '#333';
+    barDarahContainer.style.border = '2px solid #fff'; barDarahContainer.style.borderRadius = '4px'; barDarahContainer.style.overflow = 'hidden';
 
     const isiDarahBar = document.createElement('div');
-    isiDarahBar.id = 'ui-hp-bar';
-    isiDarahBar.style.width = '100%';
-    isiDarahBar.style.height = '100%';
-    isiDarahBar.style.backgroundColor = '#ff3333';
-    isiDarahBar.style.transition = 'width 0.1s ease';
+    isiDarahBar.id = 'ui-hp-bar'; isiDarahBar.style.width = '100%'; isiDarahBar.style.height = '100%'; isiDarahBar.style.backgroundColor = '#ff3333';
     barDarahContainer.appendChild(isiDarahBar);
 
     const teksTandaHP = document.createElement('div');
-    teksTandaHP.id = 'ui-hp-text';
-    teksTandaHP.style.color = 'white';
-    teksTandaHP.style.fontWeight = 'bold';
-    teksTandaHP.style.marginTop = '-20px';
-    teksTandaHP.style.fontSize = '12px';
-    teksTandaHP.innerText = 'HP: 200 / 200';
+    teksTandaHP.id = 'ui-hp-text'; teksTandaHP.style.color = 'white'; teksTandaHP.style.fontWeight = 'bold';
+    teksTandaHP.style.marginTop = '-18px'; teksTandaHP.style.fontSize = '12px'; teksTandaHP.innerText = 'HP: 200 / 200';
     barDarahContainer.appendChild(teksTandaHP);
 
-    // 2. Status Sisa Peluru Aktif
     const infoPeluru = document.createElement('div');
-    infoPeluru.id = 'ui-ammo-display';
-    infoPeluru.style.color = '#ffff00';
-    infoPeluru.style.fontSize = '20px';
-    infoPeluru.style.fontWeight = 'bold';
-    infoPeluru.style.textShadow = '1px 1px 2px black';
-    infoPeluru.innerText = 'AMMO: 2 / 2';
-
-    // 3. Tombol Medkit 5 Detik
-    const tombolMedkit = document.createElement('button');
-    tombolMedkit.id = 'btn-medkit-ui';
-    tombolMedkit.style.marginTop = '10px';
-    tombolMedkit.style.padding = '8px 16px';
-    tombolMedkit.style.fontSize = '14px';
-    tombolMedkit.style.fontWeight = 'bold';
-    tombolMedkit.style.backgroundColor = '#22c55e';
-    tombolMedkit.style.color = 'white';
-    tombolMedkit.style.border = 'none';
-    tombolMedkit.style.borderRadius = '5px';
-    tombolMedkit.style.cursor = 'pointer';
-    tombolMedkit.innerText = `💉 MEDKIT (${jumlahMedkit})`;
-    tombolMedkit.addEventListener('click', gunakanMedkit);
+    infoPeluru.id = 'ui-ammo-display'; infoPeluru.style.color = '#ffff00'; infoPeluru.style.fontSize = '18px';
+    infoPeluru.style.fontWeight = 'bold'; infoPeluru.style.textShadow = '1px 1px 1px black'; infoPeluru.style.marginTop = '4px';
 
     wadahUI.appendChild(barDarahContainer);
     wadahUI.appendChild(infoPeluru);
-    wadahUI.appendChild(tombolMedkit);
     document.body.appendChild(wadahUI);
     
+    // Set Acak ID Profil di Awal Game
+    document.getElementById('player-uid').innerText = Math.floor(100000 + Math.random() * 900000);
     updateTeksUI();
 }
 
 function updateTeksUI() {
     const senjata = statsSenjata[senjataSekarang];
-    // Sync nilai bar darah visual
     const persentaseHp = (myHp / maxHp) * 100;
-    const bar = document.getElementById('ui-hp-bar');
-    if (bar) bar.style.width = `${persentaseHp}%`;
-    
-    const teksHp = document.getElementById('ui-hp-text');
-    if (teksHp) teksHp.innerText = `HP: ${myHp} / ${maxHp}`;
+    const bar = document.getElementById('ui-hp-bar'); if (bar) bar.style.width = `${persentaseHp}%`;
+    const teksHp = document.getElementById('ui-hp-text'); if (teksHp) teksHp.innerText = `HP: ${myHp} / ${maxHp}`;
 
-    // Sync info kapasitas sisa peluru aktif
     const ammoUI = document.getElementById('ui-ammo-display');
     if (ammoUI && !isReloading) {
         ammoUI.innerText = `${senjataSekarang} AMMO: ${senjata.currentAmmo} / ${senjata.maxAmmo}`;
@@ -541,46 +604,46 @@ function updateTeksUI() {
 }
 
 function buatEfekHitmarker() {
-    // Bikin kilatan silang merah kecil di tengah layar tanda tembakan masuk target
     const penanda = document.createElement('div');
-    penanda.style.position = 'absolute';
-    penanda.style.top = '50%';
-    penanda.style.left = '50%';
-    penanda.style.transform = 'translate(-50%, -50%)';
-    penanda.style.color = '#ff3333';
-    penanda.style.fontSize = '30px';
-    penanda.style.fontWeight = 'bold';
-    penanda.style.pointerEvents = 'none';
-    penanda.innerText = '✕';
-    document.body.appendChild(penanda);
-    setTimeout(() => penanda.remove(), 120);
+    penanda.style.position = 'absolute'; penanda.style.top = '50%'; penanda.style.left = '50%';
+    penanda.style.transform = 'translate(-50%, -50%)'; penanda.style.color = '#ff3333'; penanda.style.fontSize = '28px';
+    penanda.style.fontWeight = 'bold'; penanda.style.pointerEvents = 'none'; penanda.innerText = '✕';
+    document.body.appendChild(penanda); setTimeout(() => penanda.remove(), 100);
 }
 
-function aktifkanTombolMobile() {
-    // Pengikat aksi sentuhan HP agar tidak bentrok dengan mouse pointer lock
-    document.getElementById('btn-shoot').addEventListener('touchstart', (e) => { e.preventDefault(); tembakSenjata(); });
-    document.getElementById('btn-gloo').addEventListener('touchstart', (e) => { e.preventDefault(); pasangGlooWall(); });
-}
+// TRIGGER START BATTLE DARI MODAL LOBBY HTML
+document.getElementById('btn-open-match').addEventListener('click', () => {
+    document.getElementById('room-modal').style.display = 'flex';
+});
+document.getElementById('btn-cancel-room').addEventListener('click', () => {
+    document.getElementById('room-modal').style.display = 'none';
+});
 
-// Override fungsi bawaan klik lobby agar sinkronisasi data urutan berjalan aman
-document.getElementById('btn-join').addEventListener('click', () => {
-    const inputRoom = document.getElementById('room-id').value.trim();
-    if (inputRoom !== "") {
-        roomCode = inputRoom;
+document.getElementById('btn-confirm-start').addEventListener('click', () => {
+    const kode = document.getElementById('room-input-code').value.trim();
+    if (kode !== "") {
+        roomCode = kode;
         document.getElementById('ui-room-text').innerText = roomCode;
-        document.getElementById('lobby').style.display = 'none';
-        document.getElementById('hud-senjata').style.display = 'flex';
         
-        // Pemicu pointer lock otomatis di desktop pas masuk game biar nyaman kontrol kameranya
+        // Sembunyikan elemen Lobby & Aktifkan Seluruh HUD Arena Gameplay
+        document.getElementById('room-modal').style.display = 'none';
+        document.getElementById('lobby-container').style.display = 'none';
+        document.getElementById('top-hud').style.display = 'block';
+        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+            document.getElementById('mobile-hud').style.display = 'block';
+        }
+
+        // Kunci Pointer Kursor Desktop Otomatis demi Kenyamanan Sudut Pandang FPS
         if (document.body.requestPointerLock) {
+            document.body.requestPointerLock();
             document.body.addEventListener('click', () => {
                 if(!isDead && roomCode !== "") document.body.requestPointerLock();
             });
         }
-        
+
         hubungkanJaringan();
         init3DWorld();
     } else {
-        alert("Masukkan kode room terlebih dahulu!");
+        alert("Kode Room wajib diisi!");
     }
 });
